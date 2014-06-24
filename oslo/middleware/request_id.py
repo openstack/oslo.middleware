@@ -21,8 +21,8 @@ request environment. The request ID is also added to API response.
 
 import webob.dec
 
-from openstack.common import context
 from oslo.middleware import base
+from oslo.middleware.openstack.common import context
 
 
 ENV_REQUEST_ID = 'openstack.request_id'
