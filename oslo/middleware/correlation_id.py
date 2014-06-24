@@ -17,7 +17,7 @@
 
 import uuid
 
-from openstack.common.middleware import base
+from oslo.middleware import base
 
 
 class CorrelationIdMiddleware(base.Middleware):

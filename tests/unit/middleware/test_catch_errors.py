@@ -18,7 +18,7 @@ from oslotest import base as test_base
 import webob.dec
 import webob.exc
 
-from openstack.common.middleware import catch_errors
+from oslo.middleware import catch_errors
 
 
 class CatchErrorsTest(test_base.BaseTestCase):

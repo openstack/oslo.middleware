@@ -22,7 +22,7 @@ import webob.dec
 import webob.exc
 
 from openstack.common.gettextutils import _
-from openstack.common.middleware import base
+from oslo.middleware import base
 
 
 # default request size is 112k

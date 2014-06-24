@@ -19,7 +19,7 @@ from testtools import matchers
 import webob
 import webob.dec
 
-from openstack.common.middleware import request_id
+from oslo.middleware import request_id
 
 
 class RequestIdTest(test_base.BaseTestCase):

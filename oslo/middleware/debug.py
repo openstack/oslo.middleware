@@ -22,7 +22,7 @@ import sys
 import six
 import webob.dec
 
-from openstack.common.middleware import base
+from oslo.middleware import base
 
 
 class Debug(base.Middleware):

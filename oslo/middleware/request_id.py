@@ -13,31 +13,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Middleware that provides high-level error handling.
+"""Middleware that ensures request ID.
 
-It catches all exceptions from subsequent applications in WSGI pipeline
-to hide internal errors from API response.
+It ensures to assign request ID for each API request and set it to
+request environment. The request ID is also added to API response.
 """
 
 import webob.dec
-import webob.exc
 
-from openstack.common.gettextutils import _LE
-from openstack.common import log as logging
-from openstack.common.middleware import base
+from openstack.common import context
+from oslo.middleware import base
 
 
-LOG = logging.getLogger(__name__)
+ENV_REQUEST_ID = 'openstack.request_id'
+HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 
 
-class CatchErrorsMiddleware(base.Middleware):
+class RequestIdMiddleware(base.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        try:
-            response = req.get_response(self.application)
-        except Exception:
-            LOG.exception(_LE('An error occurred during '
-                              'processing the request: %s'))
-            response = webob.exc.HTTPInternalServerError()
+        req_id = context.generate_request_id()
+        req.environ[ENV_REQUEST_ID] = req_id
+        response = req.get_response(self.application)
+        if HTTP_RESP_HEADER_REQUEST_ID not in response.headers:
+            response.headers.add(HTTP_RESP_HEADER_REQUEST_ID, req_id)
         return response

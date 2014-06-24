@@ -19,7 +19,7 @@ import mock
 from oslotest import base as test_base
 from oslotest import moxstubout
 
-from openstack.common.middleware import correlation_id
+from oslo.middleware import correlation_id
 
 
 class CorrelationIdMiddlewareTest(test_base.BaseTestCase):

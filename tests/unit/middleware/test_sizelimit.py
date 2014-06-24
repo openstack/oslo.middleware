@@ -17,7 +17,7 @@ import six
 import webob
 
 from openstack.common.fixture import config
-from openstack.common.middleware import sizelimit
+from oslo.middleware import sizelimit
 
 
 class TestLimitingReader(test_base.BaseTestCase):
