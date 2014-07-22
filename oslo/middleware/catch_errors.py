@@ -24,7 +24,7 @@ import webob.dec
 import webob.exc
 
 from oslo.middleware import base
-from oslo.middleware.openstack.common.gettextutils import _LE
+from oslo.middleware.i18n import _LE
 
 
 LOG = logging.getLogger(__name__)
