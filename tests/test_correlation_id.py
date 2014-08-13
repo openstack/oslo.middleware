@@ -22,10 +22,10 @@ from oslotest import moxstubout
 from oslo.middleware import correlation_id
 
 
-class CorrelationIdMiddlewareTest(test_base.BaseTestCase):
+class CorrelationIdTest(test_base.BaseTestCase):
 
     def setUp(self):
-        super(CorrelationIdMiddlewareTest, self).setUp()
+        super(CorrelationIdTest, self).setUp()
         self.stubs = self.useFixture(moxstubout.MoxStubout()).stubs
 
     def test_process_request(self):
@@ -37,7 +37,7 @@ class CorrelationIdMiddlewareTest(test_base.BaseTestCase):
         mock_uuid4.return_value = "fake_uuid"
         self.stubs.Set(uuid, 'uuid4', mock_uuid4)
 
-        middleware = correlation_id.CorrelationIdMiddleware(app)
+        middleware = correlation_id.CorrelationId(app)
         middleware(req)
 
         self.assertEqual(req.headers.get("X_CORRELATION_ID"), "fake_uuid")
@@ -47,7 +47,7 @@ class CorrelationIdMiddlewareTest(test_base.BaseTestCase):
         req = mock.Mock()
         req.headers = {"X_CORRELATION_ID": "correlation_id"}
 
-        middleware = correlation_id.CorrelationIdMiddleware(app)
+        middleware = correlation_id.CorrelationId(app)
         middleware(req)
 
         self.assertEqual(req.headers.get("X_CORRELATION_ID"), "correlation_id")

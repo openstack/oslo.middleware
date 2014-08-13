@@ -29,7 +29,7 @@ ENV_REQUEST_ID = 'openstack.request_id'
 HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 
 
-class RequestIdMiddleware(base.Middleware):
+class RequestId(base.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
