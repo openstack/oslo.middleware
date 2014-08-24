@@ -28,7 +28,7 @@ class RequestIdTest(test_base.BaseTestCase):
         def application(req):
             return req.environ[request_id.ENV_REQUEST_ID]
 
-        app = request_id.RequestIdMiddleware(application)
+        app = request_id.RequestId(application)
         req = webob.Request.blank('/test')
         res = req.get_response(app)
         res_req_id = res.headers.get(request_id.HTTP_RESP_HEADER_REQUEST_ID)

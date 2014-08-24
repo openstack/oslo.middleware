@@ -20,7 +20,7 @@ import uuid
 from oslo.middleware import base
 
 
-class CorrelationIdMiddleware(base.Middleware):
+class CorrelationId(base.Middleware):
 
     def process_request(self, req):
         correlation_id = (req.headers.get("X_CORRELATION_ID") or

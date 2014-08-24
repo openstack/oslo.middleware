@@ -30,7 +30,7 @@ from oslo.middleware.i18n import _LE
 LOG = logging.getLogger(__name__)
 
 
-class CatchErrorsMiddleware(base.Middleware):
+class CatchErrors(base.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
