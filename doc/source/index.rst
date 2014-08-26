@@ -1,19 +1,11 @@
-Welcome to oslo.middleware's documentation!
-===========================================
+.. include:: ../../README.rst
 
-Contents:
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
 
-   readme
    installation
-   usage
+   api
    contributing
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

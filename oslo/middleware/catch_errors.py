@@ -13,11 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Middleware that provides high-level error handling.
-
-It catches all exceptions from subsequent applications in WSGI pipeline
-to hide internal errors from API response.
-"""
 import logging
 
 import webob.dec
@@ -31,6 +26,11 @@ LOG = logging.getLogger(__name__)
 
 
 class CatchErrors(base.Middleware):
+    """Middleware that provides high-level error handling.
+
+    It catches all exceptions from subsequent applications in WSGI pipeline
+    to hide internal errors from API response.
+    """
 
     @webob.dec.wsgify
     def __call__(self, req):

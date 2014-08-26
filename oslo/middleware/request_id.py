@@ -13,12 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Middleware that ensures request ID.
-
-It ensures to assign request ID for each API request and set it to
-request environment. The request ID is also added to API response.
-"""
-
 import webob.dec
 
 from oslo.middleware import base
@@ -30,6 +24,11 @@ HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 
 
 class RequestId(base.Middleware):
+    """Middleware that ensures request ID.
+
+    It ensures to assign request ID for each API request and set it to
+    request environment. The request ID is also added to API response.
+    """
 
     @webob.dec.wsgify
     def __call__(self, req):

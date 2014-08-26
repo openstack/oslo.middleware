@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Middleware that attaches a correlation id to WSGI request"""
-
 import uuid
 
 from oslo.middleware import base
 
 
 class CorrelationId(base.Middleware):
+    "Middleware that attaches a correlation id to WSGI request"
 
     def process_request(self, req):
         correlation_id = (req.headers.get("X_CORRELATION_ID") or
