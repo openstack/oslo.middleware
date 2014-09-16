@@ -16,7 +16,7 @@ from oslotest import base as test_base
 import six
 import webob
 
-from oslo.middleware.openstack.common.fixture import config
+from oslo.config import fixture as config
 from oslo.middleware import sizelimit
 
 
