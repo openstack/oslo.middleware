@@ -18,6 +18,7 @@ Request Body limiting middleware.
 """
 
 from oslo.config import cfg
+from oslo.config import cfgfilter
 import webob.dec
 import webob.exc
 
@@ -25,15 +26,22 @@ from oslo.middleware import base
 from oslo.middleware.i18n import _
 
 
-# default request size is 112k
-max_req_body_size = cfg.IntOpt('max_request_body_size',
-                               deprecated_name='osapi_max_request_body_size',
-                               default=114688,
-                               help='The maximum body size for each '
-                                    ' request, in bytes.')
+_oldopts = [cfg.DeprecatedOpt('osapi_max_request_body_size',
+                              group='DEFAULT'),
+            cfg.DeprecatedOpt('max_request_body_size',
+                              group='DEFAULT')]
 
-CONF = cfg.CONF
-CONF.register_opt(max_req_body_size)
+_opts = [
+    # default request size is 112k
+    cfg.IntOpt('max_request_body_size',
+               default=114688,
+               help='The maximum body size for each '
+                    ' request, in bytes.',
+               deprecated_opts=_oldopts)
+]
+
+CONF = cfgfilter.ConfigFilter(cfg.CONF)
+CONF.register_opts(_opts, group='oslo_middleware')
 
 
 class LimitingReader(object):
@@ -71,12 +79,12 @@ class RequestBodySizeLimiter(base.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
+        max_size = CONF.oslo_middleware.max_request_body_size
         if (req.content_length is not None and
-                req.content_length > CONF.max_request_body_size):
+                req.content_length > max_size):
             msg = _("Request is too large.")
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
         if req.content_length is None and req.is_body_readable:
-            limiter = LimitingReader(req.body_file,
-                                     CONF.max_request_body_size)
+            limiter = LimitingReader(req.body_file, max_size)
             req.body_file = limiter
         return self.application

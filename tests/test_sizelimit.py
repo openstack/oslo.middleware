@@ -70,8 +70,9 @@ class TestRequestBodySizeLimiter(test_base.BaseTestCase):
 
     def setUp(self):
         super(TestRequestBodySizeLimiter, self).setUp()
+        fixture = self.useFixture(config.Config(sizelimit.CONF))
         self.MAX_REQUEST_BODY_SIZE = \
-            self.useFixture(config.Config()).conf.max_request_body_size
+            fixture.conf.oslo_middleware.max_request_body_size
 
         @webob.dec.wsgify()
         def fake_app(req):
