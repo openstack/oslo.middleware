@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_context import context
 import webob.dec
 
 from oslo.middleware import base
-from oslo.middleware.openstack.common import context
 
 
 ENV_REQUEST_ID = 'openstack.request_id'
