@@ -41,6 +41,14 @@ class TestLimitingReader(test_base.BaseTestCase):
 
         self.assertEqual(bytes_read, BYTES)
 
+    def test_read_default_value(self):
+        BYTES = 1024
+        data_str = "*" * BYTES
+        data = six.StringIO(data_str)
+        reader = sizelimit.LimitingReader(data, BYTES)
+        res = reader.read()
+        self.assertEqual(data_str, res)
+
     def test_limiting_reader_fails(self):
         BYTES = 1024
 
