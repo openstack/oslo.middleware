@@ -1,3 +1,6 @@
+# Copyright (c) 2013 Rackspace Hosting
+# All Rights Reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -10,19 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import warnings
+import uuid
 
-from oslo_middleware import *
-
-
-def deprecated():
-    new_name = __name__.replace('.', '_')
-    warnings.warn(
-        ('The oslo namespace package is deprecated. Please use %s instead.' %
-         new_name),
-        DeprecationWarning,
-        stacklevel=3,
-    )
+from oslo_middleware import base
 
 
-deprecated()
+class CorrelationId(base.Middleware):
+    "Middleware that attaches a correlation id to WSGI request"
+
+    def process_request(self, req):
+        correlation_id = (req.headers.get("X_CORRELATION_ID") or
+                          str(uuid.uuid4()))
+        req.headers['X_CORRELATION_ID'] = correlation_id

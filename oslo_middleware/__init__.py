@@ -10,19 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import warnings
+__all__ = ['CatchErrors',
+           'CorrelationId',
+           'Debug',
+           'RequestId',
+           'RequestBodySizeLimiter']
 
-from oslo_middleware import *
-
-
-def deprecated():
-    new_name = __name__.replace('.', '_')
-    warnings.warn(
-        ('The oslo namespace package is deprecated. Please use %s instead.' %
-         new_name),
-        DeprecationWarning,
-        stacklevel=3,
-    )
-
-
-deprecated()
+from oslo_middleware.catch_errors import CatchErrors
+from oslo_middleware.correlation_id import CorrelationId
+from oslo_middleware.debug import Debug
+from oslo_middleware.request_id import RequestId
+from oslo_middleware.sizelimit import RequestBodySizeLimiter

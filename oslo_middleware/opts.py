@@ -20,7 +20,7 @@ __all__ = [
 
 import copy
 
-from oslo.middleware import sizelimit
+from oslo_middleware import sizelimit
 
 
 def list_opts():

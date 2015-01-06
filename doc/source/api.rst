@@ -2,5 +2,5 @@
  API
 =====
 
-.. automodule:: oslo.middleware
+.. automodule:: oslo_middleware
    :members:
