@@ -13,11 +13,13 @@
 __all__ = ['CatchErrors',
            'CorrelationId',
            'Debug',
+           'Healthcheck',
            'RequestId',
            'RequestBodySizeLimiter']
 
 from oslo_middleware.catch_errors import CatchErrors
 from oslo_middleware.correlation_id import CorrelationId
 from oslo_middleware.debug import Debug
+from oslo_middleware.healthcheck import Healthcheck
 from oslo_middleware.request_id import RequestId
 from oslo_middleware.sizelimit import RequestBodySizeLimiter
