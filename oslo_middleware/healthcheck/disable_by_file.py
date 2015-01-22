@@ -16,8 +16,8 @@
 import logging
 import os
 
+from oslo_middleware._i18n import _LW
 from oslo_middleware.healthcheck import pluginbase
-from oslo_middleware.i18n import _LW
 
 LOG = logging.getLogger(__name__)
 

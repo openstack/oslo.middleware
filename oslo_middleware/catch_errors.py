@@ -18,8 +18,8 @@ import logging
 import webob.dec
 import webob.exc
 
+from oslo_middleware._i18n import _LE
 from oslo_middleware import base
-from oslo_middleware.i18n import _LE
 
 
 LOG = logging.getLogger(__name__)
