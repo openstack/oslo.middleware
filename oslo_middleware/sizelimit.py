@@ -22,8 +22,8 @@ from oslo_config import cfgfilter
 import webob.dec
 import webob.exc
 
+from oslo_middleware._i18n import _
 from oslo_middleware import base
-from oslo_middleware.i18n import _
 
 
 _oldopts = [cfg.DeprecatedOpt('osapi_max_request_body_size',
