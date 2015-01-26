@@ -23,6 +23,22 @@ LOG = logging.getLogger(__name__)
 
 
 class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
+    """DisableByFile healthcheck middleware plugin
+
+    This plugin checks presence of a file to report if the service
+    is unavailable or not.
+
+    Example of middleware configuration:
+
+    .. code-block:: ini
+
+      [filter:healthcheck]
+      paste.filter_factory = oslo_middleware:Healthcheck.factory
+      path = /healthcheck
+      backends = disable_by_file
+      disable_by_file_path = /var/run/nova/healthcheck_disable
+    """
+
     def healthcheck(self):
         path = self.conf.get('disable_by_file_path')
         if path is None:

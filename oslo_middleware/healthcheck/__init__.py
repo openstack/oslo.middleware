@@ -22,10 +22,52 @@ from oslo_middleware import base
 
 
 class Healthcheck(base.Middleware):
-    """Helper class that returns debug information.
+    """Healthcheck middleware used for monitoring.
 
-    Can be inserted into any WSGI application chain to get information about
-    the request and response.
+    If the path is /healthcheck, it will respond 200 with "OK" as the body.
+    Or 503 with the reason as the body if one of the backend report
+    an application issue.
+
+    Example of paste configuration:
+
+    .. code-block:: ini
+
+        [filter:healthcheck]
+        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        path = /healthcheck
+        backends = disable_by_file
+        disable_by_file_path = /var/run/nova/healthcheck_disable
+
+        [pipeline:public_api]
+        pipeline = healthcheck sizelimit [...] public_service
+
+
+    Multiple filter sections can be defined if it desired to have
+    pipelines with different healthcheck configuration, example:
+
+    .. code-block:: ini
+
+        [pipeline:public_api]
+        pipeline = healthcheck_public sizelimit [...] public_service
+
+        [pipeline:admin_api]
+        pipeline = healthcheck_admin sizelimit [...] admin_service
+
+        [filter:healthcheck_public]
+        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        path = /healthcheck_public
+        backends = disable_by_file
+        disable_by_file_path = /var/run/nova/healthcheck_public_disable
+
+        [filter:healthcheck_admin]
+        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        path = /healthcheck_admin
+        backends = disable_by_file
+        disable_by_file_path = /var/run/nova/healthcheck_admin_disable
+
+    More details on available backends and their configuration can be found
+    on this page: :doc:`healthcheck_plugins`.
+
     """
 
     NAMESPACE = "oslo.middleware.healthcheck"
@@ -38,7 +80,7 @@ class Healthcheck(base.Middleware):
 
         def healthcheck_filter(app):
             return cls(app, conf)
-        return cls
+        return healthcheck_filter
 
     def __init__(self, application, conf):
         super(Healthcheck, self).__init__(application)
