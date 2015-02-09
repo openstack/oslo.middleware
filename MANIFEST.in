@@ -3,4 +3,7 @@ include ChangeLog
 exclude .gitignore
 exclude .gitreview
 
+recursive-include oslo/middleware *.py
+recursive-include oslo_middleware *.py
+
 global-exclude *.pyc
