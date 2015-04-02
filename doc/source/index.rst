@@ -9,4 +9,5 @@ Contents
    installation
    api
    healthcheck_plugins
+   cors
    contributing
