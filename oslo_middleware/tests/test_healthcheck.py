@@ -54,7 +54,7 @@ class HealthcheckTests(test_base.BaseTestCase):
     @mock.patch('logging.warn')
     def test_disablefile_unconfigured(self, fake_warn):
         conf = {'backends': 'disable_by_file'}
-        self._do_test(conf, expected_body=b'')
+        self._do_test(conf, expected_body=b'OK')
         self.assertIn('disable_by_file', self.app._backends.names())
         fake_warn.assert_called_once('DisableByFile healthcheck middleware '
                                      'enabled without disable_by_file_path '
@@ -63,7 +63,7 @@ class HealthcheckTests(test_base.BaseTestCase):
     def test_disablefile_enabled(self):
         conf = {'backends': 'disable_by_file',
                 'disable_by_file_path': '/foobar'}
-        self._do_test(conf, expected_body=b'')
+        self._do_test(conf, expected_body=b'OK')
         self.assertIn('disable_by_file', self.app._backends.names())
 
     def test_disablefile_disabled(self):

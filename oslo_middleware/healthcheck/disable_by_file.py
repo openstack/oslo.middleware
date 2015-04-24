@@ -45,10 +45,10 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
             LOG.warning(_LW('DisableByFile healthcheck middleware enabled '
                             'without disable_by_file_path set'))
             return pluginbase.HealthcheckResult(available=True,
-                                                reason="")
+                                                reason="OK")
         elif not os.path.exists(path):
             return pluginbase.HealthcheckResult(available=True,
-                                                reason="")
+                                                reason="OK")
         else:
             return pluginbase.HealthcheckResult(available=False,
                                                 reason="DISABLED BY FILE")
