@@ -13,6 +13,7 @@
 # under the License.
 
 from oslo.config import cfg
+from oslo.config import fixture
 from oslotest import base as test_base
 import webob
 import webob.dec
@@ -32,47 +33,36 @@ class CORSTestBase(test_base.BaseTestCase):
         def application(req):
             return 'Hello, World!!!'
 
-        # Force a reload of the configuration after this test clears.
-        self.addCleanup(cfg.CONF.reload_config_files)
+        # Set up the config fixture.
+        config = self.useFixture(fixture.Config(cfg.CONF))
 
-        # Make sure the namespace exists for our tests.
-        if not cfg.CONF._namespace:
-            cfg.CONF.__call__(args=[])
+        config.load_raw_values(group='cors',
+                               allowed_origin='http://valid.example.com',
+                               allow_credentials='False',
+                               max_age='',
+                               expose_headers='',
+                               allow_methods='GET',
+                               allow_headers='')
 
-        # Manually load configuration options into the parser.
-        raw_config = {
-            'cors': {
-                'allowed_origin': ['http://valid.example.com'],
-                'allow_credentials': ['False'],
-                'max_age': [''],
-                'expose_headers': [''],
-                'allow_methods': ['GET'],
-                'allow_headers': ['']
-            },
-            'cors.credentials': {
-                'allowed_origin': ['http://creds.example.com'],
-                'allow_credentials': ['True']
-            },
-            'cors.exposed-headers': {
-                'allowed_origin': ['http://headers.example.com'],
-                'expose_headers': ['X-Header-1,X-Header-2'],
-                'allow_headers': ['X-Header-1,X-Header-2']
-            },
-            'cors.cached': {
-                'allowed_origin': ['http://cached.example.com'],
-                'max_age': ['3600']
-            },
-            'cors.get-only': {
-                'allowed_origin': ['http://get.example.com'],
-                'allow_methods': ['GET']
-            },
-            'cors.all-methods': {
-                'allowed_origin': ['http://all.example.com'],
-                'allow_methods': ['GET,PUT,POST,DELETE,HEAD']
-            }
-        }
-        namespace = cfg.CONF._namespace
-        namespace._add_parsed_config_file(raw_config, raw_config)
+        config.load_raw_values(group='cors.credentials',
+                               allowed_origin='http://creds.example.com',
+                               allow_credentials='True')
+
+        config.load_raw_values(group='cors.exposed-headers',
+                               allowed_origin='http://headers.example.com',
+                               expose_headers='X-Header-1,X-Header-2',
+                               allow_headers='X-Header-1,X-Header-2')
+
+        config.load_raw_values(group='cors.cached',
+                               allowed_origin='http://cached.example.com',
+                               max_age='3600')
+
+        config.load_raw_values(group='cors.get-only',
+                               allowed_origin='http://get.example.com',
+                               allow_methods='GET')
+        config.load_raw_values(group='cors.all-methods',
+                               allowed_origin='http://all.example.com',
+                               allow_methods='GET,PUT,POST,DELETE,HEAD')
 
         # Now that the config is set up, create our application.
         self.application = cors.CORS(application, cfg.CONF)
