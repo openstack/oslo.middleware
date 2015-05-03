@@ -21,7 +21,6 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: oslo/middleware/catch_errors.py:40
 #, python-format
 msgid "An error occurred during processing the request: %s"
 msgstr "Ein Fehler trat auf während die Anfrage behandelt wurde: %s"
