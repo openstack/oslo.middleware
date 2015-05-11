@@ -12,8 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo.config import cfg
-from oslo.config import fixture
+from oslo_config import cfg
+from oslo_config import fixture
 from oslotest import base as test_base
 import webob
 import webob.dec
