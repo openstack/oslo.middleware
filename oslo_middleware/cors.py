@@ -15,7 +15,7 @@
 # Default allowed headers
 import copy
 import logging
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_middleware import base
 import webob.dec
 import webob.exc
