@@ -154,9 +154,12 @@ class CORS(base.Middleware):
         # Is this origin registered? (Section 6.2.2)
         origin = request.headers['Origin']
         if origin not in self.allowed_origins:
-            LOG.debug('CORS request from origin \'%s\' not permitted.'
-                      % (origin,))
-            return
+            if '*' in self.allowed_origins:
+                origin = '*'
+            else:
+                LOG.debug('CORS request from origin \'%s\' not permitted.'
+                          % (origin,))
+                return
         cors_config = self.allowed_origins[origin]
 
         # If there's no request method, exit. (Section 6.2.3)

@@ -6,6 +6,14 @@ This middleware provides a comprehensive, configurable implementation of the
 CORS_ (Cross Origin Resource Sharing) specification as oslo-supported python
 wsgi middleware.
 
+.. note::
+
+   While this middleware supports the use of the `*` wildcard origin in the
+   specification, this feature is not recommended for security reasons. It
+   is provided to simplify basic use of CORS, practically meaning "I don't
+   care how this is used." In an intranet setting, this could lead to leakage
+   of data beyond the intranet and therefore should be avoided.
+
 Quickstart
 ----------
 First, include the middleware in your application::
@@ -46,10 +54,10 @@ legibility, we recommend using a reasonable human-readable string::
     # CORS Configuration for horizon, which uses global options.
     allowed_origin=https://horizon.example.com:443
 
-    [cors.dashboard]
-    # CORS Configuration for a hypothetical dashboard, which only permits
-    # HTTP GET requests.
-    allowed_origin=https://dashboard.example.com:443
+    [cors.wildcard]
+    # CORS Configuration for the CORS specified domain wildcard, which only
+    # permits HTTP GET requests.
+    allowed_origin=*
     allow_methods=GET
 
 
