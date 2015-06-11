@@ -15,6 +15,7 @@
 # Default allowed headers
 import copy
 import logging
+
 from oslo_config import cfg
 from oslo_middleware import base
 import webob.dec
@@ -116,19 +117,19 @@ class CORS(base.Middleware):
 
                 self.allowed_origins[allowed_origin] = conf[section]
 
-    @webob.dec.wsgify
-    def __call__(self, req):
-        # If it's an OPTIONS request, handle it immediately. Otherwise,
-        # pass it through to the application.
+    def process_request(self, req):
+        '''If we detect an OPTIONS request, handle it immediately.'''
         if req.method == 'OPTIONS':
             resp = webob.response.Response(status=webob.exc.HTTPOk.code)
             self._apply_cors_preflight_headers(request=req, response=resp)
-        else:
-            resp = req.get_response(self.application)
-            self._apply_cors_request_headers(request=req, response=resp)
+            return resp
+
+    def process_response(self, response, request=None):
+        '''Detect CORS headers on the request, and decorate the response.'''
+        self._apply_cors_request_headers(request=request, response=response)
 
         # Finally, return the response.
-        return resp
+        return response
 
     def _split_header_values(self, request, header_name):
         """Convert a comma-separated header value into a list of values."""
