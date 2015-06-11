@@ -22,6 +22,7 @@ import copy
 
 from oslo_middleware import cors
 from oslo_middleware import sizelimit
+from oslo_middleware import ssl
 
 
 def list_opts():
@@ -44,7 +45,7 @@ def list_opts():
     :returns: a list of (group_name, opts) tuples
     """
     return [
-        ('oslo_middleware', copy.deepcopy(sizelimit._opts)),
+        ('oslo_middleware', copy.deepcopy(sizelimit._opts + ssl.OPTS)),
         ('cors', copy.deepcopy(cors.CORS_OPTS)),
         ('cors.subdomain', copy.deepcopy(cors.CORS_OPTS))
     ]
