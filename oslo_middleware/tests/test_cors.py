@@ -17,8 +17,30 @@ from oslo_config import fixture
 from oslotest import base as test_base
 import webob
 import webob.dec
+import webob.exc as exc
 
 from oslo_middleware import cors
+
+
+@webob.dec.wsgify
+def test_application(req):
+    if req.path_info == '/server_cors':
+        # Mirror back the origin in the request.
+        response = webob.Response(status=200)
+        response.headers['Access-Control-Allow-Origin'] = \
+            req.headers['Origin']
+        response.headers['X-Server-Generated-Response'] = '1'
+        return response
+
+    if req.path_info == '/server_no_cors':
+        # Send a response with no CORS headers.
+        response = webob.Response(status=200)
+        return response
+
+    if req.method == 'OPTIONS':
+        raise exc.HTTPNotFound()
+
+    return 'Hello World'
 
 
 class CORSTestBase(test_base.BaseTestCase):
@@ -102,10 +124,6 @@ class CORSRegularRequestTest(CORSTestBase):
         """Setup the tests."""
         super(CORSRegularRequestTest, self).setUp()
 
-        @webob.dec.wsgify
-        def application(req):
-            return 'Hello, World!!!'
-
         # Set up the config fixture.
         config = self.useFixture(fixture.Config(cfg.CONF))
 
@@ -138,7 +156,7 @@ class CORSRegularRequestTest(CORSTestBase):
                                allow_methods='GET,PUT,POST,DELETE,HEAD')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(application, cfg.CONF)
+        self.application = cors.CORS(test_application, cfg.CONF)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
@@ -205,8 +223,7 @@ class CORSRegularRequestTest(CORSTestBase):
         request is outside the scope of this specification.
         """
         for method in self.methods:
-            request = webob.Request({})
-            request.method = method
+            request = webob.Request.blank('/')
             response = request.get_response(self.application)
             self.assertCORSResponse(response,
                                     status='200 OK',
@@ -227,7 +244,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Test valid origin header.
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://valid.example.com'
             response = request.get_response(self.application)
@@ -242,7 +259,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Test origin header not present in configuration.
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://invalid.example.com'
             response = request.get_response(self.application)
@@ -257,7 +274,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Test valid, but case-mismatched origin header.
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://VALID.EXAMPLE.COM'
             response = request.get_response(self.application)
@@ -285,7 +302,7 @@ class CORSRegularRequestTest(CORSTestBase):
         """
         # Test valid origin header without credentials.
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://valid.example.com'
             response = request.get_response(self.application)
@@ -300,7 +317,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Test valid origin header with credentials
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://creds.example.com'
             response = request.get_response(self.application)
@@ -321,7 +338,7 @@ class CORSRegularRequestTest(CORSTestBase):
         names given in the list of exposed headers.
         """
         for method in self.methods:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = method
             request.headers['Origin'] = 'http://headers.example.com'
             response = request.get_response(self.application)
@@ -334,6 +351,29 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_credentials=None,
                                     expose_headers='X-Header-1,X-Header-2')
 
+    def test_application_options_response(self):
+        """Assert that an application provided OPTIONS response is honored.
+
+        If the underlying application, via middleware or other, provides a
+        CORS response, its response should be honored.
+        """
+        test_origin = 'http://creds.example.com'
+
+        request = webob.Request.blank('/server_cors')
+        request.method = "GET"
+        request.headers['Origin'] = test_origin
+        request.headers['Access-Control-Request-Method'] = 'GET'
+
+        response = request.get_response(self.application)
+
+        # If the regular CORS handling catches this request, it should set
+        # the allow credentials header. This makes sure that it doesn't.
+        self.assertNotIn('Access-Control-Allow-Credentials', response.headers)
+        self.assertEqual(response.headers['Access-Control-Allow-Origin'],
+                         test_origin)
+        self.assertEqual(response.headers['X-Server-Generated-Response'],
+                         '1')
+
 
 class CORSPreflightRequestTest(CORSTestBase):
     """CORS Specification Section 6.2
@@ -343,10 +383,6 @@ class CORSPreflightRequestTest(CORSTestBase):
 
     def setUp(self):
         super(CORSPreflightRequestTest, self).setUp()
-
-        @webob.dec.wsgify
-        def application(req):
-            return 'Hello, World!!!'
 
         # Set up the config fixture.
         config = self.useFixture(fixture.Config(cfg.CONF))
@@ -380,7 +416,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                allow_methods='GET,PUT,POST,DELETE,HEAD')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(application, cfg.CONF)
+        self.application = cors.CORS(test_application, cfg.CONF)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
@@ -446,7 +482,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         If the Origin header is not present terminate this set of steps. The
         request is outside the scope of this specification.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         response = request.get_response(self.application)
         self.assertCORSResponse(response,
@@ -467,7 +503,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         """
 
         # Test valid domain
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://valid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -482,7 +518,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 expose_headers=None)
 
         # Test invalid domain
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://invalid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -497,7 +533,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 expose_headers=None)
 
         # Test case-sensitive mismatch domain
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://VALID.EXAMPLE.COM'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -520,7 +556,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         """
 
         # Test valid domain, valid method.
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://get.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -535,7 +571,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 expose_headers=None)
 
         # Test valid domain, invalid HTTP method.
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://valid.example.com'
         request.headers['Access-Control-Request-Method'] = 'TEAPOT'
@@ -550,7 +586,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 expose_headers=None)
 
         # Test valid domain, no HTTP method.
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://valid.example.com'
         response = request.get_response(self.application)
@@ -570,7 +606,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         list of methods do not set any additional headers and terminate this
         set of steps.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://get.example.com'
         request.headers['Access-Control-Request-Method'] = 'get'
@@ -594,7 +630,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         this set of steps. The request is outside the scope of this
         specification.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -615,7 +651,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         If there are no Access-Control-Request-Headers headers let header
         field-names be the empty list.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -639,7 +675,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         If there are no Access-Control-Request-Headers headers let header
         field-names be the empty list.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -665,7 +701,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         match for any of the values in list of headers do not set any
         additional headers and terminate this set of steps.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -694,7 +730,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         NOTE: We never use the "*" as origin.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://creds.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -715,7 +751,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         the amount of seconds the user agent is allowed to cache the result of
         the request.
         """
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://cached.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -740,7 +776,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         enough.
         """
         for method in ['GET', 'PUT', 'POST', 'DELETE']:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = "OPTIONS"
             request.headers['Origin'] = 'http://all.example.com'
             request.headers['Access-Control-Request-Method'] = method
@@ -755,7 +791,7 @@ class CORSPreflightRequestTest(CORSTestBase):
                                     expose_headers=None)
 
         for method in ['PUT', 'POST', 'DELETE']:
-            request = webob.Request({})
+            request = webob.Request.blank('/')
             request.method = "OPTIONS"
             request.headers['Origin'] = 'http://get.example.com'
             request.headers['Access-Control-Request-Method'] = method
@@ -786,7 +822,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         requested_headers = 'Content-Type,X-Header-1,Cache-Control,Expires,' \
                             'Last-Modified,Pragma'
 
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -801,16 +837,51 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 allow_credentials=None,
                                 expose_headers=None)
 
+    def test_application_options_response(self):
+        """Assert that an application provided OPTIONS response is honored.
+
+        If the underlying application, via middleware or other, provides a
+        CORS response, its response should be honored.
+        """
+        test_origin = 'http://creds.example.com'
+
+        request = webob.Request.blank('/server_cors')
+        request.method = "OPTIONS"
+        request.headers['Origin'] = test_origin
+        request.headers['Access-Control-Request-Method'] = 'GET'
+
+        response = request.get_response(self.application)
+
+        # If the regular CORS handling catches this request, it should set
+        # the allow credentials header. This makes sure that it doesn't.
+        self.assertNotIn('Access-Control-Allow-Credentials', response.headers)
+        self.assertEqual(response.headers['Access-Control-Allow-Origin'],
+                         test_origin)
+        self.assertEqual(response.headers['X-Server-Generated-Response'],
+                         '1')
+
+        # If the application returns an OPTIONS response without CORS
+        # headers, assert that we apply headers.
+        request = webob.Request.blank('/server_no_cors')
+        request.method = "OPTIONS"
+        request.headers['Origin'] = 'http://get.example.com'
+        request.headers['Access-Control-Request-Method'] = 'GET'
+        response = request.get_response(self.application)
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://get.example.com',
+                                max_age=None,
+                                allow_methods='GET',
+                                allow_headers=None,
+                                allow_credentials=None,
+                                expose_headers=None)
+
 
 class CORSTestWildcard(CORSTestBase):
     """Test the CORS wildcard specification."""
 
     def setUp(self):
         super(CORSTestWildcard, self).setUp()
-
-        @webob.dec.wsgify
-        def application(req):
-            return 'Hello, World!!!'
 
         # Set up the config fixture.
         config = self.useFixture(fixture.Config(cfg.CONF))
@@ -828,7 +899,7 @@ class CORSTestWildcard(CORSTestBase):
                                allow_methods='GET')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(application, cfg.CONF)
+        self.application = cors.CORS(test_application, cfg.CONF)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
@@ -861,7 +932,7 @@ class CORSTestWildcard(CORSTestBase):
         """
 
         # Test valid domain
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://default.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
@@ -876,7 +947,7 @@ class CORSTestWildcard(CORSTestBase):
                                 expose_headers=None)
 
         # Test invalid domain
-        request = webob.Request({})
+        request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://invalid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'

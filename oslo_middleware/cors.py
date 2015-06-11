@@ -117,15 +117,29 @@ class CORS(base.Middleware):
 
                 self.allowed_origins[allowed_origin] = conf[section]
 
-    def process_request(self, req):
-        '''If we detect an OPTIONS request, handle it immediately.'''
-        if req.method == 'OPTIONS':
-            resp = webob.response.Response(status=webob.exc.HTTPOk.code)
-            self._apply_cors_preflight_headers(request=req, response=resp)
-            return resp
-
     def process_response(self, response, request=None):
-        '''Detect CORS headers on the request, and decorate the response.'''
+        '''Check for CORS headers, and decorate if necessary.
+
+        Perform two checks. First, if an OPTIONS request was issued, let the
+        application handle it, and (if necessary) decorate the response with
+        preflight headers. In this case, if a 404 is thrown by the underlying
+        application (i.e. if the underlying application does not handle
+        OPTIONS requests, the response code is overridden.
+
+        In the case of all other requests, regular request headers are applied.
+        '''
+
+        # Sanity precheck: If we detect CORS headers provided by something in
+        # in the middleware chain, assume that it knows better.
+        if 'Access-Control-Allow-Origin' in response.headers:
+            return response
+
+        # Doublecheck for an OPTIONS request.
+        if request.method == 'OPTIONS':
+            return self._apply_cors_preflight_headers(request=request,
+                                                      response=response)
+
+        # Apply regular CORS headers.
         self._apply_cors_request_headers(request=request, response=response)
 
         # Finally, return the response.
@@ -148,9 +162,15 @@ class CORS(base.Middleware):
         appropriate for the request.
         """
 
+        # If the response contains a 2XX code, we have to assume that the
+        # underlying middleware's response content needs to be persisted.
+        # Otherwise, create a new response.
+        if 200 > response.status_code or response.status_code >= 300:
+            response = webob.response.Response(status=webob.exc.HTTPOk.code)
+
         # Does the request have an origin header? (Section 6.2.1)
         if 'Origin' not in request.headers:
-            return
+            return response
 
         # Is this origin registered? (Section 6.2.2)
         origin = request.headers['Origin']
@@ -160,12 +180,12 @@ class CORS(base.Middleware):
             else:
                 LOG.debug('CORS request from origin \'%s\' not permitted.'
                           % (origin,))
-                return
+                return response
         cors_config = self.allowed_origins[origin]
 
         # If there's no request method, exit. (Section 6.2.3)
         if 'Access-Control-Request-Method' not in request.headers:
-            return
+            return response
         request_method = request.headers['Access-Control-Request-Method']
 
         # Extract Request headers. If parsing fails, exit. (Section 6.2.4)
@@ -175,11 +195,11 @@ class CORS(base.Middleware):
                                           'Access-Control-Request-Headers')
         except Exception:
             LOG.debug('Cannot parse request headers.')
-            return
+            return response
 
         # Compare request method to permitted methods (Section 6.2.5)
         if request_method not in cors_config.allow_methods:
-            return
+            return response
 
         # Compare request headers to permitted headers, case-insensitively.
         # (Section 6.2.6)
@@ -188,7 +208,7 @@ class CORS(base.Middleware):
             permitted_headers = cors_config.allow_headers + self.simple_headers
             if upper_header not in (header.upper() for header in
                                     permitted_headers):
-                return
+                return response
 
         # Set the default origin permission headers. (Sections 6.2.7, 6.4)
         response.headers['Vary'] = 'Origin'
@@ -210,6 +230,8 @@ class CORS(base.Middleware):
         if request_headers:
             response.headers['Access-Control-Allow-Headers'] = \
                 ','.join(request_headers)
+
+        return response
 
     def _apply_cors_request_headers(self, request, response):
         """Handle Basic CORS Request (Section 6.1)
