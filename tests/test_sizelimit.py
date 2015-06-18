@@ -16,8 +16,8 @@ from oslotest import base as test_base
 import six
 import webob
 
-from oslo.config import fixture as config
 from oslo.middleware import sizelimit
+from oslo_config import fixture as config
 
 
 class TestLimitingReader(test_base.BaseTestCase):
