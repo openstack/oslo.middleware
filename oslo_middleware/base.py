@@ -15,6 +15,7 @@
 
 """Base class(es) for WSGI Middleware."""
 
+from inspect import getargspec
 import webob.dec
 
 
@@ -43,7 +44,7 @@ class Middleware(object):
         """
         return None
 
-    def process_response(self, response):
+    def process_response(self, response, request=None):
         """Do whatever you'd like to the response."""
         return response
 
@@ -53,4 +54,8 @@ class Middleware(object):
         if response:
             return response
         response = req.get_response(self.application)
+
+        (args, varargs, varkw, defaults) = getargspec(self.process_response)
+        if 'request' in args:
+            return self.process_response(response, request=req)
         return self.process_response(response)
