@@ -19,12 +19,34 @@ Quickstart
 First, include the middleware in your application::
 
     from oslo_middleware import cors
+
+    app = cors.CORS(your_wsgi_application)
+
+Secondly, add as many allowed origins as you would like::
+
+    app.add_origin(allowed_origin='https://website.example.com:443',
+                   allow_credentials=True,
+                   max_age=3600,
+                   allow_methods=['GET','PUT','POST','DELETE'],
+                   allow_headers=['X-Custom-Header'],
+                   expose_headers=['X-Custom-Header'])
+
+    # ... add more origins here.
+
+
+Configuration for oslo_config
+-----------------------------
+
+A factory method has been provided to simplify configuration of your CORS
+domain, using oslo_config::
+
+    from oslo_middleware import cors
     from oslo_config import cfg
 
     app = cors.CORS(your_wsgi_application, cfg.CONF)
 
-Secondly, add a global [cors] configuration block to the configuration file
-read by oslo.config::
+In your application's config file, then include a default configuration block
+something like this::
 
     [cors]
     allowed_origin=https://website.example.com:443
@@ -33,15 +55,11 @@ read by oslo.config::
     allow_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
     expose_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
 
-Advanced Configuration
-----------------------
-CORS Middleware permits you to define multiple `allowed_origin`'s, and to
-selectively override the global configuration for each. To accomplish this,
-first follow the setup instructions in the Quickstart above.
-
-Then, create an new configuration group for each domain that you'd like to
-extend. Each of these configuration groups must be named `[cors.something]`,
-with each name being unique. The purpose of the suffix to `cors.` is
+This middleware permits you to define multiple `allowed_origin`'s. To express
+this in your configuration file, first begin with a `[cors]` group as above,
+into which you place your default configuration values. Then add as many
+additional configuration groups as necessary, naming them `[cors.something]`
+(each name must be unique). The purpose of the suffix to `cors.` is
 legibility, we recommend using a reasonable human-readable string::
 
     [cors.ironic_webclient]
@@ -59,6 +77,21 @@ legibility, we recommend using a reasonable human-readable string::
     # permits HTTP GET requests.
     allowed_origin=*
     allow_methods=GET
+
+
+Configuration for pastedeploy
+-----------------------------
+
+If your application is using pastedeploy, the following configuration block
+will add CORS support. To add multiple domains, simply add another filter.::
+
+    [filter:cors]
+    paste.filter_factory = oslo_middleware.cors:filter_factory
+    allowed_origin=https://website.example.com:443
+    max_age=3600
+    allow_methods=GET,POST,PUT,DELETE
+    allow_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
+    expose_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
 
 
 Module Documentation

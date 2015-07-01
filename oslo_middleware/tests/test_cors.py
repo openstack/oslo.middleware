@@ -111,6 +111,42 @@ class CORSTestBase(test_base.BaseTestCase):
             self.assertNotIn(header, response.headers)
 
 
+class CORSTestFilterFactory(test_base.BaseTestCase):
+    """Test the CORS filter_factory method."""
+
+    def test_filter_factory(self):
+        # Test a valid filter.
+        filter = cors.filter_factory(None,
+                                     allowed_origin='http://valid.example.com',
+                                     allow_credentials='False',
+                                     max_age='',
+                                     expose_headers='',
+                                     allow_methods='GET',
+                                     allow_headers='')
+        application = filter(test_application)
+
+        self.assertIn('http://valid.example.com', application.allowed_origins)
+
+        config = application.allowed_origins['http://valid.example.com']
+        self.assertEqual('False', config['allow_credentials'])
+        self.assertEqual('', config['max_age'])
+        self.assertEqual('', config['expose_headers'])
+        self.assertEqual('GET', config['allow_methods'])
+        self.assertEqual('', config['allow_headers'])
+
+    def test_no_origin_fail(self):
+        '''Assert that a filter factory with no allowed_origin fails.'''
+        self.assertRaises(TypeError,
+                          cors.filter_factory,
+                          global_conf=None,
+                          # allowed_origin=None,  # Expected value.
+                          allow_credentials='False',
+                          max_age='',
+                          expose_headers='',
+                          allow_methods='GET',
+                          allow_headers='')
+
+
 class CORSRegularRequestTest(CORSTestBase):
     """CORS Specification Section 6.1
 
