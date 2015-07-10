@@ -51,14 +51,17 @@ class HealthcheckTests(test_base.BaseTestCase):
         conf = {'path': '/hidden_healthcheck'}
         self._do_test(conf, path='/toto', expected_body=b'Hello, World!!!')
 
-    @mock.patch('logging.warn')
-    def test_disablefile_unconfigured(self, fake_warn):
+    @mock.patch('oslo_middleware.healthcheck.disable_by_file.LOG')
+    def test_disablefile_unconfigured(self, fake_log):
+        fake_warn = fake_log.warning
         conf = {'backends': 'disable_by_file'}
         self._do_test(conf, expected_body=b'OK')
         self.assertIn('disable_by_file', self.app._backends.names())
-        fake_warn.assert_called_once('DisableByFile healthcheck middleware '
-                                     'enabled without disable_by_file_path '
-                                     'set')
+        fake_warn.assert_called_once_with(
+            'DisableByFile healthcheck middleware '
+            'enabled without disable_by_file_path '
+            'set'
+        )
 
     def test_disablefile_enabled(self):
         conf = {'backends': 'disable_by_file',
