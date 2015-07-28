@@ -241,6 +241,8 @@ class CORS(base.Middleware):
 
         # If there's no request method, exit. (Section 6.2.3)
         if 'Access-Control-Request-Method' not in request.headers:
+            LOG.debug('CORS request does not contain '
+                      'Access-Control-Request-Method header.')
             return response
         request_method = request.headers['Access-Control-Request-Method']
 
@@ -255,6 +257,8 @@ class CORS(base.Middleware):
 
         # Compare request method to permitted methods (Section 6.2.5)
         if request_method not in cors_config['allow_methods']:
+            LOG.debug('Request method \'%s\' not in permitted list: %s'
+                      % (request_method, cors_config['allow_methods']))
             return response
 
         # Compare request headers to permitted headers, case-insensitively.
@@ -265,6 +269,8 @@ class CORS(base.Middleware):
                                  self.simple_headers)
             if upper_header not in (header.upper() for header in
                                     permitted_headers):
+                LOG.debug('Request header \'%s\' not in permitted list: %s'
+                          % (requested_header, permitted_headers))
                 return response
 
         # Set the default origin permission headers. (Sections 6.2.7, 6.4)
