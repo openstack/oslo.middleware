@@ -999,3 +999,113 @@ class CORSTestWildcard(CORSTestBase):
                                 allow_headers='',
                                 allow_credentials='true',
                                 expose_headers=None)
+
+
+class CORSTestLatentProperties(CORSTestBase):
+    """Test the CORS wildcard specification."""
+
+    def setUp(self):
+        super(CORSTestLatentProperties, self).setUp()
+
+        # Set up the config fixture.
+        config = self.useFixture(fixture.Config(cfg.CONF))
+
+        config.load_raw_values(group='cors',
+                               allowed_origin='http://default.example.com',
+                               allow_credentials='True',
+                               max_age='',
+                               expose_headers='X-Configured',
+                               allow_methods='GET',
+                               allow_headers='X-Configured')
+
+        # Now that the config is set up, create our application.
+        self.application = cors.CORS(test_application, cfg.CONF)
+
+    def test_latent_methods(self):
+        """Assert that latent HTTP methods are permitted."""
+
+        self.application.set_latent(allow_headers=None,
+                                    expose_headers=None,
+                                    allow_methods=['POST'])
+
+        request = webob.Request.blank('/')
+        request.method = "OPTIONS"
+        request.headers['Origin'] = 'http://default.example.com'
+        request.headers['Access-Control-Request-Method'] = 'POST'
+        response = request.get_response(self.application)
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://default.example.com',
+                                max_age=None,
+                                allow_methods='POST',
+                                allow_headers='',
+                                allow_credentials='true',
+                                expose_headers=None)
+
+    def test_invalid_latent_methods(self):
+        """Assert that passing a non-list is caught."""
+
+        self.assertRaises(TypeError,
+                          self.application.set_latent,
+                          allow_methods='POST')
+
+    def test_latent_allow_headers(self):
+        """Assert that latent HTTP headers are permitted."""
+
+        self.application.set_latent(allow_headers=['X-Latent'],
+                                    expose_headers=None,
+                                    allow_methods=None)
+
+        request = webob.Request.blank('/')
+        request.method = "OPTIONS"
+        request.headers['Origin'] = 'http://default.example.com'
+        request.headers['Access-Control-Request-Method'] = 'GET'
+        request.headers[
+            'Access-Control-Request-Headers'] = 'X-Latent,X-Configured'
+        response = request.get_response(self.application)
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://default.example.com',
+                                max_age=None,
+                                allow_methods='GET',
+                                allow_headers='X-Latent,X-Configured',
+                                allow_credentials='true',
+                                expose_headers=None)
+
+    def test_invalid_latent_allow_headers(self):
+        """Assert that passing a non-list is caught in allow headers."""
+
+        self.assertRaises(TypeError,
+                          self.application.set_latent,
+                          allow_headers='X-Latent')
+
+    def test_latent_expose_headers(self):
+        """Assert that latent HTTP headers are exposed."""
+
+        self.application.set_latent(allow_headers=None,
+                                    expose_headers=[
+                                        'X-Server-Generated-Response'],
+                                    allow_methods=None)
+
+        request = webob.Request.blank('/')
+        request.method = "GET"
+        request.headers['Origin'] = 'http://default.example.com'
+        response = request.get_response(self.application)
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://default.example.com',
+                                max_age=None,
+                                allow_methods=None,
+                                allow_headers=None,
+                                allow_credentials='true',
+                                expose_headers='X-Configured,'
+                                               'X-Server-Generated-Response')
+
+    def test_invalid_latent_expose_headers(self):
+        """Assert that passing a non-list is caught in expose headers."""
+
+        # Add headers to the application.
+
+        self.assertRaises(TypeError,
+                          self.application.set_latent,
+                          expose_headers='X-Latent')

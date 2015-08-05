@@ -78,6 +78,17 @@ legibility, we recommend using a reasonable human-readable string::
     allowed_origin=*
     allow_methods=GET
 
+If your software requires specific headers or methods for proper operation, you
+may include these as latent properties. These will be evaluated in addition
+to any found in configuration::
+
+    from oslo_middleware import cors
+
+    app = cors.CORS(your_wsgi_application)
+    app.set_latent(allow_headers=['X-System-Header'],
+                   expose_headers=['X-System-Header'],
+                   allow_methods=['GET','PATCH'])
+
 
 Configuration for pastedeploy
 -----------------------------

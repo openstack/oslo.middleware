@@ -98,6 +98,13 @@ class CORS(base.Middleware):
     def _init_conf(self):
         '''Initialize this middleware from an oslo.config instance.'''
 
+        # Set up a location for our latent configuration options
+        self.latent_configuration = {
+            'allow_headers': [],
+            'expose_headers': [],
+            'methods': []
+        }
+
         # First, check the configuration and register global options.
         self.oslo_conf.register_opts(CORS_OPTS, 'cors')
 
@@ -164,6 +171,39 @@ class CORS(base.Middleware):
             'allow_methods': allow_methods,
             'allow_headers': allow_headers
         }
+
+    def set_latent(self, allow_headers=None, allow_methods=None,
+                   expose_headers=None):
+        '''Add a new latent property for this middleware.
+
+        Latent properties are those values which a system requires for
+        operation. API-specific headers, for example, may be added by an
+        engineer so that they ship with the codebase, and thus do not require
+        extra documentation or passing of institutional knowledge.
+
+        :param allow_headers: HTTP headers permitted in client requests.
+        :param allow_methods: HTTP methods permitted in client requests.
+        :param expose_headers: HTTP Headers exposed to clients.
+        '''
+
+        if allow_headers:
+            if isinstance(allow_headers, list):
+                self.latent_configuration['allow_headers'] = allow_headers
+            else:
+                raise TypeError("allow_headers must be a list or None.")
+
+        if expose_headers:
+            if isinstance(expose_headers, list):
+                self.latent_configuration['expose_headers'] = expose_headers
+            else:
+                raise TypeError("expose_headers must be a list or None.")
+
+        if allow_methods:
+            if isinstance(allow_methods, list):
+                self.latent_configuration['methods'] = allow_methods
+            else:
+                raise TypeError("allow_methods parameter must be a list or"
+                                " None.")
 
     def process_response(self, response, request=None):
         '''Check for CORS headers, and decorate if necessary.
@@ -249,19 +289,23 @@ class CORS(base.Middleware):
             return response
 
         # Compare request method to permitted methods (Section 6.2.5)
-        if request_method not in cors_config['allow_methods']:
+        permitted_methods = (
+            cors_config['allow_methods'] + self.latent_configuration['methods']
+        )
+        if request_method not in permitted_methods:
             LOG.debug('Request method \'%s\' not in permitted list: %s'
-                      % (request_method, cors_config['allow_methods']))
+                      % (request_method, permitted_methods))
             return response
 
         # Compare request headers to permitted headers, case-insensitively.
         # (Section 6.2.6)
+        permitted_headers = [header.upper() for header in
+                             (cors_config['allow_headers'] +
+                              self.simple_headers +
+                              self.latent_configuration['allow_headers'])]
         for requested_header in request_headers:
             upper_header = requested_header.upper()
-            permitted_headers = (cors_config['allow_headers'] +
-                                 self.simple_headers)
-            if upper_header not in (header.upper() for header in
-                                    permitted_headers):
+            if upper_header not in permitted_headers:
                 LOG.debug('Request header \'%s\' not in permitted list: %s'
                           % (requested_header, permitted_headers))
                 return response
@@ -319,8 +363,8 @@ class CORS(base.Middleware):
         # Attach the exposed headers and exit. (Section 6.1.4)
         if cors_config['expose_headers']:
             response.headers['Access-Control-Expose-Headers'] = \
-                ','.join(cors_config['expose_headers'])
-
+                ','.join(cors_config['expose_headers'] +
+                         self.latent_configuration['expose_headers'])
 
 # NOTE(sileht): Shortcut for backwards compatibility
 filter_factory = CORS.factory
