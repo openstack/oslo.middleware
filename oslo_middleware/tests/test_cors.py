@@ -131,11 +131,11 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         self.assertIn('http://valid.example.com', application.allowed_origins)
 
         config = application.allowed_origins['http://valid.example.com']
-        self.assertEqual('False', config['allow_credentials'])
-        self.assertEqual('', config['max_age'])
-        self.assertEqual('', config['expose_headers'])
-        self.assertEqual('GET', config['allow_methods'])
-        self.assertEqual('', config['allow_headers'])
+        self.assertEqual(False, config['allow_credentials'])
+        self.assertEqual(None, config['max_age'])
+        self.assertEqual([], config['expose_headers'])
+        self.assertEqual(['GET'], config['allow_methods'])
+        self.assertEqual([], config['allow_headers'])
 
     def test_no_origin_fail(self):
         '''Assert that a filter factory with no allowed_origin fails.'''

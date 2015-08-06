@@ -10,4 +10,5 @@ Contents
    api
    healthcheck_plugins
    cors
+   oslo_config
    contributing

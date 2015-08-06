@@ -37,7 +37,7 @@ class SSLMiddleware(base.Middleware):
 
     def process_request(self, req):
         self.header_name = 'HTTP_{0}'.format(
-            self.oslo_conf.oslo_middleware.secure_proxy_ssl_header.upper()
+            self._conf_get('secure_proxy_ssl_header').upper()
             .replace('-', '_'))
         req.environ['wsgi.url_scheme'] = req.environ.get(
             self.header_name, req.environ['wsgi.url_scheme'])

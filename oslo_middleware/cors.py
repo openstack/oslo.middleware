@@ -76,19 +76,11 @@ class CORS(base.Middleware):
         super(CORS, self).__init__(application, conf)
         # Begin constructing our configuration hash.
         self.allowed_origins = {}
-
-        self._init_from_oslo(self.oslo_conf)
-        self._init_from_conf()
+        self._init_conf()
 
     @classmethod
     def factory(cls, global_conf, allowed_origin, **local_conf):
-        # Ensures allowed_origin config exists
-        return super(CORS, cls).factory(global_conf,
-                                        allowed_origin=allowed_origin,
-                                        **local_conf)
-
-    def _init_from_conf(self):
-        """Load configuration from paste.deploy
+        """factory method for paste.deploy
 
         allowed_origin: Protocol, host, and port for the allowed origin.
         allow_credentials: Whether to permit credentials.
@@ -98,20 +90,23 @@ class CORS(base.Middleware):
         allow_headers: List of HTTP headers to permit from the client.
         """
 
-        if 'allowed_origin' in self.conf:
-            self.add_origin(
-                allowed_origin=self.conf['allowed_origin'],
-                allow_credentials=self.conf.get('allow_credentials', True),
-                expose_headers=self.conf.get('expose_headers'),
-                max_age=self.conf.get('max_age'),
-                allow_methods=self.conf.get('allow_methods'),
-                allow_headers=self.conf.get('allow_headers'))
+        # Ensures allowed_origin config exists
+        return super(CORS, cls).factory(global_conf,
+                                        allowed_origin=allowed_origin,
+                                        **local_conf)
 
-    def _init_from_oslo(self, conf):
+    def _init_conf(self):
         '''Initialize this middleware from an oslo.config instance.'''
 
         # First, check the configuration and register global options.
-        conf.register_opts(CORS_OPTS, 'cors')
+        self.oslo_conf.register_opts(CORS_OPTS, 'cors')
+
+        allowed_origin = self._conf_get('allowed_origin', 'cors')
+        allow_credentials = self._conf_get('allow_credentials', 'cors')
+        expose_headers = self._conf_get('expose_headers', 'cors')
+        max_age = self._conf_get('max_age', 'cors')
+        allow_methods = self._conf_get('allow_methods', 'cors')
+        allow_headers = self._conf_get('allow_headers', 'cors')
 
         # Clone our original CORS_OPTS, and set the defaults to whatever is
         # set in the global conf instance. This is done explicitly (instead
@@ -119,24 +114,29 @@ class CORS(base.Middleware):
         # allowed_origin.
         subgroup_opts = copy.deepcopy(CORS_OPTS)
         cfg.set_defaults(subgroup_opts,
-                         allow_credentials=conf.cors.allow_credentials,
-                         expose_headers=conf.cors.expose_headers,
-                         max_age=conf.cors.max_age,
-                         allow_methods=conf.cors.allow_methods,
-                         allow_headers=conf.cors.allow_headers)
+                         allow_credentials=allow_credentials,
+                         expose_headers=expose_headers,
+                         max_age=max_age,
+                         allow_methods=allow_methods,
+                         allow_headers=allow_headers)
 
         # If the default configuration contains an allowed_origin, don't
         # forget to register that.
-        if conf.cors.allowed_origin:
-            self.add_origin(**conf.cors)
+        if allowed_origin:
+            self.add_origin(allowed_origin=allowed_origin,
+                            allow_credentials=allow_credentials,
+                            expose_headers=expose_headers,
+                            max_age=max_age,
+                            allow_methods=allow_methods,
+                            allow_headers=allow_headers)
 
         # Iterate through all the loaded config sections, looking for ones
         # prefixed with 'cors.'
-        for section in conf.list_all_sections():
+        for section in self.oslo_conf.list_all_sections():
             if section.startswith('cors.'):
                 # Register with the preconstructed defaults
-                conf.register_opts(subgroup_opts, section)
-                self.add_origin(**conf[section])
+                self.oslo_conf.register_opts(subgroup_opts, section)
+                self.add_origin(**self.oslo_conf[section])
 
     def add_origin(self, allowed_origin, allow_credentials=True,
                    expose_headers=None, max_age=None, allow_methods=None,

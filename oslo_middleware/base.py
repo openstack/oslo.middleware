@@ -63,6 +63,13 @@ class Middleware(object):
                 # Fallback to global object
                 self.oslo_conf = cfg.CONF
 
+    def _conf_get(self, key, group="oslo_middleware"):
+        if key in self.conf:
+            # Validate value type
+            self.oslo_conf.set_override(key, self.conf[key], group=group,
+                                        enforce_type=True)
+        return getattr(getattr(self.oslo_conf, group), key)
+
     def process_request(self, req):
         """Called on each request.
 

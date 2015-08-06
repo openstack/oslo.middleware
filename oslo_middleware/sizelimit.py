@@ -84,7 +84,7 @@ class RequestBodySizeLimiter(base.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        max_size = self.oslo_conf.oslo_middleware.max_request_body_size
+        max_size = self._conf_get('max_request_body_size')
         if (req.content_length is not None and
                 req.content_length > max_size):
             msg = _("Request is too large.")
