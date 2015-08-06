@@ -54,38 +54,6 @@ CORS_OPTS = [
 ]
 
 
-def filter_factory(global_conf,
-                   allowed_origin,
-                   allow_credentials=True,
-                   expose_headers=None,
-                   max_age=None,
-                   allow_methods=None,
-                   allow_headers=None):
-    '''Factory to support paste.deploy
-
-    :param global_conf: The paste.ini global configuration object (not used).
-    :param allowed_origin: Protocol, host, and port for the allowed origin.
-    :param allow_credentials: Whether to permit credentials.
-    :param expose_headers: A list of headers to expose.
-    :param max_age: Maximum cache duration.
-    :param allow_methods: List of HTTP methods to permit.
-    :param allow_headers: List of HTTP headers to permit from the client.
-    :return:
-    '''
-
-    def filter(app):
-        cors_app = CORS(app)
-        cors_app.add_origin(allowed_origin=allowed_origin,
-                            allow_credentials=allow_credentials,
-                            expose_headers=expose_headers,
-                            max_age=max_age,
-                            allow_methods=allow_methods,
-                            allow_headers=allow_headers)
-        return cors_app
-
-    return filter
-
-
 class CORS(base.Middleware):
     """CORS Middleware.
 
@@ -105,15 +73,39 @@ class CORS(base.Middleware):
     ]
 
     def __init__(self, application, conf=None):
-        super(CORS, self).__init__(application)
-
+        super(CORS, self).__init__(application, conf)
         # Begin constructing our configuration hash.
         self.allowed_origins = {}
 
-        # Sanity check. Do we have an oslo.config? If so, load it. Else, assume
-        # that we'll use add_config.
-        if conf:
-            self._init_from_oslo(conf)
+        self._init_from_oslo(self.oslo_conf)
+        self._init_from_conf()
+
+    @classmethod
+    def factory(cls, global_conf, allowed_origin, **local_conf):
+        # Ensures allowed_origin config exists
+        return super(CORS, cls).factory(global_conf,
+                                        allowed_origin=allowed_origin,
+                                        **local_conf)
+
+    def _init_from_conf(self):
+        """Load configuration from paste.deploy
+
+        allowed_origin: Protocol, host, and port for the allowed origin.
+        allow_credentials: Whether to permit credentials.
+        expose_headers: A list of headers to expose.
+        max_age: Maximum cache duration.
+        allow_methods: List of HTTP methods to permit.
+        allow_headers: List of HTTP headers to permit from the client.
+        """
+
+        if 'allowed_origin' in self.conf:
+            self.add_origin(
+                allowed_origin=self.conf['allowed_origin'],
+                allow_credentials=self.conf.get('allow_credentials', True),
+                expose_headers=self.conf.get('expose_headers'),
+                max_age=self.conf.get('max_age'),
+                allow_methods=self.conf.get('allow_methods'),
+                allow_headers=self.conf.get('allow_headers'))
 
     def _init_from_oslo(self, conf):
         '''Initialize this middleware from an oslo.config instance.'''
@@ -327,3 +319,7 @@ class CORS(base.Middleware):
         if cors_config['expose_headers']:
             response.headers['Access-Control-Expose-Headers'] = \
                 ','.join(cors_config['expose_headers'])
+
+
+# NOTE(sileht): Shortcut for backwards compatibility
+filter_factory = CORS.factory

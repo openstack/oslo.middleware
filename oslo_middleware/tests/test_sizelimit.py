@@ -78,15 +78,15 @@ class TestRequestBodySizeLimiter(test_base.BaseTestCase):
 
     def setUp(self):
         super(TestRequestBodySizeLimiter, self).setUp()
-        fixture = self.useFixture(config.Config(sizelimit.CONF))
-        self.MAX_REQUEST_BODY_SIZE = \
-            fixture.conf.oslo_middleware.max_request_body_size
+        self.useFixture(config.Config())
 
         @webob.dec.wsgify()
         def fake_app(req):
             return webob.Response(req.body)
 
         self.middleware = sizelimit.RequestBodySizeLimiter(fake_app)
+        self.MAX_REQUEST_BODY_SIZE = (
+            self.middleware.oslo_conf.oslo_middleware.max_request_body_size)
         self.request = webob.Request.blank('/', method='POST')
 
     def test_content_length_acceptable(self):

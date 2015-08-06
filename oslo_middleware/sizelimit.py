@@ -18,7 +18,6 @@ Request Body limiting middleware.
 """
 
 from oslo_config import cfg
-from oslo_config import cfgfilter
 import webob.dec
 import webob.exc
 
@@ -39,9 +38,6 @@ _opts = [
                     ' request, in bytes.',
                deprecated_opts=_oldopts)
 ]
-
-CONF = cfgfilter.ConfigFilter(cfg.CONF)
-CONF.register_opts(_opts, group='oslo_middleware')
 
 
 class LimitingReader(object):
@@ -82,9 +78,13 @@ class LimitingReader(object):
 class RequestBodySizeLimiter(base.Middleware):
     """Limit the size of incoming requests."""
 
+    def __init__(self, application, conf=None):
+        super(RequestBodySizeLimiter, self).__init__(application, conf)
+        self.oslo_conf.register_opts(_opts, group='oslo_middleware')
+
     @webob.dec.wsgify
     def __call__(self, req):
-        max_size = CONF.oslo_middleware.max_request_body_size
+        max_size = self.oslo_conf.oslo_middleware.max_request_body_size
         if (req.content_length is not None and
                 req.content_length > max_size):
             msg = _("Request is too large.")

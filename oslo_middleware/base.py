@@ -18,6 +18,8 @@
 from inspect import getargspec
 import webob.dec
 
+from oslo_config import cfg
+
 
 class Middleware(object):
     """Base WSGI middleware wrapper.
@@ -30,10 +32,36 @@ class Middleware(object):
     @classmethod
     def factory(cls, global_conf, **local_conf):
         """Factory method for paste.deploy."""
-        return cls
+        conf = global_conf.copy() if global_conf else {}
+        conf.update(local_conf)
 
-    def __init__(self, application):
+        def middleware_filter(app):
+            return cls(app, conf)
+
+        return middleware_filter
+
+    def __init__(self, application, conf=None):
         self.application = application
+        # NOTE(sileht): If the configuration come from oslo.config
+        # just use it.
+        if isinstance(conf, cfg.ConfigOpts):
+            self.conf = []
+            self.oslo_conf = conf
+        else:
+            self.conf = conf or []
+            if "oslo_config_project" in self.conf:
+                if 'oslo_config_file' in self.conf:
+                    default_config_files = [self.conf['oslo_config_file']]
+                else:
+                    default_config_files = None
+                self.oslo_conf = cfg.ConfigOpts()
+                self.oslo_conf([], project=self.conf['oslo_config_project'],
+                               default_config_files=default_config_files,
+                               validate_default_values=True)
+
+            else:
+                # Fallback to global object
+                self.oslo_conf = cfg.CONF
 
     def process_request(self, req):
         """Called on each request.

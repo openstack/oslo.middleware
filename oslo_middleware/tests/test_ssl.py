@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
 from oslo_config import fixture as config
 from oslotest import base
 import webob
@@ -27,8 +26,12 @@ class SSLMiddlewareTest(base.BaseTestCase):
         super(SSLMiddlewareTest, self).setUp()
         self.useFixture(config.Config())
 
-    def _test_scheme(self, expected, headers):
+    def _test_scheme(self, expected, headers, config=None):
         middleware = ssl.SSLMiddleware(None)
+        if config:
+            middleware.oslo_conf.set_override(
+                'secure_proxy_ssl_header', config,
+                group='oslo_middleware')
         request = webob.Request.blank('http://example.com/', headers=headers)
 
         # Ensure ssl middleware does not stop pipeline execution
@@ -44,13 +47,9 @@ class SSLMiddlewareTest(base.BaseTestCase):
         self._test_scheme('https', headers)
 
     def test_with_custom_header(self):
-        cfg.CONF.set_override('secure_proxy_ssl_header', 'X-My-Header',
-                              group='oslo_middleware')
         headers = {'X-Forwarded-Proto': 'https'}
-        self._test_scheme('http', headers)
+        self._test_scheme('http', headers, config='X-My-Header')
 
     def test_with_custom_header_and_forwarded_protocol(self):
-        cfg.CONF.set_override('secure_proxy_ssl_header', 'X-My-Header',
-                              group='oslo_middleware')
         headers = {'X-My-Header': 'https'}
-        self._test_scheme('https', headers)
+        self._test_scheme('https', headers, config='X-My-Header')
