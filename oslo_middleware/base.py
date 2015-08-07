@@ -35,7 +35,8 @@ class Middleware(object):
     def __init__(self, application):
         self.application = application
 
-    def process_request(self, req):
+    @staticmethod
+    def process_request(req):
         """Called on each request.
 
         If this returns None, the next application down the stack will be
@@ -44,7 +45,8 @@ class Middleware(object):
         """
         return None
 
-    def process_response(self, response, request=None):
+    @staticmethod
+    def process_response(response, request=None):
         """Do whatever you'd like to the response."""
         return response
 

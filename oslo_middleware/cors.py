@@ -201,7 +201,8 @@ class CORS(base.Middleware):
         # Finally, return the response.
         return response
 
-    def _split_header_values(self, request, header_name):
+    @staticmethod
+    def _split_header_values(request, header_name):
         """Convert a comma-separated header value into a list of values."""
         values = []
         if header_name in request.headers:
