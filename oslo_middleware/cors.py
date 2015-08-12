@@ -22,7 +22,6 @@ import webob.dec
 import webob.exc
 import webob.response
 
-
 LOG = logging.getLogger(__name__)
 
 CORS_OPTS = [
@@ -99,7 +98,7 @@ class CORS(base.Middleware):
         '''Initialize this middleware from an oslo.config instance.'''
 
         # Set up a location for our latent configuration options
-        self.latent_configuration = {
+        self._latent_configuration = {
             'allow_headers': [],
             'expose_headers': [],
             'methods': []
@@ -188,19 +187,19 @@ class CORS(base.Middleware):
 
         if allow_headers:
             if isinstance(allow_headers, list):
-                self.latent_configuration['allow_headers'] = allow_headers
+                self._latent_configuration['allow_headers'] = allow_headers
             else:
                 raise TypeError("allow_headers must be a list or None.")
 
         if expose_headers:
             if isinstance(expose_headers, list):
-                self.latent_configuration['expose_headers'] = expose_headers
+                self._latent_configuration['expose_headers'] = expose_headers
             else:
                 raise TypeError("expose_headers must be a list or None.")
 
         if allow_methods:
             if isinstance(allow_methods, list):
-                self.latent_configuration['methods'] = allow_methods
+                self._latent_configuration['methods'] = allow_methods
             else:
                 raise TypeError("allow_methods parameter must be a list or"
                                 " None.")
@@ -290,7 +289,8 @@ class CORS(base.Middleware):
 
         # Compare request method to permitted methods (Section 6.2.5)
         permitted_methods = (
-            cors_config['allow_methods'] + self.latent_configuration['methods']
+            cors_config['allow_methods'] +
+            self._latent_configuration['methods']
         )
         if request_method not in permitted_methods:
             LOG.debug('Request method \'%s\' not in permitted list: %s'
@@ -302,7 +302,7 @@ class CORS(base.Middleware):
         permitted_headers = [header.upper() for header in
                              (cors_config['allow_headers'] +
                               self.simple_headers +
-                              self.latent_configuration['allow_headers'])]
+                              self._latent_configuration['allow_headers'])]
         for requested_header in request_headers:
             upper_header = requested_header.upper()
             if upper_header not in permitted_headers:
@@ -364,7 +364,7 @@ class CORS(base.Middleware):
         if cors_config['expose_headers']:
             response.headers['Access-Control-Expose-Headers'] = \
                 ','.join(cors_config['expose_headers'] +
-                         self.latent_configuration['expose_headers'])
+                         self._latent_configuration['expose_headers'])
 
 # NOTE(sileht): Shortcut for backwards compatibility
 filter_factory = CORS.factory
