@@ -19,7 +19,7 @@ import collections
 import six
 
 HealthcheckResult = collections.namedtuple(
-    'HealthcheckResult', ['available', 'reason'], verbose=True)
+    'HealthcheckResult', ['available', 'reason'])
 
 
 @six.add_metaclass(abc.ABCMeta)
