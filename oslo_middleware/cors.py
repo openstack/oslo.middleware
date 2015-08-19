@@ -63,6 +63,8 @@ class CORS(base.ConfigurableMiddleware):
     """
 
     simple_headers = [
+        'Accept',
+        'Accept-Language',
         'Content-Type',
         'Cache-Control',
         'Content-Language',
