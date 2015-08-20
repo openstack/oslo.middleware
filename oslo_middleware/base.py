@@ -31,7 +31,15 @@ class ConfigurableMiddleware(object):
 
     @classmethod
     def factory(cls, global_conf, **local_conf):
-        """Factory method for paste.deploy."""
+        """Factory method for paste.deploy.
+
+        :param global_conf: dict of options for all middlewares
+                            (usually the [DEFAULT] section of the paste deploy
+                            configuration file)
+        :param local_conf: options dedicated to this middleware
+                           (usually the option defined in the middleware
+                           section of the paste deploy configuration file)
+        """
         conf = global_conf.copy() if global_conf else {}
         conf.update(local_conf)
 

@@ -115,8 +115,7 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
     """Test the CORS filter_factory method."""
 
     def test_filter_factory(self):
-        config = self.useFixture(fixture.Config())
-        config.conf([])
+        self.useFixture(fixture.Config()).conf([])
 
         # Test a valid filter.
         filter = cors.filter_factory(None,

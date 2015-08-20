@@ -26,11 +26,11 @@ class SSLMiddlewareTest(base.BaseTestCase):
         super(SSLMiddlewareTest, self).setUp()
         self.useFixture(config.Config())
 
-    def _test_scheme(self, expected, headers, config=None):
+    def _test_scheme(self, expected, headers, secure_proxy_ssl_header=None):
         middleware = ssl.SSLMiddleware(None)
-        if config:
+        if secure_proxy_ssl_header:
             middleware.oslo_conf.set_override(
-                'secure_proxy_ssl_header', config,
+                'secure_proxy_ssl_header', secure_proxy_ssl_header,
                 group='oslo_middleware')
         request = webob.Request.blank('http://example.com/', headers=headers)
 
@@ -48,8 +48,10 @@ class SSLMiddlewareTest(base.BaseTestCase):
 
     def test_with_custom_header(self):
         headers = {'X-Forwarded-Proto': 'https'}
-        self._test_scheme('http', headers, config='X-My-Header')
+        self._test_scheme('http', headers,
+                          secure_proxy_ssl_header='X-My-Header')
 
     def test_with_custom_header_and_forwarded_protocol(self):
         headers = {'X-My-Header': 'https'}
-        self._test_scheme('https', headers, config='X-My-Header')
+        self._test_scheme('https', headers,
+                          secure_proxy_ssl_header='X-My-Header')
