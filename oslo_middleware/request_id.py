@@ -23,7 +23,7 @@ ENV_REQUEST_ID = 'openstack.request_id'
 HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 
 
-class RequestId(base.Middleware):
+class RequestId(base.ConfigurableMiddleware):
     """Middleware that ensures request ID.
 
     It ensures to assign request ID for each API request and set it to

@@ -21,7 +21,7 @@ import webob.response
 from oslo_middleware import base
 
 
-class Healthcheck(base.Middleware):
+class Healthcheck(base.ConfigurableMiddleware):
     """Healthcheck middleware used for monitoring.
 
     If the path is /healthcheck, it will respond 200 with "OK" as the body.

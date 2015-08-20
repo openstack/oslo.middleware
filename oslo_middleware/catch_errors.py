@@ -25,7 +25,7 @@ from oslo_middleware import base
 LOG = logging.getLogger(__name__)
 
 
-class CatchErrors(base.Middleware):
+class CatchErrors(base.ConfigurableMiddleware):
     """Middleware that provides high-level error handling.
 
     It catches all exceptions from subsequent applications in WSGI pipeline

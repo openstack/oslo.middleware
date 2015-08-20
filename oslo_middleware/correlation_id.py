@@ -18,7 +18,7 @@ import uuid
 from oslo_middleware import base
 
 
-class CorrelationId(base.Middleware):
+class CorrelationId(base.ConfigurableMiddleware):
     "Middleware that attaches a correlation id to WSGI request"
 
     def process_request(self, req):

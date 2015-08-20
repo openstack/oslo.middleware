@@ -14,16 +14,18 @@
 
 import webob
 
+from oslo_middleware.base import ConfigurableMiddleware
 from oslo_middleware.base import Middleware
 from oslotest.base import BaseTestCase
 
 
+@webob.dec.wsgify
+def application(req):
+    return 'Hello, World!!!'
+
+
 class TestBase(BaseTestCase):
     """Test the base middleware class."""
-
-    def setUp(self):
-        """Setup the tests."""
-        super(BaseTestCase, self).setUp()
 
     def test_extend_with_request(self):
         """Assert that a newer middleware behaves as appropriate.
@@ -31,11 +33,6 @@ class TestBase(BaseTestCase):
         This tests makes sure that the request is passed to the
         middleware's implementation.
         """
-        # Create an application.
-        @webob.dec.wsgify
-        def application(req):
-            return 'Hello, World!!!'
-
         # Bootstrap the application
         self.application = RequestBase(application)
 
@@ -52,11 +49,6 @@ class TestBase(BaseTestCase):
         middleware's implementation, and that there are no other expected
         errors.
         """
-        # Create an application.
-        @webob.dec.wsgify
-        def application(req):
-            return 'Hello, World!!!'
-
         # Bootstrap the application
         self.application = NoRequestBase(application)
 
@@ -65,6 +57,16 @@ class TestBase(BaseTestCase):
         request.get_response(self.application)
 
         self.assertTrue(self.application.called_without_request)
+
+    def test_paste_deploy_legacy(self):
+        app = LegacyMiddlewareTest.factory(
+            {'global': True}, local=True)(application)
+        self.assertEqual(app.conf, {})
+
+    def test_paste_deploy_configurable(self):
+        app = ConfigurableMiddlewareTest.factory(
+            {'global': True}, local=True)(application)
+        self.assertEqual(app.conf, {'global': True, 'local': True})
 
 
 class NoRequestBase(Middleware):
@@ -79,3 +81,11 @@ class RequestBase(Middleware):
     def process_response(self, response, request):
         self.called_with_request = True
         return response
+
+
+class ConfigurableMiddlewareTest(ConfigurableMiddleware):
+    pass
+
+
+class LegacyMiddlewareTest(Middleware):
+    pass

@@ -25,7 +25,7 @@ import webob.dec
 from oslo_middleware import base
 
 
-class Debug(base.Middleware):
+class Debug(base.ConfigurableMiddleware):
     """Helper class that returns debug information.
 
     Can be inserted into any WSGI application chain to get information about

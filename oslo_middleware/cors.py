@@ -53,7 +53,7 @@ CORS_OPTS = [
 ]
 
 
-class CORS(base.Middleware):
+class CORS(base.ConfigurableMiddleware):
     """CORS Middleware.
 
     This middleware allows a WSGI app to serve CORS headers for multiple
@@ -71,8 +71,8 @@ class CORS(base.Middleware):
         'Pragma'
     ]
 
-    def __init__(self, application, conf=None):
-        super(CORS, self).__init__(application, conf)
+    def __init__(self, application, *args, **kwargs):
+        super(CORS, self).__init__(application, *args, **kwargs)
         # Begin constructing our configuration hash.
         self.allowed_origins = {}
         self._init_conf()

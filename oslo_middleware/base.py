@@ -21,7 +21,7 @@ import webob.dec
 from oslo_config import cfg
 
 
-class Middleware(object):
+class ConfigurableMiddleware(object):
     """Base WSGI middleware wrapper.
 
     These classes require an application to be initialized that will be called
@@ -41,14 +41,19 @@ class Middleware(object):
         return middleware_filter
 
     def __init__(self, application, conf=None):
+        """Base middleware constructor
+
+        :param  conf: a dict of options or a cfg.ConfigOpts object
+        """
         self.application = application
+
         # NOTE(sileht): If the configuration come from oslo.config
         # just use it.
         if isinstance(conf, cfg.ConfigOpts):
-            self.conf = []
+            self.conf = {}
             self.oslo_conf = conf
         else:
-            self.conf = conf or []
+            self.conf = conf or {}
             if "oslo_config_project" in self.conf:
                 if 'oslo_config_file' in self.conf:
                     default_config_files = [self.conf['oslo_config_file']]
@@ -96,3 +101,16 @@ class Middleware(object):
         if 'request' in args:
             return self.process_response(response, request=req)
         return self.process_response(response)
+
+
+class Middleware(ConfigurableMiddleware):
+    """Legacy base WSGI middleware wrapper.
+
+    Legacy interface that doesn't pass configuration options
+    to the middleware when it's loaded via paste.deploy.
+    """
+
+    @classmethod
+    def factory(cls, global_conf, **local_conf):
+        """Factory method for paste.deploy."""
+        return cls

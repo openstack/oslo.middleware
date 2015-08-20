@@ -75,7 +75,7 @@ class LimitingReader(object):
         return result
 
 
-class RequestBodySizeLimiter(base.Middleware):
+class RequestBodySizeLimiter(base.ConfigurableMiddleware):
     """Limit the size of incoming requests."""
 
     def __init__(self, application, conf=None):

@@ -23,7 +23,7 @@ OPTS = [
 ]
 
 
-class SSLMiddleware(base.Middleware):
+class SSLMiddleware(base.ConfigurableMiddleware):
     """SSL termination proxies middleware.
 
     This middleware overloads wsgi.url_scheme with the one provided in
@@ -31,8 +31,8 @@ class SSLMiddleware(base.Middleware):
     termination proxy.
     """
 
-    def __init__(self, application, conf=None):
-        super(SSLMiddleware, self).__init__(application, conf)
+    def __init__(self, application, *args, **kwargs):
+        super(SSLMiddleware, self).__init__(application, *args, **kwargs)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     def process_request(self, req):
