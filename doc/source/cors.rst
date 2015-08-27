@@ -105,6 +105,11 @@ will add CORS support. To add multiple domains, simply add another filter.::
     expose_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
 
 
+Configuration Options
+---------------------
+
+.. show-options:: oslo.middleware.cors
+
 Module Documentation
 --------------------
 
