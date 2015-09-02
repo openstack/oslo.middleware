@@ -80,7 +80,7 @@ class CORS(base.ConfigurableMiddleware):
         self._init_conf()
 
     @classmethod
-    def factory(cls, global_conf, allowed_origin, **local_conf):
+    def factory(cls, global_conf, **local_conf):
         """factory method for paste.deploy
 
         allowed_origin: Protocol, host, and port for the allowed origin.
@@ -90,11 +90,11 @@ class CORS(base.ConfigurableMiddleware):
         allow_methods: List of HTTP methods to permit.
         allow_headers: List of HTTP headers to permit from the client.
         """
-
-        # Ensures allowed_origin config exists
-        return super(CORS, cls).factory(global_conf,
-                                        allowed_origin=allowed_origin,
-                                        **local_conf)
+        if ('allowed_origin' not in local_conf
+                and 'oslo_config_project' not in local_conf):
+            raise TypeError("allowed_origin or oslo_config_project "
+                            "is required")
+        return super(CORS, cls).factory(global_conf, **local_conf)
 
     def _init_conf(self):
         '''Initialize this middleware from an oslo.config instance.'''

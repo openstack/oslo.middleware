@@ -148,6 +148,10 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
                           allow_methods='GET',
                           allow_headers='')
 
+    def test_no_origin_but_oslo_config_project(self):
+        '''Assert that a filter factory with oslo_config_project succeed.'''
+        cors.filter_factory(global_conf=None, oslo_config_project='foobar')
+
 
 class CORSRegularRequestTest(CORSTestBase):
     """CORS Specification Section 6.1
