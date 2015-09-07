@@ -1019,6 +1019,19 @@ class CORSTestWildcard(CORSTestBase):
                                 allow_credentials='true',
                                 expose_headers=None)
 
+        # Test valid domain
+        request = webob.Request.blank('/')
+        request.method = "GET"
+        request.headers['Origin'] = 'http://default.example.com'
+        response = request.get_response(self.application)
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://default.example.com',
+                                max_age=None,
+                                allow_headers='',
+                                allow_credentials='true',
+                                expose_headers=None)
+
         # Test invalid domain
         request = webob.Request.blank('/')
         request.method = "OPTIONS"
