@@ -54,6 +54,22 @@ class Healthcheck(base.ConfigurableMiddleware):
        can provide details (or no details, depending on if configured) about
        the activity of the server.
 
+    Example requests/responses:
+
+        $ curl -i -X HEAD "http://0.0.0.0:8775/status"
+        HTTP/1.1 204 No Content
+        Content-Type: text/plain; charset=UTF-8
+        Content-Length: 0
+        Date: Fri, 11 Sep 2015 18:55:08 GMT
+
+        $ curl -i  "http://0.0.0.0:8775/status"
+        HTTP/1.1 200 OK
+        Content-Type: text/plain; charset=UTF-8
+        Content-Length: 2
+        Date: Fri, 11 Sep 2015 18:55:43 GMT
+
+        OK
+
     Example of paste configuration:
 
     .. code-block:: ini
@@ -99,6 +115,10 @@ class Healthcheck(base.ConfigurableMiddleware):
     NAMESPACE = "oslo.middleware.healthcheck"
     HEALTHY_TO_STATUS_CODES = {
         True: webob.exc.HTTPOk.code,
+        False: webob.exc.HTTPServiceUnavailable.code,
+    }
+    HEAD_HEALTHY_TO_STATUS_CODES = {
+        True: webob.exc.HTTPNoContent.code,
         False: webob.exc.HTTPServiceUnavailable.code,
     }
     PLAIN_RESPONSE_TEMPLATE = """
@@ -198,6 +218,9 @@ class Healthcheck(base.ConfigurableMiddleware):
             }
         return (self._pretty_json_dumps(body), 'application/json')
 
+    def _make_head_response(self, results, healthy):
+        return ( "", "text/plain")
+
     def _make_html_response(self, results, healthy):
         try:
             hostname = socket.gethostname()
@@ -225,11 +248,15 @@ class Healthcheck(base.ConfigurableMiddleware):
             return None
         results = [ext.obj.healthcheck() for ext in self._backends]
         healthy = self._are_results_healthy(results)
-        accept_type = req.accept.best_match(self._accept_order)
-        if not accept_type:
-            accept_type = self._default_accept
-        functor = self._accept_to_functor[accept_type]
+        if req.method == "HEAD":
+            functor = self._make_head_response
+            status = self.HEAD_HEALTHY_TO_STATUS_CODES[healthy]
+        else:
+            status = self.HEALTHY_TO_STATUS_CODES[healthy]
+            accept_type = req.accept.best_match(self._accept_order)
+            if not accept_type:
+                accept_type = self._default_accept
+            functor = self._accept_to_functor[accept_type]
         body, content_type = functor(results, healthy)
-        status = self.HEALTHY_TO_STATUS_CODES[healthy]
         return webob.response.Response(status=status, body=body,
                                        content_type=content_type)

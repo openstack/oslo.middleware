@@ -29,16 +29,18 @@ class HealthcheckTests(test_base.BaseTestCase):
         return 'Hello, World!!!'
 
     def _do_test_request(self, conf={}, path='/healthcheck',
-                         accept='text/plain'):
+                         accept='text/plain', method='GET'):
         self.app = healthcheck.Healthcheck(self.application, conf)
-        req = webob.Request.blank(path, accept=accept)
+        req = webob.Request.blank(path, accept=accept, method=method)
         res = req.get_response(self.app)
         return res
 
     def _do_test(self, conf={}, path='/healthcheck',
                  expected_code=webob.exc.HTTPOk.code,
-                 expected_body=b'', accept='text/plain'):
-        res = self._do_test_request(conf=conf, path=path, accept=accept)
+                 expected_body=b'', accept='text/plain',
+                 method='GET'):
+        res = self._do_test_request(conf=conf, path=path,
+                                    accept=accept, method=method)
         self.assertEqual(expected_code, res.status_int)
         self.assertEqual(expected_body, res.body)
 
@@ -74,6 +76,12 @@ class HealthcheckTests(test_base.BaseTestCase):
         self._do_test(conf, expected_body=b'OK')
         self.assertIn('disable_by_file', self.app._backends.names())
 
+    def test_disablefile_enabled_head(self):
+        conf = {'backends': 'disable_by_file',
+                'disable_by_file_path': '/foobar'}
+        self._do_test(conf, expected_body=b'', method='HEAD',
+                      expected_code=webob.exc.HTTPNoContent.code)
+
     def test_disablefile_enabled_html_detailed(self):
         conf = {'backends': 'disable_by_file',
                 'disable_by_file_path': '/foobar', 'detailed': True}
@@ -89,6 +97,15 @@ class HealthcheckTests(test_base.BaseTestCase):
         self._do_test(conf,
                       expected_code=webob.exc.HTTPServiceUnavailable.code,
                       expected_body=b'DISABLED BY FILE')
+        self.assertIn('disable_by_file', self.app._backends.names())
+
+    def test_disablefile_disabled_head(self):
+        filename = self.create_tempfiles([('test', 'foobar')])[0]
+        conf = {'backends': 'disable_by_file',
+                'disable_by_file_path': filename}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'', method='HEAD')
         self.assertIn('disable_by_file', self.app._backends.names())
 
     def test_disablefile_disabled_html_detailed(self):
