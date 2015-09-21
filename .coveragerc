@@ -4,4 +4,4 @@ source = middleware
 omit = middleware/tests/*,middleware/openstack/*
 
 [report]
-ignore-errors = True
+ignore_errors = True
