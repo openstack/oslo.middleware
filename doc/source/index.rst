@@ -12,3 +12,11 @@ Contents
    cors
    oslo_config
    contributing
+
+Release Notes
+=============
+
+.. toctree::
+   :maxdepth: 1
+
+   history
