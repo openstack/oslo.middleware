@@ -40,7 +40,7 @@ def list_opts():
     registered. A group name of None corresponds to the [DEFAULT] group in
     config files.
 
-    This function is also discoverable via the 'oslo.concurrency' entry point
+    This function is also discoverable via the 'oslo.middleware' entry point
     under the 'oslo.config.opts' namespace.
 
     The purpose of this is to allow tools like the Oslo sample config file
@@ -68,7 +68,7 @@ def list_opts_sizelimit():
     registered. A group name of None corresponds to the [DEFAULT] group in
     config files.
 
-    This function is also discoverable via the 'oslo.concurrency' entry point
+    This function is also discoverable via the 'oslo.middleware' entry point
     under the 'oslo.config.opts' namespace.
 
     The purpose of this is to allow tools like the Oslo sample config file
@@ -82,7 +82,7 @@ def list_opts_sizelimit():
 
 
 def list_opts_ssl():
-    """Return a list of oslo.config options for the sizelimit middleware.
+    """Return a list of oslo.config options for the SSL middleware.
 
     The returned list includes all oslo.config options which may be registered
     at runtime by the library.
@@ -92,7 +92,7 @@ def list_opts_ssl():
     registered. A group name of None corresponds to the [DEFAULT] group in
     config files.
 
-    This function is also discoverable via the 'oslo.concurrency' entry point
+    This function is also discoverable via the 'oslo.middleware' entry point
     under the 'oslo.config.opts' namespace.
 
     The purpose of this is to allow tools like the Oslo sample config file
@@ -116,7 +116,7 @@ def list_opts_cors():
     registered. A group name of None corresponds to the [DEFAULT] group in
     config files.
 
-    This function is also discoverable via the 'oslo.concurrency' entry point
+    This function is also discoverable via the 'oslo.middleware' entry point
     under the 'oslo.config.opts' namespace.
 
     The purpose of this is to allow tools like the Oslo sample config file
