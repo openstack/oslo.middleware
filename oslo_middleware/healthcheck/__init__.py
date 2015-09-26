@@ -13,8 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import gc
 import json
+import platform
 import socket
+import sys
+import traceback
 
 try:
     from collections import OrderedDict  # noqa
@@ -25,13 +29,23 @@ except ImportError:
 import jinja2
 from oslo_utils import reflection
 from oslo_utils import strutils
+from oslo_utils import timeutils
 import six
 import stevedore
 import webob.dec
 import webob.exc
 import webob.response
 
+try:
+    import greenlet
+except ImportError:
+    greenlet = None
+
 from oslo_middleware import base
+
+
+def _find_objects(t):
+    return [o for o in gc.get_objects() if isinstance(o, t)]
 
 
 def _expand_template(contents, params):
@@ -132,9 +146,18 @@ class Healthcheck(base.ConfigurableMiddleware):
 <HEAD><TITLE>Healthcheck Status</TITLE></HEAD>
 <BODY>
 {% if detailed -%}
+<H1>Server status</H1>
 {% if hostname -%}
-<H1>Server status for {{hostname|e}}</H1>
+<B>Server hostname:</B><PRE>{{hostname|e}}</PRE>
 {%- endif %}
+<B>Current time:</B><PRE>{{now|e}}</PRE>
+<B>Python version:</B><PRE>{{python_version|e}}</PRE>
+<B>Platform:</B><PRE>{{platform|e}}</PRE>
+<HR></HR>
+<H2>Garbage collector:</H2>
+<B>Counts:</B><PRE>{{gc.counts|e}}</PRE>
+<B>Thresholds:</B><PRE>{{gc.threshold|e}}</PRE>
+<HR></HR>
 {%- endif %}
 <H2>Result of {{results|length}} checks:</H2>
 <TABLE bgcolor="#ffffff" border="1">
@@ -151,6 +174,34 @@ class Healthcheck(base.ConfigurableMiddleware):
 {%- endfor %}
 </TBODY>
 </TABLE>
+<HR></HR>
+{% if detailed -%}
+{% if greenthreads -%}
+<H2>{{greenthreads|length}} greenthread(s) active:</H2>
+<TABLE bgcolor="#ffffff" border="1">
+<TBODY>
+{% for stack in greenthreads -%}
+<TR>
+    <TD><PRE>{{stack|e}}</PRE></TD>
+</TR>
+{%- endfor %}
+</TBODY>
+</TABLE>
+<HR></HR>
+{%- endif %}
+{% if threads -%}
+<H2>{{threads|length}} thread(s) active:</H2>
+<TABLE bgcolor="#ffffff" border="1">
+<TBODY>
+{% for stack in threads -%}
+<TR>
+    <TD><PRE>{{stack|e}}</PRE></TD>
+</TR>
+{%- endfor %}
+</TBODY>
+</TABLE>
+{%- endif %}
+{%- endif %}
 </BODY>
 </HTML>
 """
@@ -180,6 +231,34 @@ class Healthcheck(base.ConfigurableMiddleware):
         self._default_accept = 'text/plain'
 
     @staticmethod
+    def _get_threadstacks():
+        threadstacks = []
+        try:
+            active_frames = sys._current_frames()
+        except AttributeError:
+            pass
+        else:
+            buf = six.StringIO()
+            for stack in six.itervalues(active_frames):
+                traceback.print_stack(stack, file=buf)
+                threadstacks.append(buf.getvalue())
+                buf.seek(0)
+                buf.truncate()
+        return threadstacks
+
+    @staticmethod
+    def _get_greenstacks():
+        greenstacks = []
+        if greenlet is not None:
+            buf = six.StringIO()
+            for gt in _find_objects(greenlet.greenlet):
+                traceback.print_stack(gt.gr_frame, file=buf)
+                greenstacks.append(buf.getvalue())
+                buf.seek(0)
+                buf.truncate()
+        return greenstacks
+
+    @staticmethod
     def _pretty_json_dumps(contents):
         return json.dumps(contents, indent=4, sort_keys=True)
 
@@ -202,6 +281,13 @@ class Healthcheck(base.ConfigurableMiddleware):
         if self._show_details:
             body = {
                 'detailed': True,
+                'python_version': sys.version,
+                'now': str(timeutils.utcnow()),
+                'platform': platform.platform(),
+                'gc': {
+                    'counts': gc.get_count(),
+                    'threshold': gc.get_threshold(),
+                },
             }
             reasons = []
             for result in results:
@@ -211,6 +297,8 @@ class Healthcheck(base.ConfigurableMiddleware):
                                                        fully_qualified=False),
                 })
             body['reasons'] = reasons
+            body['greenthreads'] = self._get_greenstacks()
+            body['threads'] = self._get_threadstacks()
         else:
             body = {
                 'reasons': [result.reason for result in results],
@@ -238,6 +326,15 @@ class Healthcheck(base.ConfigurableMiddleware):
             'hostname': hostname,
             'results': translated_results,
             'detailed': self._show_details,
+            'now': str(timeutils.utcnow()),
+            'python_version': sys.version,
+            'platform': platform.platform(),
+            'gc': {
+                'counts': gc.get_count(),
+                'threshold': gc.get_threshold(),
+             },
+             'threads': self._get_threadstacks(),
+             'greenthreads': self._get_threadstacks(),
         }
         body = _expand_template(self.HTML_RESPONSE_TEMPLATE, params)
         return (body.strip(), 'text/html')
