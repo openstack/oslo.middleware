@@ -9,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
-
+from debtcollector import removals
 from oslo_config import cfg
 from oslo_middleware import base
 
@@ -17,10 +17,15 @@ from oslo_middleware import base
 OPTS = [
     cfg.StrOpt('secure_proxy_ssl_header',
                default='X-Forwarded-Proto',
+               deprecated_for_removal=True,
                help="The HTTP Header that will be used to determine what "
                     "the original request protocol scheme was, even if it was "
                     "hidden by an SSL termination proxy.")
 ]
+
+
+removals.removed_module(__name__,
+                        "oslo_middleware.http_proxy_to_wsgi")
 
 
 class SSLMiddleware(base.ConfigurableMiddleware):
