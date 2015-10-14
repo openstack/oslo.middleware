@@ -12,5 +12,5 @@ oslo.i18n>=1.5.0 # Apache-2.0
 oslo.utils>=2.0.0 # Apache-2.0
 six>=1.9.0
 stevedore>=1.5.0 # Apache-2.0
-WebOb<1.5.0,>=1.2.3
+WebOb>=1.2.3
 debtcollector>=0.3.0 # Apache-2.0
