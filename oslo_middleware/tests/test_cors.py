@@ -136,6 +136,18 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         self.assertEqual(['GET'], config['allow_methods'])
         self.assertEqual([], config['allow_headers'])
 
+    def test_filter_factory_multiorigin(self):
+        self.useFixture(fixture.Config()).conf([])
+
+        # Test a valid filter.
+        filter = cors.filter_factory(None,
+                                     allowed_origin='http://valid.example.com,'
+                                                    'http://other.example.com')
+        application = filter(test_application)
+
+        self.assertIn('http://valid.example.com', application.allowed_origins)
+        self.assertIn('http://other.example.com', application.allowed_origins)
+
     def test_no_origin_fail(self):
         '''Assert that a filter factory with no allowed_origin fails.'''
         self.assertRaises(TypeError,
@@ -220,6 +232,10 @@ class CORSRegularRequestTest(CORSTestBase):
                                allowed_origin='http://all.example.com',
                                allow_methods='GET,PUT,POST,DELETE,HEAD')
 
+        config.load_raw_values(group='cors.duplicate',
+                               allowed_origin='http://domain1.example.com,'
+                                              'http://domain2.example.com')
+
         # Now that the config is set up, create our application.
         self.application = cors.CORS(test_application, cfg.CONF)
 
@@ -228,7 +244,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm global configuration
         gc = cfg.CONF.cors
-        self.assertEqual(gc.allowed_origin, 'http://valid.example.com')
+        self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
         self.assertEqual(gc.allow_credentials, False)
         self.assertEqual(gc.expose_headers, [])
         self.assertEqual(gc.max_age, None)
@@ -237,7 +253,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm credentials overrides.
         cc = cfg.CONF['cors.credentials']
-        self.assertEqual(cc.allowed_origin, 'http://creds.example.com')
+        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
         self.assertEqual(cc.allow_credentials, True)
         self.assertEqual(cc.expose_headers, gc.expose_headers)
         self.assertEqual(cc.max_age, gc.max_age)
@@ -246,7 +262,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm exposed-headers overrides.
         ec = cfg.CONF['cors.exposed-headers']
-        self.assertEqual(ec.allowed_origin, 'http://headers.example.com')
+        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
         self.assertEqual(ec.allow_credentials, gc.allow_credentials)
         self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
         self.assertEqual(ec.max_age, gc.max_age)
@@ -255,7 +271,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm cached overrides.
         chc = cfg.CONF['cors.cached']
-        self.assertEqual(chc.allowed_origin, 'http://cached.example.com')
+        self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
         self.assertEqual(chc.allow_credentials, gc.allow_credentials)
         self.assertEqual(chc.expose_headers, gc.expose_headers)
         self.assertEqual(chc.max_age, 3600)
@@ -264,7 +280,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm get-only overrides.
         goc = cfg.CONF['cors.get-only']
-        self.assertEqual(goc.allowed_origin, 'http://get.example.com')
+        self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
         self.assertEqual(goc.allow_credentials, gc.allow_credentials)
         self.assertEqual(goc.expose_headers, gc.expose_headers)
         self.assertEqual(goc.max_age, gc.max_age)
@@ -273,12 +289,22 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm all-methods overrides.
         ac = cfg.CONF['cors.all-methods']
-        self.assertEqual(ac.allowed_origin, 'http://all.example.com')
+        self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
         self.assertEqual(ac.allow_credentials, gc.allow_credentials)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
         self.assertEqual(ac.max_age, gc.max_age)
         self.assertEqual(ac.allow_methods,
                          ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'])
+        self.assertEqual(ac.allow_headers, gc.allow_headers)
+
+        # Confirm duplicate domains.
+        ac = cfg.CONF['cors.duplicate']
+        self.assertEqual(ac.allowed_origin, ['http://domain1.example.com',
+                                             'http://domain2.example.com'])
+        self.assertEqual(ac.allow_credentials, gc.allow_credentials)
+        self.assertEqual(ac.expose_headers, gc.expose_headers)
+        self.assertEqual(ac.max_age, gc.max_age)
+        self.assertEqual(ac.allow_methods, gc.allow_methods)
         self.assertEqual(ac.allow_headers, gc.allow_headers)
 
     def test_no_origin_header(self):
@@ -346,6 +372,21 @@ class CORSRegularRequestTest(CORSTestBase):
             self.assertCORSResponse(response,
                                     status='200 OK',
                                     allow_origin=None,
+                                    max_age=None,
+                                    allow_methods=None,
+                                    allow_headers=None,
+                                    allow_credentials=None,
+                                    expose_headers=None)
+
+        # Test valid header from list of duplicates.
+        for method in self.methods:
+            request = webob.Request.blank('/')
+            request.method = method
+            request.headers['Origin'] = 'http://domain2.example.com'
+            response = request.get_response(self.application)
+            self.assertCORSResponse(response,
+                                    status='200 OK',
+                                    allow_origin='http://domain2.example.com',
                                     max_age=None,
                                     allow_methods=None,
                                     allow_headers=None,
@@ -488,7 +529,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm global configuration
         gc = cfg.CONF.cors
-        self.assertEqual(gc.allowed_origin, 'http://valid.example.com')
+        self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
         self.assertEqual(gc.allow_credentials, False)
         self.assertEqual(gc.expose_headers, [])
         self.assertEqual(gc.max_age, None)
@@ -497,7 +538,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm credentials overrides.
         cc = cfg.CONF['cors.credentials']
-        self.assertEqual(cc.allowed_origin, 'http://creds.example.com')
+        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
         self.assertEqual(cc.allow_credentials, True)
         self.assertEqual(cc.expose_headers, gc.expose_headers)
         self.assertEqual(cc.max_age, gc.max_age)
@@ -506,7 +547,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm exposed-headers overrides.
         ec = cfg.CONF['cors.exposed-headers']
-        self.assertEqual(ec.allowed_origin, 'http://headers.example.com')
+        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
         self.assertEqual(ec.allow_credentials, gc.allow_credentials)
         self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
         self.assertEqual(ec.max_age, gc.max_age)
@@ -515,7 +556,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm cached overrides.
         chc = cfg.CONF['cors.cached']
-        self.assertEqual(chc.allowed_origin, 'http://cached.example.com')
+        self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
         self.assertEqual(chc.allow_credentials, gc.allow_credentials)
         self.assertEqual(chc.expose_headers, gc.expose_headers)
         self.assertEqual(chc.max_age, 3600)
@@ -524,7 +565,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm get-only overrides.
         goc = cfg.CONF['cors.get-only']
-        self.assertEqual(goc.allowed_origin, 'http://get.example.com')
+        self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
         self.assertEqual(goc.allow_credentials, gc.allow_credentials)
         self.assertEqual(goc.expose_headers, gc.expose_headers)
         self.assertEqual(goc.max_age, gc.max_age)
@@ -533,7 +574,7 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm all-methods overrides.
         ac = cfg.CONF['cors.all-methods']
-        self.assertEqual(ac.allowed_origin, 'http://all.example.com')
+        self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
         self.assertEqual(ac.allow_credentials, gc.allow_credentials)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
         self.assertEqual(ac.max_age, gc.max_age)
@@ -1006,7 +1047,7 @@ class CORSTestWildcard(CORSTestBase):
 
         # Confirm global configuration
         gc = cfg.CONF.cors
-        self.assertEqual(gc.allowed_origin, 'http://default.example.com')
+        self.assertEqual(gc.allowed_origin, ['http://default.example.com'])
         self.assertEqual(gc.allow_credentials, True)
         self.assertEqual(gc.expose_headers, [])
         self.assertEqual(gc.max_age, None)
@@ -1016,7 +1057,7 @@ class CORSTestWildcard(CORSTestBase):
 
         # Confirm all-methods overrides.
         ac = cfg.CONF['cors.wildcard']
-        self.assertEqual(ac.allowed_origin, '*')
+        self.assertEqual(ac.allowed_origin, ['*'])
         self.assertEqual(gc.allow_credentials, True)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
         self.assertEqual(ac.max_age, gc.max_age)
