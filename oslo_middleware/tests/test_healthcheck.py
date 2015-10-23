@@ -29,18 +29,21 @@ class HealthcheckTests(test_base.BaseTestCase):
         return 'Hello, World!!!'
 
     def _do_test_request(self, conf={}, path='/healthcheck',
-                         accept='text/plain', method='GET'):
+                         accept='text/plain', method='GET',
+                         server_port=80):
         self.app = healthcheck.Healthcheck(self.application, conf)
         req = webob.Request.blank(path, accept=accept, method=method)
+        req.server_port = server_port
         res = req.get_response(self.app)
         return res
 
     def _do_test(self, conf={}, path='/healthcheck',
                  expected_code=webob.exc.HTTPOk.code,
                  expected_body=b'', accept='text/plain',
-                 method='GET'):
+                 method='GET', server_port=80):
         res = self._do_test_request(conf=conf, path=path,
-                                    accept=accept, method=method)
+                                    accept=accept, method=method,
+                                    server_port=server_port)
         self.assertEqual(expected_code, res.status_int)
         self.assertEqual(expected_body, res.body)
 
@@ -125,3 +128,35 @@ class HealthcheckTests(test_base.BaseTestCase):
                       expected_code=webob.exc.HTTPServiceUnavailable.code,
                       expected_body=b'DISABLED BY FILE\nDISABLED BY FILE')
         self.assertIn('disable_by_file', self.app._backends.names())
+
+    def test_disable_by_port_file(self):
+        filename = self.create_tempfiles([('test', 'foobar')])[0]
+        conf = {'backends': 'disable_by_files_ports',
+                'disable_by_file_paths': "80:%s" % filename}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'DISABLED BY FILE')
+        self.assertIn('disable_by_files_ports', self.app._backends.names())
+
+    def test_no_disable_by_port_file(self):
+        filename = self.create_tempfiles([('test', 'foobar')])[0]
+        conf = {'backends': 'disable_by_files_ports',
+                'disable_by_file_paths': "8000:%s" % filename}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      expected_body=b'OK')
+        self.assertIn('disable_by_files_ports', self.app._backends.names())
+
+    def test_disable_by_port_many_files(self):
+        filename = self.create_tempfiles([('test', 'foobar')])[0]
+        filename2 = self.create_tempfiles([('test2', 'foobar2')])[0]
+        conf = {'backends': 'disable_by_files_ports',
+                'disable_by_file_paths': "80:%s,81:%s" % (filename, filename2)}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'DISABLED BY FILE')
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'DISABLED BY FILE',
+                      server_port=81)
+        self.assertIn('disable_by_files_ports', self.app._backends.names())

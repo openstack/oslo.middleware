@@ -28,7 +28,7 @@ class HealthcheckBaseExtension(object):
         self.conf = conf
 
     @abc.abstractmethod
-    def healthcheck():
+    def healthcheck(self, server_port):
         """method called by the healthcheck middleware
 
         return: HealthcheckResult object
