@@ -115,6 +115,12 @@ configuration, this may be done as follows.::
     # Optional field, in case the program name is different from the project:
     oslo_config_program = oslo_project_name-api
 
+    # This method also permits setting latent properties, for any origins set
+    # in oslo config.
+    latent_allow_headers=X-Auth-Token
+    latent_expose_headers=X-Auth-Token
+    latent_methods=GET,PUT,POST
+
 Configuration Options
 ---------------------
 

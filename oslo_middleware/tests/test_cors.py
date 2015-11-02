@@ -152,6 +152,29 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         '''Assert that a filter factory with oslo_config_project succeed.'''
         cors.filter_factory(global_conf=None, oslo_config_project='foobar')
 
+    def test_factory_latent_properties(self):
+        '''Assert latent properties in paste.ini config.
+
+        If latent_* properties are added to a paste.ini config, assert that
+        they are persisted in the middleware.
+        '''
+
+        # Spaces in config are deliberate to frobb the config parsing.
+        filter = cors.filter_factory(global_conf=None,
+                                     oslo_config_project='foobar',
+                                     latent_expose_headers=' X-Header-1 , X-2',
+                                     latent_allow_headers='X-Header-1 , X-2',
+                                     latent_allow_methods='GET,PUT, POST')
+        app = filter(test_application)
+
+        # Ensure that the properties are in latent configuration.
+        self.assertEqual(['X-Header-1', 'X-2'],
+                         app._latent_configuration['expose_headers'])
+        self.assertEqual(['X-Header-1', 'X-2'],
+                         app._latent_configuration['allow_headers'])
+        self.assertEqual(['GET', 'PUT', 'POST'],
+                         app._latent_configuration['methods'])
+
 
 class CORSRegularRequestTest(CORSTestBase):
     """CORS Specification Section 6.1
