@@ -28,9 +28,18 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         def fake_app(req):
             return util.application_uri(req.environ)
 
+        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
+        self.request = webob.Request.blank('/foo/bar', method='POST')
+
+    def test_backward_compat(self):
+        @webob.dec.wsgify()
+        def fake_app(req):
+            return util.application_uri(req.environ)
+
         self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGIMiddleware(
             fake_app)
-        self.request = webob.Request.blank('/foo/bar', method='POST')
+        response = self.request.get_response(self.middleware)
+        self.assertEqual(b"http://localhost:80/", response.body)
 
     def test_no_headers(self):
         response = self.request.get_response(self.middleware)

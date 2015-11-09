@@ -15,6 +15,7 @@ __all__ = ['CatchErrors',
            'CORS',
            'Debug',
            'Healthcheck',
+           'HTTPProxyToWSGI',
            'RequestId',
            'RequestBodySizeLimiter',
            'SSLMiddleware']
@@ -24,6 +25,7 @@ from oslo_middleware.correlation_id import CorrelationId
 from oslo_middleware.cors import CORS
 from oslo_middleware.debug import Debug
 from oslo_middleware.healthcheck import Healthcheck
+from oslo_middleware.http_proxy_to_wsgi import HTTPProxyToWSGI
 from oslo_middleware.request_id import RequestId
 from oslo_middleware.sizelimit import RequestBodySizeLimiter
 from oslo_middleware.ssl import SSLMiddleware

@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
-
+from debtcollector import removals
 from oslo_middleware import base
 
 
-class HTTPProxyToWSGIMiddleware(base.ConfigurableMiddleware):
+class HTTPProxyToWSGI(base.ConfigurableMiddleware):
     """HTTP proxy to WSGI termination middleware.
 
     This middleware overloads WSGI environment variables with the one provided
@@ -68,3 +68,8 @@ class HTTPProxyToWSGIMiddleware(base.ConfigurableMiddleware):
         v = req.environ.get("HTTP_X_FORWARDED_PREFIX")
         if v:
             req.environ['SCRIPT_NAME'] = v + req.environ['SCRIPT_NAME']
+
+
+@removals.remove
+class HTTPProxyToWSGIMiddleware(HTTPProxyToWSGI):
+    """Placeholder for backward compatibility"""
