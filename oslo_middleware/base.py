@@ -67,8 +67,16 @@ class ConfigurableMiddleware(object):
                     default_config_files = [self.conf['oslo_config_file']]
                 else:
                     default_config_files = None
+
+                if 'oslo_config_program' in self.conf:
+                    program = self.conf['oslo_config_program']
+                else:
+                    program = None
+
                 self.oslo_conf = cfg.ConfigOpts()
-                self.oslo_conf([], project=self.conf['oslo_config_project'],
+                self.oslo_conf([],
+                               project=self.conf['oslo_config_project'],
+                               prog=program,
                                default_config_files=default_config_files,
                                validate_default_values=True)
 

@@ -104,6 +104,16 @@ will add CORS support. To add multiple domains, simply add another filter.::
     allow_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
     expose_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
 
+If your application is using pastedeploy, but would also like to use the
+existing configuration from oslo_config in order to simplify the points of
+configuration, this may be done as follows.::
+
+    [filter:cors]
+    paste.filter_factory = oslo_middleware.cors:filter_factory
+    oslo_config_project = oslo_project_name
+
+    # Optional field, in case the program name is different from the project:
+    oslo_config_program = oslo_project_name-api
 
 Configuration Options
 ---------------------

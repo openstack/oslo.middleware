@@ -29,6 +29,10 @@ The paste filter (in /etc/my_app/api-paste.ini) will looks like::
     # the application configuration, by setting this:
     #  oslo_config_project = my_app
 
+    # In some cases, you may need to specify the program name for the project
+    # as well.
+    #  oslo_config_program = my_app-api
+
 The oslo.config file of the application (eg: /etc/my_app/my_app.conf) will looks like::
 
     [oslo_middleware]
