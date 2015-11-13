@@ -343,7 +343,8 @@ class Healthcheck(base.ConfigurableMiddleware):
     def process_request(self, req):
         if req.path != self._path:
             return None
-        results = [ext.obj.healthcheck() for ext in self._backends]
+        results = [ext.obj.healthcheck(req.server_port)
+                   for ext in self._backends]
         healthy = self._are_results_healthy(results)
         if req.method == "HEAD":
             functor = self._make_head_response
