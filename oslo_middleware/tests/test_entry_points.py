@@ -14,8 +14,6 @@ from oslotest import base
 import stevedore
 from testtools import matchers
 
-import oslo_middleware
-
 
 class TestPasteDeploymentEntryPoints(base.BaseTestCase):
 
@@ -38,10 +36,3 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
         factory_names = [extension.name for extension in em]
         self.assertThat(factory_names,
                         matchers.ContainsAll(factory_classes))
-
-        # Ensure that we can create instances of the filter factories
-        for factory_name, class_name in factory_classes.items():
-            e = [m for m in em if m.name == factory_name][0]
-            factory = getattr(oslo_middleware, factory_name)
-            factory_class = getattr(factory, class_name).factory
-            self.assertEqual(factory_class, e.plugin)
