@@ -55,6 +55,7 @@ CORS_OPTS = [
 
 class InvalidOriginError(Exception):
     """Exception raised when Origin is invalid."""
+
     def __init__(self, origin):
         self.origin = origin
         super(InvalidOriginError, self).__init__(
@@ -87,6 +88,18 @@ class CORS(base.ConfigurableMiddleware):
         self.allowed_origins = {}
         self._init_conf()
 
+        def sanitize(csv_list):
+            try:
+                return [str.strip(x) for x in csv_list.split(',')]
+            except Exception:
+                return None
+
+        self.set_latent(
+            allow_headers=sanitize(self.conf.get('latent_allow_headers')),
+            expose_headers=sanitize(self.conf.get('latent_expose_headers')),
+            allow_methods=sanitize(self.conf.get('latent_allow_methods'))
+        )
+
     @classmethod
     def factory(cls, global_conf, **local_conf):
         """factory method for paste.deploy
@@ -99,7 +112,7 @@ class CORS(base.ConfigurableMiddleware):
         allow_headers: List of HTTP headers to permit from the client.
         """
         if ('allowed_origin' not in local_conf
-                and 'oslo_config_project' not in local_conf):
+           and 'oslo_config_project' not in local_conf):
             raise TypeError("allowed_origin or oslo_config_project "
                             "is required")
         return super(CORS, cls).factory(global_conf, **local_conf)
