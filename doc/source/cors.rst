@@ -49,18 +49,19 @@ In your application's config file, then include a default configuration block
 something like this::
 
     [cors]
-    allowed_origin=https://website.example.com:443
+    allowed_origin=https://website.example.com:443,https://website2.example.com:443
     max_age=3600
     allow_methods=GET,POST,PUT,DELETE
     allow_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
     expose_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header
 
-This middleware permits you to define multiple `allowed_origin`'s. To express
-this in your configuration file, first begin with a `[cors]` group as above,
-into which you place your default configuration values. Then add as many
-additional configuration groups as necessary, naming them `[cors.something]`
-(each name must be unique). The purpose of the suffix to `cors.` is
-legibility, we recommend using a reasonable human-readable string::
+This middleware permits you to override the rules for multiple
+`allowed_origin`'s. To express this in your configuration file, first begin
+with a `[cors]` group as above, into which you place your default
+configuration values. Then add as many additional configuration groups as
+necessary, naming them `[cors.something]` (each name must be unique). The
+purpose of the suffix to `cors.` is legibility, we recommend using a
+reasonable human-readable string::
 
     [cors.ironic_webclient]
     # CORS Configuration for a hypothetical ironic webclient, which overrides
@@ -94,11 +95,11 @@ Configuration for pastedeploy
 -----------------------------
 
 If your application is using pastedeploy, the following configuration block
-will add CORS support. To add multiple domains, simply add another filter.::
+will add CORS support.::
 
     [filter:cors]
     paste.filter_factory = oslo_middleware.cors:filter_factory
-    allowed_origin=https://website.example.com:443
+    allowed_origin=https://website.example.com:443,https://website2.example.com:443
     max_age=3600
     allow_methods=GET,POST,PUT,DELETE
     allow_headers=Content-Type,Cache-Control,Content-Language,Expires,Last-Modified,Pragma,X-Custom-Header

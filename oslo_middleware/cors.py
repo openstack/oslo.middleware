@@ -25,10 +25,10 @@ import webob.response
 LOG = logging.getLogger(__name__)
 
 CORS_OPTS = [
-    cfg.StrOpt('allowed_origin',
-               default=None,
-               help='Indicate whether this resource may be shared with the '
-                    'domain received in the requests "origin" header.'),
+    cfg.ListOpt('allowed_origin',
+                default=None,
+                help='Indicate whether this resource may be shared with the '
+                     'domain received in the requests "origin" header.'),
     cfg.BoolOpt('allow_credentials',
                 default=True,
                 help='Indicate that the actual request can include user '
@@ -180,19 +180,20 @@ class CORS(base.ConfigurableMiddleware):
         :param allow_headers: List of HTTP headers to permit from the client.
         :return:
         '''
+        for origin in allowed_origin:
 
-        if allowed_origin in self.allowed_origins:
-            LOG.warn('Allowed origin [%s] already exists, skipping' % (
-                allowed_origin,))
-            return
+            if origin in self.allowed_origins:
+                LOG.warn('Allowed origin [%s] already exists, skipping' % (
+                    allowed_origin,))
+                continue
 
-        self.allowed_origins[allowed_origin] = {
-            'allow_credentials': allow_credentials,
-            'expose_headers': expose_headers,
-            'max_age': max_age,
-            'allow_methods': allow_methods,
-            'allow_headers': allow_headers
-        }
+            self.allowed_origins[origin] = {
+                'allow_credentials': allow_credentials,
+                'expose_headers': expose_headers,
+                'max_age': max_age,
+                'allow_methods': allow_methods,
+                'allow_headers': allow_headers
+            }
 
     def set_latent(self, allow_headers=None, allow_methods=None,
                    expose_headers=None):
