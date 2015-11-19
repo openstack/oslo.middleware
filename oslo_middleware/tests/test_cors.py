@@ -164,6 +164,16 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         '''Assert that a filter factory with oslo_config_project succeed.'''
         cors.filter_factory(global_conf=None, oslo_config_project='foobar')
 
+    def test_cor_config_sections_with_defaults(self):
+        '''Assert cors.* config sections with default values work.'''
+
+        # Set up the config fixture.
+        config = self.useFixture(fixture.Config(cfg.CONF))
+        config.load_raw_values(group='cors.subdomain')
+
+        # Now that the config is set up, create our application.
+        self.application = cors.CORS(test_application, cfg.CONF)
+
     def test_factory_latent_properties(self):
         '''Assert latent properties in paste.ini config.
 

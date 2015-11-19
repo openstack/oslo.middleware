@@ -152,13 +152,12 @@ class CORS(base.ConfigurableMiddleware):
 
         # If the default configuration contains an allowed_origin, don't
         # forget to register that.
-        if allowed_origin:
-            self.add_origin(allowed_origin=allowed_origin,
-                            allow_credentials=allow_credentials,
-                            expose_headers=expose_headers,
-                            max_age=max_age,
-                            allow_methods=allow_methods,
-                            allow_headers=allow_headers)
+        self.add_origin(allowed_origin=allowed_origin,
+                        allow_credentials=allow_credentials,
+                        expose_headers=expose_headers,
+                        max_age=max_age,
+                        allow_methods=allow_methods,
+                        allow_headers=allow_headers)
 
         # Iterate through all the loaded config sections, looking for ones
         # prefixed with 'cors.'
@@ -187,20 +186,21 @@ class CORS(base.ConfigurableMiddleware):
         if isinstance(allowed_origin, six.string_types):
             allowed_origin = [allowed_origin]
 
-        for origin in allowed_origin:
+        if allowed_origin:
+            for origin in allowed_origin:
 
-            if origin in self.allowed_origins:
-                LOG.warn('Allowed origin [%s] already exists, skipping' % (
-                    allowed_origin,))
-                continue
+                if origin in self.allowed_origins:
+                    LOG.warn('Allowed origin [%s] already exists, skipping' % (
+                        allowed_origin,))
+                    continue
 
-            self.allowed_origins[origin] = {
-                'allow_credentials': allow_credentials,
-                'expose_headers': expose_headers,
-                'max_age': max_age,
-                'allow_methods': allow_methods,
-                'allow_headers': allow_headers
-            }
+                self.allowed_origins[origin] = {
+                    'allow_credentials': allow_credentials,
+                    'expose_headers': expose_headers,
+                    'max_age': max_age,
+                    'allow_methods': allow_methods,
+                    'allow_headers': allow_headers
+                }
 
     def set_latent(self, allow_headers=None, allow_methods=None,
                    expose_headers=None):
