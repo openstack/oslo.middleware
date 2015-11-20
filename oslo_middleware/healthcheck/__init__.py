@@ -162,6 +162,23 @@ class Healthcheck(base.ConfigurableMiddleware):
 <H2>Result of {{results|length}} checks:</H2>
 <TABLE bgcolor="#ffffff" border="1">
 <TBODY>
+<TR>
+{% if detailed -%}
+<TH>
+Kind
+</TH>
+<TH>
+Reason
+</TH>
+<TH>
+Details
+</TH>
+{% else %}
+<TH>
+Reason
+</TH>
+{%- endif %}
+</TR>
 {% for result in results -%}
 {% if result.reason -%}
 <TR>
@@ -169,6 +186,9 @@ class Healthcheck(base.ConfigurableMiddleware):
     <TD>{{result.class|e}}</TD>
 {%- endif %}
     <TD>{{result.reason|e}}</TD>
+{% if detailed -%}
+    <TD>{{result.details|e}}</TD>
+{%- endif %}
 </TR>
 {%- endif %}
 {%- endfor %}
@@ -293,6 +313,7 @@ class Healthcheck(base.ConfigurableMiddleware):
             for result in results:
                 reasons.append({
                     'reason': result.reason,
+                    'details': result.details or '',
                     'class': reflection.get_class_name(result,
                                                        fully_qualified=False),
                 })
@@ -317,6 +338,7 @@ class Healthcheck(base.ConfigurableMiddleware):
         translated_results = []
         for result in results:
             translated_results.append({
+                'details': result.details or '',
                 'reason': result.reason,
                 'class': reflection.get_class_name(result,
                                                    fully_qualified=False),
