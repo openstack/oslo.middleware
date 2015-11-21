@@ -18,6 +18,7 @@ import logging
 
 from oslo_config import cfg
 from oslo_middleware import base
+import six
 import webob.dec
 import webob.exc
 import webob.response
@@ -180,6 +181,12 @@ class CORS(base.ConfigurableMiddleware):
         :param allow_headers: List of HTTP headers to permit from the client.
         :return:
         '''
+
+        # NOTE(dims): Support older code that still passes in
+        # a string for allowed_origin instead of a list
+        if isinstance(allowed_origin, six.string_types):
+            allowed_origin = [allowed_origin]
+
         for origin in allowed_origin:
 
             if origin in self.allowed_origins:
