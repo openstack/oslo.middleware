@@ -13,18 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import gc
 import json
 import platform
 import socket
 import sys
 import traceback
-
-try:
-    from collections import OrderedDict  # noqa
-except ImportError:
-    # TODO(harlowja): remove this when py2.6 support is dropped...
-    from ordereddict import OrderedDict  # noqa
 
 import jinja2
 from oslo_utils import reflection
@@ -238,7 +233,7 @@ Reason
             self.NAMESPACE, self._backend_names,
             name_order=True, invoke_on_load=True,
             invoke_args=(conf,))
-        self._accept_to_functor = OrderedDict([
+        self._accept_to_functor = collections.OrderedDict([
             # Order here matters...
             ('text/plain', self._make_text_response),
             ('text/html', self._make_html_response),
