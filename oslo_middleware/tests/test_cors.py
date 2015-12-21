@@ -131,7 +131,7 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
 
         config = application.allowed_origins['http://valid.example.com']
         self.assertEqual(False, config['allow_credentials'])
-        self.assertEqual(None, config['max_age'])
+        self.assertIsNone(config['max_age'])
         self.assertEqual([], config['expose_headers'])
         self.assertEqual(['GET'], config['allow_methods'])
         self.assertEqual([], config['allow_headers'])
