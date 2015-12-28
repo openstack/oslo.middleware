@@ -190,8 +190,8 @@ class CORS(base.ConfigurableMiddleware):
             for origin in allowed_origin:
 
                 if origin in self.allowed_origins:
-                    LOG.warn('Allowed origin [%s] already exists, skipping' % (
-                        allowed_origin,))
+                    LOG.warning('Allowed origin [%s] already exists, skipping'
+                                % (allowed_origin,))
                     continue
 
                 self.allowed_origins[origin] = {
