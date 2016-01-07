@@ -31,7 +31,7 @@ class SSLMiddlewareTest(base.BaseTestCase):
         if secure_proxy_ssl_header:
             middleware.oslo_conf.set_override(
                 'secure_proxy_ssl_header', secure_proxy_ssl_header,
-                group='oslo_middleware')
+                group='oslo_middleware', enforce_type=True)
         request = webob.Request.blank('http://example.com/', headers=headers)
 
         # Ensure ssl middleware does not stop pipeline execution
