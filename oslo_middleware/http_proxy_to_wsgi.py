@@ -12,7 +12,17 @@
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
 from debtcollector import removals
+from oslo_config import cfg
 from oslo_middleware import base
+
+
+OPTS = [
+    cfg.BoolOpt('enable_proxy_headers_parsing',
+                default=False,
+                help="Wether the application is behind a proxy or not. "
+                     "This determines if the middleware should parse the "
+                     "headers or not.")
+]
 
 
 class HTTPProxyToWSGI(base.ConfigurableMiddleware):
@@ -22,6 +32,10 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
     by the remote HTTP reverse proxy.
 
     """
+
+    def __init__(self, application, *args, **kwargs):
+        super(HTTPProxyToWSGI, self).__init__(application, *args, **kwargs)
+        self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     @staticmethod
     def _parse_rfc7239_header(header):
@@ -40,6 +54,8 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
         return result
 
     def process_request(self, req):
+        if not self._conf_get('enable_proxy_headers_parsing'):
+            return
         fwd_hdr = req.environ.get("HTTP_FORWARDED")
         if fwd_hdr:
             proxies = self._parse_rfc7239_header(fwd_hdr)
