@@ -25,8 +25,16 @@ extensions = [
     #'sphinx.ext.intersphinx',
     'oslosphinx',
     'oslo_config.sphinxext',
+    'oslo_config.sphinxconfiggen',
     'stevedore.sphinxext',
 ]
+
+# NOTE(dhellmann): An issue with the oslo.config sphinx integration
+#                  makes the show-options directive here result in
+#                  duplicate target nodes being introduced. Until we
+#                  can fix that, use the other directive to dump a
+#                  config file and include it as literal text.
+config_generator_config_file = 'cors_config_file.cfg'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.

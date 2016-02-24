@@ -50,3 +50,4 @@ ChangeLog
 # Editors
 *~
 .*.swp
+/doc/source/sample.config

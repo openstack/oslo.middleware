@@ -125,7 +125,14 @@ configuration, this may be done as follows.::
 Configuration Options
 ---------------------
 
-.. show-options:: oslo.middleware.cors
+.. NOTE(dhellmann): An issue with the oslo.config sphinx integration
+                    makes the show-options directive here result in
+                    duplicate target nodes being introduced. Until we
+                    can fix that, use the other directive to dump a
+                    config file and include it as literal text.
+.. .. show-options:: oslo.middleware.cors
+
+.. literalinclude:: sample.config
 
 Module Documentation
 --------------------
