@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_config import cfg
 from oslo_config import fixture
 from oslotest import base as test_base
 import webob
@@ -48,6 +47,14 @@ class CORSTestBase(test_base.BaseTestCase):
 
     Sets up applications and helper methods.
     """
+
+    def setUp(self):
+        """Setup the tests."""
+        super(CORSTestBase, self).setUp()
+
+        # Set up the config fixture.
+        self.config_fixture = self.useFixture(fixture.Config())
+        self.config = self.config_fixture.conf
 
     def assertCORSResponse(self, response,
                            status='200 OK',
@@ -111,11 +118,11 @@ class CORSTestBase(test_base.BaseTestCase):
             self.assertNotIn(header, response.headers)
 
 
-class CORSTestFilterFactory(test_base.BaseTestCase):
+class CORSTestFilterFactory(CORSTestBase):
     """Test the CORS filter_factory method."""
 
     def test_filter_factory(self):
-        self.useFixture(fixture.Config()).conf([])
+        self.config([])
 
         # Test a valid filter.
         filter = cors.filter_factory(None,
@@ -137,7 +144,7 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         self.assertEqual([], config['allow_headers'])
 
     def test_filter_factory_multiorigin(self):
-        self.useFixture(fixture.Config()).conf([])
+        self.config([])
 
         # Test a valid filter.
         filter = cors.filter_factory(None,
@@ -168,11 +175,10 @@ class CORSTestFilterFactory(test_base.BaseTestCase):
         '''Assert cors.* config sections with default values work.'''
 
         # Set up the config fixture.
-        config = self.useFixture(fixture.Config(cfg.CONF))
-        config.load_raw_values(group='cors.subdomain')
+        self.config_fixture.load_raw_values(group='cors.subdomain')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(test_application, cfg.CONF)
+        self.application = cors.CORS(test_application, self.config)
 
     def test_factory_latent_properties(self):
         '''Assert latent properties in paste.ini config.
@@ -211,49 +217,47 @@ class CORSRegularRequestTest(CORSTestBase):
         """Setup the tests."""
         super(CORSRegularRequestTest, self).setUp()
 
-        # Set up the config fixture.
-        config = self.useFixture(fixture.Config(cfg.CONF))
+        fixture = self.config_fixture  # Line length accommodation
+        fixture.load_raw_values(group='cors',
+                                allowed_origin='http://valid.example.com',
+                                allow_credentials='False',
+                                max_age='',
+                                expose_headers='',
+                                allow_methods='GET',
+                                allow_headers='')
 
-        config.load_raw_values(group='cors',
-                               allowed_origin='http://valid.example.com',
-                               allow_credentials='False',
-                               max_age='',
-                               expose_headers='',
-                               allow_methods='GET',
-                               allow_headers='')
+        fixture.load_raw_values(group='cors.credentials',
+                                allowed_origin='http://creds.example.com',
+                                allow_credentials='True')
 
-        config.load_raw_values(group='cors.credentials',
-                               allowed_origin='http://creds.example.com',
-                               allow_credentials='True')
+        fixture.load_raw_values(group='cors.exposed-headers',
+                                allowed_origin='http://headers.example.com',
+                                expose_headers='X-Header-1,X-Header-2',
+                                allow_headers='X-Header-1,X-Header-2')
 
-        config.load_raw_values(group='cors.exposed-headers',
-                               allowed_origin='http://headers.example.com',
-                               expose_headers='X-Header-1,X-Header-2',
-                               allow_headers='X-Header-1,X-Header-2')
+        fixture.load_raw_values(group='cors.cached',
+                                allowed_origin='http://cached.example.com',
+                                max_age='3600')
 
-        config.load_raw_values(group='cors.cached',
-                               allowed_origin='http://cached.example.com',
-                               max_age='3600')
+        fixture.load_raw_values(group='cors.get-only',
+                                allowed_origin='http://get.example.com',
+                                allow_methods='GET')
+        fixture.load_raw_values(group='cors.all-methods',
+                                allowed_origin='http://all.example.com',
+                                allow_methods='GET,PUT,POST,DELETE,HEAD')
 
-        config.load_raw_values(group='cors.get-only',
-                               allowed_origin='http://get.example.com',
-                               allow_methods='GET')
-        config.load_raw_values(group='cors.all-methods',
-                               allowed_origin='http://all.example.com',
-                               allow_methods='GET,PUT,POST,DELETE,HEAD')
-
-        config.load_raw_values(group='cors.duplicate',
-                               allowed_origin='http://domain1.example.com,'
-                                              'http://domain2.example.com')
+        fixture.load_raw_values(group='cors.duplicate',
+                                allowed_origin='http://domain1.example.com,'
+                                               'http://domain2.example.com')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(test_application, cfg.CONF)
+        self.application = cors.CORS(test_application, self.config)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
 
         # Confirm global configuration
-        gc = cfg.CONF.cors
+        gc = self.config.cors
         self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
         self.assertEqual(gc.allow_credentials, False)
         self.assertEqual(gc.expose_headers, [])
@@ -262,7 +266,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(gc.allow_headers, [])
 
         # Confirm credentials overrides.
-        cc = cfg.CONF['cors.credentials']
+        cc = self.config['cors.credentials']
         self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
         self.assertEqual(cc.allow_credentials, True)
         self.assertEqual(cc.expose_headers, gc.expose_headers)
@@ -271,7 +275,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(cc.allow_headers, gc.allow_headers)
 
         # Confirm exposed-headers overrides.
-        ec = cfg.CONF['cors.exposed-headers']
+        ec = self.config['cors.exposed-headers']
         self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
         self.assertEqual(ec.allow_credentials, gc.allow_credentials)
         self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
@@ -280,7 +284,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
 
         # Confirm cached overrides.
-        chc = cfg.CONF['cors.cached']
+        chc = self.config['cors.cached']
         self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
         self.assertEqual(chc.allow_credentials, gc.allow_credentials)
         self.assertEqual(chc.expose_headers, gc.expose_headers)
@@ -289,7 +293,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(chc.allow_headers, gc.allow_headers)
 
         # Confirm get-only overrides.
-        goc = cfg.CONF['cors.get-only']
+        goc = self.config['cors.get-only']
         self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
         self.assertEqual(goc.allow_credentials, gc.allow_credentials)
         self.assertEqual(goc.expose_headers, gc.expose_headers)
@@ -298,7 +302,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(goc.allow_headers, gc.allow_headers)
 
         # Confirm all-methods overrides.
-        ac = cfg.CONF['cors.all-methods']
+        ac = self.config['cors.all-methods']
         self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
         self.assertEqual(ac.allow_credentials, gc.allow_credentials)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
@@ -308,7 +312,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(ac.allow_headers, gc.allow_headers)
 
         # Confirm duplicate domains.
-        ac = cfg.CONF['cors.duplicate']
+        ac = self.config['cors.duplicate']
         self.assertEqual(ac.allowed_origin, ['http://domain1.example.com',
                                              'http://domain2.example.com'])
         self.assertEqual(ac.allow_credentials, gc.allow_credentials)
@@ -500,45 +504,43 @@ class CORSPreflightRequestTest(CORSTestBase):
     def setUp(self):
         super(CORSPreflightRequestTest, self).setUp()
 
-        # Set up the config fixture.
-        config = self.useFixture(fixture.Config(cfg.CONF))
+        fixture = self.config_fixture  # Line length accommodation
+        fixture.load_raw_values(group='cors',
+                                allowed_origin='http://valid.example.com',
+                                allow_credentials='False',
+                                max_age='',
+                                expose_headers='',
+                                allow_methods='GET',
+                                allow_headers='')
 
-        config.load_raw_values(group='cors',
-                               allowed_origin='http://valid.example.com',
-                               allow_credentials='False',
-                               max_age='',
-                               expose_headers='',
-                               allow_methods='GET',
-                               allow_headers='')
+        fixture.load_raw_values(group='cors.credentials',
+                                allowed_origin='http://creds.example.com',
+                                allow_credentials='True')
 
-        config.load_raw_values(group='cors.credentials',
-                               allowed_origin='http://creds.example.com',
-                               allow_credentials='True')
+        fixture.load_raw_values(group='cors.exposed-headers',
+                                allowed_origin='http://headers.example.com',
+                                expose_headers='X-Header-1,X-Header-2',
+                                allow_headers='X-Header-1,X-Header-2')
 
-        config.load_raw_values(group='cors.exposed-headers',
-                               allowed_origin='http://headers.example.com',
-                               expose_headers='X-Header-1,X-Header-2',
-                               allow_headers='X-Header-1,X-Header-2')
+        fixture.load_raw_values(group='cors.cached',
+                                allowed_origin='http://cached.example.com',
+                                max_age='3600')
 
-        config.load_raw_values(group='cors.cached',
-                               allowed_origin='http://cached.example.com',
-                               max_age='3600')
-
-        config.load_raw_values(group='cors.get-only',
-                               allowed_origin='http://get.example.com',
-                               allow_methods='GET')
-        config.load_raw_values(group='cors.all-methods',
-                               allowed_origin='http://all.example.com',
-                               allow_methods='GET,PUT,POST,DELETE,HEAD')
+        fixture.load_raw_values(group='cors.get-only',
+                                allowed_origin='http://get.example.com',
+                                allow_methods='GET')
+        fixture.load_raw_values(group='cors.all-methods',
+                                allowed_origin='http://all.example.com',
+                                allow_methods='GET,PUT,POST,DELETE,HEAD')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(test_application, cfg.CONF)
+        self.application = cors.CORS(test_application, self.config)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
 
         # Confirm global configuration
-        gc = cfg.CONF.cors
+        gc = self.config.cors
         self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
         self.assertEqual(gc.allow_credentials, False)
         self.assertEqual(gc.expose_headers, [])
@@ -547,7 +549,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(gc.allow_headers, [])
 
         # Confirm credentials overrides.
-        cc = cfg.CONF['cors.credentials']
+        cc = self.config['cors.credentials']
         self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
         self.assertEqual(cc.allow_credentials, True)
         self.assertEqual(cc.expose_headers, gc.expose_headers)
@@ -556,7 +558,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(cc.allow_headers, gc.allow_headers)
 
         # Confirm exposed-headers overrides.
-        ec = cfg.CONF['cors.exposed-headers']
+        ec = self.config['cors.exposed-headers']
         self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
         self.assertEqual(ec.allow_credentials, gc.allow_credentials)
         self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
@@ -565,7 +567,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
 
         # Confirm cached overrides.
-        chc = cfg.CONF['cors.cached']
+        chc = self.config['cors.cached']
         self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
         self.assertEqual(chc.allow_credentials, gc.allow_credentials)
         self.assertEqual(chc.expose_headers, gc.expose_headers)
@@ -574,7 +576,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(chc.allow_headers, gc.allow_headers)
 
         # Confirm get-only overrides.
-        goc = cfg.CONF['cors.get-only']
+        goc = self.config['cors.get-only']
         self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
         self.assertEqual(goc.allow_credentials, gc.allow_credentials)
         self.assertEqual(goc.expose_headers, gc.expose_headers)
@@ -583,7 +585,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(goc.allow_headers, gc.allow_headers)
 
         # Confirm all-methods overrides.
-        ac = cfg.CONF['cors.all-methods']
+        ac = self.config['cors.all-methods']
         self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
         self.assertEqual(ac.allow_credentials, gc.allow_credentials)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
@@ -1034,29 +1036,27 @@ class CORSTestWildcard(CORSTestBase):
     def setUp(self):
         super(CORSTestWildcard, self).setUp()
 
-        # Set up the config fixture.
-        config = self.useFixture(fixture.Config(cfg.CONF))
+        fixture = self.config_fixture  # Line length accommodation
+        fixture.load_raw_values(group='cors',
+                                allowed_origin='http://default.example.com',
+                                allow_credentials='True',
+                                max_age='',
+                                expose_headers='',
+                                allow_methods='GET,PUT,POST,DELETE,HEAD',
+                                allow_headers='')
 
-        config.load_raw_values(group='cors',
-                               allowed_origin='http://default.example.com',
-                               allow_credentials='True',
-                               max_age='',
-                               expose_headers='',
-                               allow_methods='GET,PUT,POST,DELETE,HEAD',
-                               allow_headers='')
-
-        config.load_raw_values(group='cors.wildcard',
-                               allowed_origin='*',
-                               allow_methods='GET')
+        fixture.load_raw_values(group='cors.wildcard',
+                                allowed_origin='*',
+                                allow_methods='GET')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(test_application, cfg.CONF)
+        self.application = cors.CORS(test_application, self.config)
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""
 
         # Confirm global configuration
-        gc = cfg.CONF.cors
+        gc = self.config.cors
         self.assertEqual(gc.allowed_origin, ['http://default.example.com'])
         self.assertEqual(gc.allow_credentials, True)
         self.assertEqual(gc.expose_headers, [])
@@ -1066,7 +1066,7 @@ class CORSTestWildcard(CORSTestBase):
         self.assertEqual(gc.allow_headers, [])
 
         # Confirm all-methods overrides.
-        ac = cfg.CONF['cors.wildcard']
+        ac = self.config['cors.wildcard']
         self.assertEqual(ac.allowed_origin, ['*'])
         self.assertEqual(gc.allow_credentials, True)
         self.assertEqual(ac.expose_headers, gc.expose_headers)
@@ -1132,19 +1132,17 @@ class CORSTestLatentProperties(CORSTestBase):
     def setUp(self):
         super(CORSTestLatentProperties, self).setUp()
 
-        # Set up the config fixture.
-        config = self.useFixture(fixture.Config(cfg.CONF))
-
-        config.load_raw_values(group='cors',
-                               allowed_origin='http://default.example.com',
-                               allow_credentials='True',
-                               max_age='',
-                               expose_headers='X-Configured',
-                               allow_methods='GET',
-                               allow_headers='X-Configured')
+        fixture = self.config_fixture  # Line length accommodation
+        fixture.load_raw_values(group='cors',
+                                allowed_origin='http://default.example.com',
+                                allow_credentials='True',
+                                max_age='',
+                                expose_headers='X-Configured',
+                                allow_methods='GET',
+                                allow_headers='X-Configured')
 
         # Now that the config is set up, create our application.
-        self.application = cors.CORS(test_application, cfg.CONF)
+        self.application = cors.CORS(test_application, self.config)
 
     def test_latent_methods(self):
         """Assert that latent HTTP methods are permitted."""
