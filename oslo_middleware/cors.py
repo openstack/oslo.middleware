@@ -29,7 +29,9 @@ CORS_OPTS = [
     cfg.ListOpt('allowed_origin',
                 default=None,
                 help='Indicate whether this resource may be shared with the '
-                     'domain received in the requests "origin" header.'),
+                     'domain received in the requests "origin" header. '
+                     'Format: "<protocol>://<host>[:<port>]", no trailing '
+                     'slash. Example: https://horizon.example.com'),
     cfg.BoolOpt('allow_credentials',
                 default=True,
                 help='Indicate that the actual request can include user '
