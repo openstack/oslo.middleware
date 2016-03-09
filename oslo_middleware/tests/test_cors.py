@@ -31,6 +31,12 @@ def test_application(req):
         response.headers['X-Server-Generated-Response'] = '1'
         return response
 
+    if req.path_info == '/server_cors_vary':
+        # Mirror back the origin in the request.
+        response = webob.Response(status=200)
+        response.headers['Vary'] = 'Custom-Vary'
+        return response
+
     if req.path_info == '/server_no_cors':
         # Send a response with no CORS headers.
         response = webob.Response(status=200)
@@ -63,7 +69,8 @@ class CORSTestBase(test_base.BaseTestCase):
                            allow_methods=None,
                            allow_headers=None,
                            allow_credentials=None,
-                           expose_headers=None):
+                           expose_headers=None,
+                           vary='Origin'):
         """Test helper for CORS response headers.
 
         Assert all the headers in a given response. By default, we assume
@@ -107,7 +114,7 @@ class CORSTestBase(test_base.BaseTestCase):
         # Vary: Origin header is set, since this implementation of the CORS
         # specification permits multiple origin domains.
         if allow_origin:
-            self.assertHeader(response, 'Vary', 'Origin')
+            self.assertHeader(response, 'Vary', vary)
 
     def assertHeader(self, response, header, value=None):
         if value:
@@ -493,6 +500,30 @@ class CORSRegularRequestTest(CORSTestBase):
                          test_origin)
         self.assertEqual(response.headers['X-Server-Generated-Response'],
                          '1')
+
+    def test_application_vary_respected(self):
+        """Assert that an application's provided Vary header is persisted.
+
+        If the underlying application, via middleware or other, provides a
+        Vary header, its response should be honored.
+        """
+
+        request = webob.Request.blank('/server_cors_vary')
+        request.method = "GET"
+        request.headers['Origin'] = 'http://valid.example.com'
+        request.headers['Access-Control-Request-Method'] = 'GET'
+
+        response = request.get_response(self.application)
+
+        self.assertCORSResponse(response,
+                                status='200 OK',
+                                allow_origin='http://valid.example.com',
+                                max_age=None,
+                                allow_methods=None,
+                                allow_headers=None,
+                                allow_credentials=None,
+                                expose_headers=None,
+                                vary='Custom-Vary,Origin')
 
 
 class CORSPreflightRequestTest(CORSTestBase):

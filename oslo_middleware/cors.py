@@ -391,7 +391,10 @@ class CORS(base.ConfigurableMiddleware):
             return
 
         # Set the default origin permission headers. (Sections 6.1.3 & 6.4)
-        response.headers['Vary'] = 'Origin'
+        if 'Vary' in response.headers:
+            response.headers['Vary'] += ',Origin'
+        else:
+            response.headers['Vary'] = 'Origin'
         response.headers['Access-Control-Allow-Origin'] = origin
 
         # Does this CORS configuration permit credentials? (Section 6.1.3)
