@@ -70,7 +70,8 @@ class CORSTestBase(test_base.BaseTestCase):
                            allow_headers=None,
                            allow_credentials=None,
                            expose_headers=None,
-                           vary='Origin'):
+                           vary='Origin',
+                           has_content_type=False):
         """Test helper for CORS response headers.
 
         Assert all the headers in a given response. By default, we assume
@@ -109,6 +110,10 @@ class CORSTestBase(test_base.BaseTestCase):
         self.assertHeader(response,
                           'Access-Control-Expose-Headers',
                           expose_headers)
+
+        # Assert no Content-Type added.
+        if not has_content_type:
+            self.assertHeader(response, 'Content-Type')
 
         # If we're expecting an origin response, also assert that the
         # Vary: Origin header is set, since this implementation of the CORS
@@ -344,7 +349,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
     def test_origin_headers(self):
         """CORS Specification Section 6.1.2
@@ -367,7 +373,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
         # Test origin header not present in configuration.
         for method in self.methods:
@@ -382,7 +389,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
         # Test valid, but case-mismatched origin header.
         for method in self.methods:
@@ -397,7 +405,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
         # Test valid header from list of duplicates.
         for method in self.methods:
@@ -412,7 +421,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
     def test_supports_credentials(self):
         """CORS Specification Section 6.1.3
@@ -440,7 +450,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
         # Test valid origin header with credentials
         for method in self.methods:
@@ -455,7 +466,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials="true",
-                                    expose_headers=None)
+                                    expose_headers=None,
+                                    has_content_type=True)
 
     def test_expose_headers(self):
         """CORS Specification Section 6.1.4
@@ -476,7 +488,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                     allow_methods=None,
                                     allow_headers=None,
                                     allow_credentials=None,
-                                    expose_headers='X-Header-1,X-Header-2')
+                                    expose_headers='X-Header-1,X-Header-2',
+                                    has_content_type=True)
 
     def test_application_options_response(self):
         """Assert that an application provided OPTIONS response is honored.
@@ -523,7 +536,8 @@ class CORSRegularRequestTest(CORSTestBase):
                                 allow_headers=None,
                                 allow_credentials=None,
                                 expose_headers=None,
-                                vary='Custom-Vary,Origin')
+                                vary='Custom-Vary,Origin',
+                                has_content_type=True)
 
 
 class CORSPreflightRequestTest(CORSTestBase):
@@ -1058,7 +1072,8 @@ class CORSPreflightRequestTest(CORSTestBase):
                                 allow_methods='GET',
                                 allow_headers=None,
                                 allow_credentials=None,
-                                expose_headers=None)
+                                expose_headers=None,
+                                has_content_type=True)
 
 
 class CORSTestWildcard(CORSTestBase):
@@ -1139,7 +1154,8 @@ class CORSTestWildcard(CORSTestBase):
                                 max_age=None,
                                 allow_headers='',
                                 allow_credentials='true',
-                                expose_headers=None)
+                                expose_headers=None,
+                                has_content_type=True)
 
         # Test invalid domain
         request = webob.Request.blank('/')
@@ -1154,7 +1170,8 @@ class CORSTestWildcard(CORSTestBase):
                                 allow_methods='GET',
                                 allow_headers='',
                                 allow_credentials='true',
-                                expose_headers=None)
+                                expose_headers=None,
+                                has_content_type=True)
 
 
 class CORSTestLatentProperties(CORSTestBase):
@@ -1253,7 +1270,8 @@ class CORSTestLatentProperties(CORSTestBase):
                                 allow_headers=None,
                                 allow_credentials='true',
                                 expose_headers='X-Configured,'
-                                               'X-Server-Generated-Response')
+                                               'X-Server-Generated-Response',
+                                has_content_type=True)
 
     def test_invalid_latent_expose_headers(self):
         """Assert that passing a non-list is caught in expose headers."""
