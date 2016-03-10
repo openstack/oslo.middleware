@@ -130,6 +130,94 @@ class CORSTestBase(test_base.BaseTestCase):
             self.assertNotIn(header, response.headers)
 
 
+class CORSTestDefaultOverrides(CORSTestBase):
+    def setUp(self):
+        super(CORSTestDefaultOverrides, self).setUp()
+
+        fixture = self.config_fixture  # Line length accommodation
+
+        fixture.load_raw_values(group='cors',
+                                allowed_origin='http://valid.example.com')
+
+        fixture.load_raw_values(group='cors.override_creds',
+                                allowed_origin='http://creds.example.com',
+                                allow_credentials='True')
+
+        fixture.load_raw_values(group='cors.override_headers',
+                                allowed_origin='http://headers.example.com',
+                                expose_headers='X-Header-1,X-Header-2',
+                                allow_headers='X-Header-1,X-Header-2')
+
+        self.override_opts = {
+            'expose_headers': ['X-Header-1'],
+            'allow_headers': ['X-Header-2'],
+            'allow_methods': ['GET', 'DELETE'],
+            'allow_credentials': False,
+            'max_age': 10
+        }
+
+    def test_config_defaults(self):
+        """Assert that using set_defaults overrides the appropriate values."""
+
+        cors.set_defaults(**self.override_opts)
+
+        for opt in cors.CORS_OPTS:
+            if opt.dest in self.override_opts:
+                self.assertEqual(opt.default, self.override_opts[opt.dest])
+
+    def test_invalid_default_option(self):
+        """Assert that using set_defaults only permits valid options."""
+
+        self.assertRaises(AttributeError,
+                          cors.set_defaults,
+                          allowed_origin='test')
+
+    def test_cascading_override(self):
+        """Assert that using set_defaults overrides cors.* config values."""
+
+        # set defaults
+        cors.set_defaults(**self.override_opts)
+
+        # Now that the config is set up, create our application.
+        self.application = cors.CORS(test_application, self.config)
+
+        # Check the global configuration for expected values:
+        gc = self.config.cors
+        self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
+        self.assertEqual(gc.allow_credentials,
+                         self.override_opts['allow_credentials'])
+        self.assertEqual(gc.expose_headers,
+                         self.override_opts['expose_headers'])
+        self.assertEqual(gc.max_age, 10)
+        self.assertEqual(gc.allow_methods,
+                         self.override_opts['allow_methods'])
+        self.assertEqual(gc.allow_headers,
+                         self.override_opts['allow_headers'])
+
+        # Check the child configuration for expected values:
+        cc = self.config['cors.override_creds']
+        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
+        self.assertTrue(cc.allow_credentials)
+        self.assertEqual(cc.expose_headers,
+                         self.override_opts['expose_headers'])
+        self.assertEqual(cc.max_age, 10)
+        self.assertEqual(cc.allow_methods,
+                         self.override_opts['allow_methods'])
+        self.assertEqual(cc.allow_headers,
+                         self.override_opts['allow_headers'])
+
+        # Check the other child configuration for expected values:
+        ec = self.config['cors.override_headers']
+        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
+        self.assertEqual(ec.allow_credentials,
+                         self.override_opts['allow_credentials'])
+        self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
+        self.assertEqual(ec.max_age, 10)
+        self.assertEqual(ec.allow_methods,
+                         self.override_opts['allow_methods'])
+        self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
+
+
 class CORSTestFilterFactory(CORSTestBase):
     """Test the CORS filter_factory method."""
 

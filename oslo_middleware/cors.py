@@ -55,6 +55,41 @@ CORS_OPTS = [
 ]
 
 
+def set_defaults(**kwargs):
+    """Override the default values for configuration options.
+
+    This method permits a project to override the default CORS option values.
+    For example, it may wish to offer a set of sane default headers which
+    allow it to function with only minimal additional configuration.
+
+    :param allow_credentials: Whether to permit credentials.
+    :type allow_credentials: bool
+    :param expose_headers: A list of headers to expose.
+    :type expose_headers: List of Strings
+    :param max_age: Maximum cache duration in seconds.
+    :type max_age: Int
+    :param allow_methods: List of HTTP methods to permit.
+    :type allow_methods: List of Strings
+    :param allow_headers: List of HTTP headers to permit from the client.
+    :type allow_headers: List of Strings
+    """
+    # Since 'None' is a valid config override, we have to use kwargs. Else
+    # there's no good way for a user to override only one option, because all
+    # the others would be overridden to 'None'.
+
+    valid_params = set(k.name for k in CORS_OPTS
+                       if k.name != 'allowed_origin')
+    passed_params = set(k for k in kwargs)
+
+    wrong_params = passed_params - valid_params
+    if wrong_params:
+        raise AttributeError('Parameter(s) [%s] invalid, please only use [%s]'
+                             % (wrong_params, valid_params))
+
+    # Set global defaults.
+    cfg.set_defaults(CORS_OPTS, **kwargs)
+
+
 class InvalidOriginError(Exception):
     """Exception raised when Origin is invalid."""
 
