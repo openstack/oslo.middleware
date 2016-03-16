@@ -37,8 +37,7 @@ CORS_OPTS = [
                 help='Indicate that the actual request can include user '
                      'credentials'),
     cfg.ListOpt('expose_headers',
-                default=['Content-Type', 'Cache-Control', 'Content-Language',
-                         'Expires', 'Last-Modified', 'Pragma'],
+                default=[],
                 help='Indicate which headers are safe to expose to the API. '
                      'Defaults to HTTP Simple Headers.'),
     cfg.IntOpt('max_age',
@@ -49,8 +48,7 @@ CORS_OPTS = [
                 help='Indicate which methods can be used during the actual '
                      'request.'),
     cfg.ListOpt('allow_headers',
-                default=['Content-Type', 'Cache-Control', 'Content-Language',
-                         'Expires', 'Last-Modified', 'Pragma'],
+                default=[],
                 help='Indicate which header field names may be used during '
                      'the actual request.')
 ]
