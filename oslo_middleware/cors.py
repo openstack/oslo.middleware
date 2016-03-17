@@ -45,7 +45,7 @@ CORS_OPTS = [
                help='Maximum cache age of CORS preflight requests.'),
     cfg.ListOpt('allow_methods',
                 default=['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
-                         'TRACE'],  # RFC 2616
+                         'TRACE', 'PATCH'],  # RFC 2616, RFC 5789
                 help='Indicate which methods can be used during the actual '
                      'request.'),
     cfg.ListOpt('allow_headers',
