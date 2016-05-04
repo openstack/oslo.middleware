@@ -14,6 +14,7 @@
 
 # Default allowed headers
 import copy
+from debtcollector import moves
 import logging
 
 from oslo_config import cfg
@@ -243,6 +244,9 @@ class CORS(base.ConfigurableMiddleware):
                     'allow_headers': allow_headers
                 }
 
+    @moves.moved_method('set_defaults',
+                        message='CORS.set_latent has been deprecated in favor '
+                                'of oslo_middleware.cors.set_defaults')
     def set_latent(self, allow_headers=None, allow_methods=None,
                    expose_headers=None):
         '''Add a new latent property for this middleware.
