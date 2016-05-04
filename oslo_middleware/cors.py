@@ -16,6 +16,7 @@
 import copy
 import logging
 
+import debtcollector
 from oslo_config import cfg
 from oslo_middleware import base
 import six
@@ -204,6 +205,11 @@ class CORS(base.ConfigurableMiddleware):
         # prefixed with 'cors.'
         for section in self.oslo_conf.list_all_sections():
             if section.startswith('cors.'):
+                debtcollector.deprecate('Multiple configuration blocks are '
+                                        'deprecated and will be removed in '
+                                        'future versions. Please consolidate '
+                                        'your configuration in the [cors] '
+                                        'configuration block.')
                 # Register with the preconstructed defaults
                 self.oslo_conf.register_opts(subgroup_opts, section)
                 self.add_origin(**self.oslo_conf[section])
