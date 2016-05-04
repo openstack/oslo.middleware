@@ -12,7 +12,6 @@
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Default allowed headers
 import copy
 import logging
 
@@ -231,6 +230,9 @@ class CORS(base.ConfigurableMiddleware):
         # NOTE(dims): Support older code that still passes in
         # a string for allowed_origin instead of a list
         if isinstance(allowed_origin, six.string_types):
+            # TODO(krotscheck): https://review.openstack.org/#/c/312687/
+            LOG.warn('DEPRECATED: The `allowed_origin` keyword argument in '
+                     '`add_origin()` should be a list, found String.')
             allowed_origin = [allowed_origin]
 
         if allowed_origin:
