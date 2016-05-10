@@ -13,12 +13,36 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import threading
+import time
+
 import mock
 from oslotest import base as test_base
+import requests
 import webob.dec
 import webob.exc
 
 from oslo_middleware import healthcheck
+from oslo_middleware.healthcheck import __main__
+
+
+class HealthcheckMainTests(test_base.BaseTestCase):
+
+    def test_startup_response(self):
+        server = __main__.create_server(0)
+        th = threading.Thread(target=server.serve_forever)
+        th.start()
+        self.addCleanup(server.shutdown)
+        while True:
+            try:
+                r = requests.get("http://%s:%s" % (server.server_address[0],
+                                                   server.server_address[1]))
+            except requests.ConnectionError:
+                # Server hasn't started up yet, try again in a few.
+                time.sleep(1)
+            else:
+                self.assertEqual(200, r.status_code)
+                break
 
 
 class HealthcheckTests(test_base.BaseTestCase):
