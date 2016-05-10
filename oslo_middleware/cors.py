@@ -19,7 +19,6 @@ import logging
 from oslo_config import cfg
 from oslo_middleware import base
 import six
-import webob.dec
 import webob.exc
 import webob.response
 
