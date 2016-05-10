@@ -58,6 +58,17 @@ class TestBase(BaseTestCase):
 
         self.assertTrue(self.application.called_without_request)
 
+    def test_no_content_type_added(self):
+        class TestMiddleware(Middleware):
+            @staticmethod
+            def process_request(req):
+                return "foobar"
+
+        m = TestMiddleware(None)
+        request = webob.Request({}, method='GET')
+        response = request.get_response(m)
+        self.assertNotIn('Content-Type', response.headers)
+
     def test_paste_deploy_legacy(self):
         app = LegacyMiddlewareTest.factory(
             {'global': True}, local=True)(application)

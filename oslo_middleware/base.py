@@ -17,8 +17,20 @@
 
 from inspect import getargspec
 import webob.dec
+import webob.request
+import webob.response
 
 from oslo_config import cfg
+
+
+class NoContentTypeResponse(webob.response.Response):
+
+    default_content_type = None  # prevents webob assigning content type
+
+
+class NoContentTypeRequest(webob.request.Request):
+
+    ResponseClass = NoContentTypeResponse
 
 
 class ConfigurableMiddleware(object):
@@ -106,7 +118,7 @@ class ConfigurableMiddleware(object):
         """Do whatever you'd like to the response."""
         return response
 
-    @webob.dec.wsgify
+    @webob.dec.wsgify(RequestClass=NoContentTypeRequest)
     def __call__(self, req):
         response = self.process_request(req)
         if response:

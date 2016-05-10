@@ -20,7 +20,7 @@ from oslo_config import cfg
 from oslo_middleware import base
 import six
 import webob.exc
-import webob.response
+
 
 LOG = logging.getLogger(__name__)
 
@@ -96,11 +96,6 @@ class InvalidOriginError(Exception):
         self.origin = origin
         super(InvalidOriginError, self).__init__(
             'CORS request from origin \'%s\' not permitted.' % origin)
-
-
-class _NoContentTypeResponse(webob.response.Response):
-
-    default_content_type = None  # prevents webob assigning content type
 
 
 class CORS(base.ConfigurableMiddleware):
@@ -325,7 +320,7 @@ class CORS(base.ConfigurableMiddleware):
         # underlying middleware's response content needs to be persisted.
         # Otherwise, create a new response.
         if 200 > response.status_code or response.status_code >= 300:
-            response = _NoContentTypeResponse(status=webob.exc.HTTPOk.code)
+            response = base.NoContentTypeResponse(status=webob.exc.HTTPOk.code)
 
         # Does the request have an origin header? (Section 6.2.1)
         if 'Origin' not in request.headers:
