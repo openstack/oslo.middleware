@@ -19,7 +19,7 @@ from oslo_middleware import base
 OPTS = [
     cfg.BoolOpt('enable_proxy_headers_parsing',
                 default=False,
-                help="Wether the application is behind a proxy or not. "
+                help="Whether the application is behind a proxy or not. "
                      "This determines if the middleware should parse the "
                      "headers or not.")
 ]
