@@ -52,7 +52,9 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
             for port_path in paths.split(","):
                 port_path = port_path.strip()
                 if port_path:
-                    port, path = port_path.split(":")
+                    # On windows, drive letters are followed by colons,
+                    # which makes split() return 3 elements in this case
+                    port, path = port_path.split(":", 1)
                     port = int(port)
                     yield (port, path)
 

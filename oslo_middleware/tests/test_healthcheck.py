@@ -35,8 +35,11 @@ class HealthcheckMainTests(test_base.BaseTestCase):
         self.addCleanup(server.shutdown)
         while True:
             try:
-                r = requests.get("http://%s:%s" % (server.server_address[0],
-                                                   server.server_address[1]))
+                # Connecting on 0.0.0.0 is not allowed on windows
+                # The operating system will return WSAEADDRNOTAVAIL which
+                # in turn will throw a requests.ConnectionError
+                r = requests.get("http://127.0.0.1:%s" % (
+                    server.server_address[1]))
             except requests.ConnectionError:
                 # Server hasn't started up yet, try again in a few.
                 time.sleep(1)
