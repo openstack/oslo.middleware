@@ -36,4 +36,4 @@ class RequestIdTest(test_base.BaseTestCase):
             res_req_id = res_req_id.decode('utf-8')
         self.assertThat(res_req_id, matchers.StartsWith('req-'))
         # request-id in request environ is returned as response body
-        self.assertEqual(res_req_id, res.body.decode('utf-8'))
+        self.assertEqual(res.body.decode('utf-8'), res_req_id)

@@ -29,7 +29,7 @@ class TestLimitingReader(test_base.BaseTestCase):
         for chunk in sizelimit.LimitingReader(data, BYTES):
             bytes_read += len(chunk)
 
-        self.assertEqual(bytes_read, BYTES)
+        self.assertEqual(BYTES, bytes_read)
 
         bytes_read = 0
         data = six.StringIO("*" * BYTES)
@@ -39,7 +39,7 @@ class TestLimitingReader(test_base.BaseTestCase):
             bytes_read += 1
             byte = reader.read(1)
 
-        self.assertEqual(bytes_read, BYTES)
+        self.assertEqual(BYTES, bytes_read)
 
     def test_read_default_value(self):
         BYTES = 1024
@@ -93,16 +93,16 @@ class TestRequestBodySizeLimiter(test_base.BaseTestCase):
         self.request.headers['Content-Length'] = self.MAX_REQUEST_BODY_SIZE
         self.request.body = b"0" * self.MAX_REQUEST_BODY_SIZE
         response = self.request.get_response(self.middleware)
-        self.assertEqual(response.status_int, 200)
+        self.assertEqual(200, response.status_int)
 
     def test_content_length_too_large(self):
         self.request.headers['Content-Length'] = self.MAX_REQUEST_BODY_SIZE + 1
         self.request.body = b"0" * (self.MAX_REQUEST_BODY_SIZE + 1)
         response = self.request.get_response(self.middleware)
-        self.assertEqual(response.status_int, 413)
+        self.assertEqual(413, response.status_int)
 
     def test_request_too_large_no_content_length(self):
         self.request.body = b"0" * (self.MAX_REQUEST_BODY_SIZE + 1)
         self.request.headers['Content-Length'] = None
         response = self.request.get_response(self.middleware)
-        self.assertEqual(response.status_int, 413)
+        self.assertEqual(413, response.status_int)
