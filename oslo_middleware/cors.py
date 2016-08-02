@@ -225,8 +225,8 @@ class CORS(base.ConfigurableMiddleware):
         # a string for allowed_origin instead of a list
         if isinstance(allowed_origin, six.string_types):
             # TODO(krotscheck): https://review.openstack.org/#/c/312687/
-            LOG.warn('DEPRECATED: The `allowed_origin` keyword argument in '
-                     '`add_origin()` should be a list, found String.')
+            LOG.warning('DEPRECATED: The `allowed_origin` keyword argument in '
+                        '`add_origin()` should be a list, found String.')
             allowed_origin = [allowed_origin]
 
         if allowed_origin:
