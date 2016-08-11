@@ -20,7 +20,7 @@ OPTS = [
                deprecated_for_removal=True,
                help="The HTTP Header that will be used to determine what "
                     "the original request protocol scheme was, even if it was "
-                    "hidden by an SSL termination proxy.")
+                    "hidden by a SSL termination proxy.")
 ]
 
 
