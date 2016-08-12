@@ -79,7 +79,7 @@ class CORSTestBase(test_base.BaseTestCase):
         """
 
         # Assert response status.
-        self.assertEqual(response.status, status)
+        self.assertEqual(status, response.status)
 
         # Assert the Access-Control-Allow-Origin header.
         self.assertHeader(response,
@@ -163,7 +163,7 @@ class CORSTestDefaultOverrides(CORSTestBase):
 
         for opt in cors.CORS_OPTS:
             if opt.dest in self.override_opts:
-                self.assertEqual(opt.default, self.override_opts[opt.dest])
+                self.assertEqual(self.override_opts[opt.dest], opt.default)
 
     def test_invalid_default_option(self):
         """Assert that using set_defaults only permits valid options."""
@@ -183,39 +183,39 @@ class CORSTestDefaultOverrides(CORSTestBase):
 
         # Check the global configuration for expected values:
         gc = self.config.cors
-        self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
-        self.assertEqual(gc.allow_credentials,
-                         self.override_opts['allow_credentials'])
-        self.assertEqual(gc.expose_headers,
-                         self.override_opts['expose_headers'])
-        self.assertEqual(gc.max_age, 10)
-        self.assertEqual(gc.allow_methods,
-                         self.override_opts['allow_methods'])
-        self.assertEqual(gc.allow_headers,
-                         self.override_opts['allow_headers'])
+        self.assertEqual(['http://valid.example.com'], gc.allowed_origin)
+        self.assertEqual(self.override_opts['allow_credentials'],
+                         gc.allow_credentials)
+        self.assertEqual(self.override_opts['expose_headers'],
+                         gc.expose_headers)
+        self.assertEqual(10, gc.max_age)
+        self.assertEqual(self.override_opts['allow_methods'],
+                         gc.allow_methods)
+        self.assertEqual(self.override_opts['allow_headers'],
+                         gc.allow_headers)
 
         # Check the child configuration for expected values:
         cc = self.config['cors.override_creds']
-        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
+        self.assertEqual(['http://creds.example.com'], cc.allowed_origin)
         self.assertTrue(cc.allow_credentials)
-        self.assertEqual(cc.expose_headers,
-                         self.override_opts['expose_headers'])
-        self.assertEqual(cc.max_age, 10)
-        self.assertEqual(cc.allow_methods,
-                         self.override_opts['allow_methods'])
-        self.assertEqual(cc.allow_headers,
-                         self.override_opts['allow_headers'])
+        self.assertEqual(self.override_opts['expose_headers'],
+                         cc.expose_headers)
+        self.assertEqual(10, cc.max_age)
+        self.assertEqual(self.override_opts['allow_methods'],
+                         cc.allow_methods)
+        self.assertEqual(self.override_opts['allow_headers'],
+                         cc.allow_headers)
 
         # Check the other child configuration for expected values:
         ec = self.config['cors.override_headers']
-        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
-        self.assertEqual(ec.allow_credentials,
-                         self.override_opts['allow_credentials'])
-        self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
-        self.assertEqual(ec.max_age, 10)
-        self.assertEqual(ec.allow_methods,
-                         self.override_opts['allow_methods'])
-        self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
+        self.assertEqual(['http://headers.example.com'], ec.allowed_origin)
+        self.assertEqual(self.override_opts['allow_credentials'],
+                         ec.allow_credentials)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.expose_headers)
+        self.assertEqual(10, ec.max_age)
+        self.assertEqual(self.override_opts['allow_methods'],
+                         ec.allow_methods)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.allow_headers)
 
 
 class CORSTestFilterFactory(CORSTestBase):
@@ -358,68 +358,69 @@ class CORSRegularRequestTest(CORSTestBase):
 
         # Confirm global configuration
         gc = self.config.cors
-        self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
-        self.assertEqual(gc.allow_credentials, False)
-        self.assertEqual(gc.expose_headers, [])
-        self.assertEqual(gc.max_age, None)
-        self.assertEqual(gc.allow_methods, ['GET'])
-        self.assertEqual(gc.allow_headers, [])
+        self.assertEqual(['http://valid.example.com'], gc.allowed_origin)
+        self.assertEqual(False, gc.allow_credentials)
+        self.assertEqual([], gc.expose_headers)
+        self.assertEqual(None, gc.max_age)
+        self.assertEqual(['GET'], gc.allow_methods)
+        self.assertEqual([], gc.allow_headers)
 
         # Confirm credentials overrides.
         cc = self.config['cors.credentials']
-        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
-        self.assertEqual(cc.allow_credentials, True)
-        self.assertEqual(cc.expose_headers, gc.expose_headers)
-        self.assertEqual(cc.max_age, gc.max_age)
-        self.assertEqual(cc.allow_methods, gc.allow_methods)
-        self.assertEqual(cc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://creds.example.com'], cc.allowed_origin)
+        self.assertEqual(True, cc.allow_credentials)
+        self.assertEqual(gc.expose_headers, cc.expose_headers)
+        self.assertEqual(gc.max_age, cc.max_age)
+        self.assertEqual(gc.allow_methods, cc.allow_methods)
+        self.assertEqual(gc.allow_headers, cc.allow_headers)
 
         # Confirm exposed-headers overrides.
         ec = self.config['cors.exposed-headers']
-        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
-        self.assertEqual(ec.allow_credentials, gc.allow_credentials)
-        self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
-        self.assertEqual(ec.max_age, gc.max_age)
-        self.assertEqual(ec.allow_methods, gc.allow_methods)
-        self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
+        self.assertEqual(['http://headers.example.com'], ec.allowed_origin)
+        self.assertEqual(gc.allow_credentials, ec.allow_credentials)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.expose_headers)
+        self.assertEqual(gc.max_age, ec.max_age)
+        self.assertEqual(gc.allow_methods, ec.allow_methods)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.allow_headers)
 
         # Confirm cached overrides.
         chc = self.config['cors.cached']
-        self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
-        self.assertEqual(chc.allow_credentials, gc.allow_credentials)
-        self.assertEqual(chc.expose_headers, gc.expose_headers)
-        self.assertEqual(chc.max_age, 3600)
-        self.assertEqual(chc.allow_methods, gc.allow_methods)
-        self.assertEqual(chc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://cached.example.com'], chc.allowed_origin)
+        self.assertEqual(gc.allow_credentials, chc.allow_credentials)
+        self.assertEqual(gc.expose_headers, chc.expose_headers)
+        self.assertEqual(3600, chc.max_age)
+        self.assertEqual(gc.allow_methods, chc.allow_methods)
+        self.assertEqual(gc.allow_headers, chc.allow_headers)
 
         # Confirm get-only overrides.
         goc = self.config['cors.get-only']
-        self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
-        self.assertEqual(goc.allow_credentials, gc.allow_credentials)
-        self.assertEqual(goc.expose_headers, gc.expose_headers)
-        self.assertEqual(goc.max_age, gc.max_age)
-        self.assertEqual(goc.allow_methods, ['GET'])
-        self.assertEqual(goc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://get.example.com'], goc.allowed_origin)
+        self.assertEqual(gc.allow_credentials, goc.allow_credentials)
+        self.assertEqual(gc.expose_headers, goc.expose_headers)
+        self.assertEqual(gc.max_age, goc.max_age)
+        self.assertEqual(['GET'], goc.allow_methods)
+        self.assertEqual(gc.allow_headers, goc.allow_headers)
 
         # Confirm all-methods overrides.
         ac = self.config['cors.all-methods']
-        self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
-        self.assertEqual(ac.allow_credentials, gc.allow_credentials)
-        self.assertEqual(ac.expose_headers, gc.expose_headers)
-        self.assertEqual(ac.max_age, gc.max_age)
-        self.assertEqual(ac.allow_methods,
-                         ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'])
-        self.assertEqual(ac.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://all.example.com'], ac.allowed_origin)
+        self.assertEqual(gc.allow_credentials, ac.allow_credentials)
+        self.assertEqual(gc.expose_headers, ac.expose_headers)
+        self.assertEqual(gc.max_age, ac.max_age)
+        self.assertEqual(['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
+                         ac.allow_methods)
+        self.assertEqual(gc.allow_headers, ac.allow_headers)
 
         # Confirm duplicate domains.
         ac = self.config['cors.duplicate']
-        self.assertEqual(ac.allowed_origin, ['http://domain1.example.com',
-                                             'http://domain2.example.com'])
-        self.assertEqual(ac.allow_credentials, gc.allow_credentials)
-        self.assertEqual(ac.expose_headers, gc.expose_headers)
-        self.assertEqual(ac.max_age, gc.max_age)
-        self.assertEqual(ac.allow_methods, gc.allow_methods)
-        self.assertEqual(ac.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://domain1.example.com',
+                          'http://domain2.example.com'],
+                         ac.allowed_origin)
+        self.assertEqual(gc.allow_credentials, ac.allow_credentials)
+        self.assertEqual(gc.expose_headers, ac.expose_headers)
+        self.assertEqual(gc.max_age, ac.max_age)
+        self.assertEqual(gc.allow_methods, ac.allow_methods)
+        self.assertEqual(gc.allow_headers, ac.allow_headers)
 
     def test_no_origin_header(self):
         """CORS Specification Section 6.1.1
@@ -683,49 +684,49 @@ class CORSPreflightRequestTest(CORSTestBase):
 
         # Confirm credentials overrides.
         cc = self.config['cors.credentials']
-        self.assertEqual(cc.allowed_origin, ['http://creds.example.com'])
-        self.assertEqual(cc.allow_credentials, True)
-        self.assertEqual(cc.expose_headers, gc.expose_headers)
-        self.assertEqual(cc.max_age, gc.max_age)
-        self.assertEqual(cc.allow_methods, gc.allow_methods)
-        self.assertEqual(cc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://creds.example.com'], cc.allowed_origin)
+        self.assertEqual(True, cc.allow_credentials)
+        self.assertEqual(gc.expose_headers, cc.expose_headers)
+        self.assertEqual(gc.max_age, cc.max_age)
+        self.assertEqual(gc.allow_methods, cc.allow_methods)
+        self.assertEqual(gc.allow_headers, cc.allow_headers)
 
         # Confirm exposed-headers overrides.
         ec = self.config['cors.exposed-headers']
-        self.assertEqual(ec.allowed_origin, ['http://headers.example.com'])
-        self.assertEqual(ec.allow_credentials, gc.allow_credentials)
-        self.assertEqual(ec.expose_headers, ['X-Header-1', 'X-Header-2'])
-        self.assertEqual(ec.max_age, gc.max_age)
-        self.assertEqual(ec.allow_methods, gc.allow_methods)
-        self.assertEqual(ec.allow_headers, ['X-Header-1', 'X-Header-2'])
+        self.assertEqual(['http://headers.example.com'], ec.allowed_origin)
+        self.assertEqual(gc.allow_credentials, ec.allow_credentials)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.expose_headers)
+        self.assertEqual(gc.max_age, ec.max_age)
+        self.assertEqual(gc.allow_methods, ec.allow_methods)
+        self.assertEqual(['X-Header-1', 'X-Header-2'], ec.allow_headers)
 
         # Confirm cached overrides.
         chc = self.config['cors.cached']
-        self.assertEqual(chc.allowed_origin, ['http://cached.example.com'])
-        self.assertEqual(chc.allow_credentials, gc.allow_credentials)
-        self.assertEqual(chc.expose_headers, gc.expose_headers)
-        self.assertEqual(chc.max_age, 3600)
-        self.assertEqual(chc.allow_methods, gc.allow_methods)
-        self.assertEqual(chc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://cached.example.com'], chc.allowed_origin)
+        self.assertEqual(gc.allow_credentials, chc.allow_credentials)
+        self.assertEqual(gc.expose_headers, chc.expose_headers)
+        self.assertEqual(3600, chc.max_age)
+        self.assertEqual(gc.allow_methods, chc.allow_methods)
+        self.assertEqual(gc.allow_headers, chc.allow_headers)
 
         # Confirm get-only overrides.
         goc = self.config['cors.get-only']
-        self.assertEqual(goc.allowed_origin, ['http://get.example.com'])
-        self.assertEqual(goc.allow_credentials, gc.allow_credentials)
-        self.assertEqual(goc.expose_headers, gc.expose_headers)
-        self.assertEqual(goc.max_age, gc.max_age)
-        self.assertEqual(goc.allow_methods, ['GET'])
-        self.assertEqual(goc.allow_headers, gc.allow_headers)
+        self.assertEqual(['http://get.example.com'], goc.allowed_origin)
+        self.assertEqual(gc.allow_credentials, goc.allow_credentials)
+        self.assertEqual(gc.expose_headers, goc.expose_headers)
+        self.assertEqual(gc.max_age, goc.max_age)
+        self.assertEqual(['GET'], goc.allow_methods)
+        self.assertEqual(gc.allow_headers, goc.allow_headers)
 
         # Confirm all-methods overrides.
         ac = self.config['cors.all-methods']
-        self.assertEqual(ac.allowed_origin, ['http://all.example.com'])
-        self.assertEqual(ac.allow_credentials, gc.allow_credentials)
-        self.assertEqual(ac.expose_headers, gc.expose_headers)
-        self.assertEqual(ac.max_age, gc.max_age)
+        self.assertEqual(['http://all.example.com'], ac.allowed_origin)
+        self.assertEqual(gc.allow_credentials, ac.allow_credentials)
+        self.assertEqual(gc.expose_headers, ac.expose_headers)
+        self.assertEqual(gc.max_age, ac.max_age)
         self.assertEqual(ac.allow_methods,
                          ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'])
-        self.assertEqual(ac.allow_headers, gc.allow_headers)
+        self.assertEqual(gc.allow_headers, ac.allow_headers)
 
     def test_no_origin_header(self):
         """CORS Specification Section 6.2.1
@@ -1141,10 +1142,10 @@ class CORSPreflightRequestTest(CORSTestBase):
         # If the regular CORS handling catches this request, it should set
         # the allow credentials header. This makes sure that it doesn't.
         self.assertNotIn('Access-Control-Allow-Credentials', response.headers)
-        self.assertEqual(response.headers['Access-Control-Allow-Origin'],
-                         test_origin)
-        self.assertEqual(response.headers['X-Server-Generated-Response'],
-                         '1')
+        self.assertEqual(test_origin,
+                         response.headers['Access-Control-Allow-Origin'])
+        self.assertEqual('1',
+                         response.headers['X-Server-Generated-Response'])
 
         # If the application returns an OPTIONS response without CORS
         # headers, assert that we apply headers.
@@ -1191,22 +1192,22 @@ class CORSTestWildcard(CORSTestBase):
 
         # Confirm global configuration
         gc = self.config.cors
-        self.assertEqual(gc.allowed_origin, ['http://default.example.com'])
-        self.assertEqual(gc.allow_credentials, True)
-        self.assertEqual(gc.expose_headers, [])
-        self.assertEqual(gc.max_age, None)
-        self.assertEqual(gc.allow_methods, ['GET', 'PUT', 'POST', 'DELETE',
-                                            'HEAD'])
-        self.assertEqual(gc.allow_headers, [])
+        self.assertEqual(['http://default.example.com'], gc.allowed_origin)
+        self.assertEqual(True, gc.allow_credentials)
+        self.assertEqual([], gc.expose_headers)
+        self.assertEqual(None, gc.max_age)
+        self.assertEqual(['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
+                         gc.allow_methods)
+        self.assertEqual([], gc.allow_headers)
 
         # Confirm all-methods overrides.
         ac = self.config['cors.wildcard']
-        self.assertEqual(ac.allowed_origin, ['*'])
-        self.assertEqual(gc.allow_credentials, True)
-        self.assertEqual(ac.expose_headers, gc.expose_headers)
-        self.assertEqual(ac.max_age, gc.max_age)
-        self.assertEqual(ac.allow_methods, ['GET'])
-        self.assertEqual(ac.allow_headers, gc.allow_headers)
+        self.assertEqual(['*'], ac.allowed_origin)
+        self.assertEqual(True, gc.allow_credentials)
+        self.assertEqual(gc.expose_headers, ac.expose_headers)
+        self.assertEqual(gc.max_age, ac.max_age)
+        self.assertEqual(['GET'], ac.allow_methods)
+        self.assertEqual(gc.allow_headers, ac.allow_headers)
 
     def test_wildcard_domain(self):
         """CORS Specification, Wildcards

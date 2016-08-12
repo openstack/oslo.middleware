@@ -72,12 +72,12 @@ class TestBase(BaseTestCase):
     def test_paste_deploy_legacy(self):
         app = LegacyMiddlewareTest.factory(
             {'global': True}, local=True)(application)
-        self.assertEqual(app.conf, {})
+        self.assertEqual({}, app.conf)
 
     def test_paste_deploy_configurable(self):
         app = ConfigurableMiddlewareTest.factory(
             {'global': True}, local=True)(application)
-        self.assertEqual(app.conf, {'global': True, 'local': True})
+        self.assertEqual({'global': True, 'local': True}, app.conf)
 
 
 class NoRequestBase(Middleware):
