@@ -65,13 +65,13 @@ class Healthcheck(base.ConfigurableMiddleware):
 
     Example requests/responses:
 
-        $ curl -i -X HEAD "http://0.0.0.0:8775/status"
+        $ curl -i -X HEAD "http://0.0.0.0:8775/healthcheck"
         HTTP/1.1 204 No Content
         Content-Type: text/plain; charset=UTF-8
         Content-Length: 0
         Date: Fri, 11 Sep 2015 18:55:08 GMT
 
-        $ curl -i  "http://0.0.0.0:8775/status"
+        $ curl -i  "http://0.0.0.0:8775/healthcheck"
         HTTP/1.1 200 OK
         Content-Type: text/plain; charset=UTF-8
         Content-Length: 2
