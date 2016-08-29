@@ -52,32 +52,187 @@ def _expand_template(contents, params):
 class Healthcheck(base.ConfigurableMiddleware):
     """Healthcheck middleware used for monitoring.
 
-    If the path is /healthcheck, it will respond 200 with "OK" as the body.
-    Or 503 with the reason as the body if one of the backend report
-    an application issue.
+    If the path is ``/healthcheck``, it will respond 200 with "OK" as
+    the body. Or a 503 with the reason as the body if one of the backends
+    reports an application issue.
 
     This is useful for the following reasons:
 
-    1. Load balancers can 'ping' this url to determine service availability.
-    2. Provides an endpoint that is similar to 'mod_status' in apache which
-       can provide details (or no details, depending on if configured) about
-       the activity of the server.
+    * Load balancers can 'ping' this url to determine service availability.
+    * Provides an endpoint that is similar to 'mod_status' in apache which
+      can provide details (or no details, depending on if configured) about
+      the activity of the server.
+    * *(and more)*
 
-    Example requests/responses:
+    Example requests/responses (**not** detailed mode)::
 
-        $ curl -i -X HEAD "http://0.0.0.0:8775/healthcheck"
-        HTTP/1.1 204 No Content
-        Content-Type: text/plain; charset=UTF-8
-        Content-Length: 0
-        Date: Fri, 11 Sep 2015 18:55:08 GMT
+      $ curl -i -X HEAD "http://0.0.0.0:8775/healthcheck"
+      HTTP/1.1 204 No Content
+      Content-Type: text/plain; charset=UTF-8
+      Content-Length: 0
+      Date: Fri, 11 Sep 2015 18:55:08 GMT
 
-        $ curl -i  "http://0.0.0.0:8775/healthcheck"
-        HTTP/1.1 200 OK
-        Content-Type: text/plain; charset=UTF-8
-        Content-Length: 2
-        Date: Fri, 11 Sep 2015 18:55:43 GMT
+      $ curl -i -X GET "http://0.0.0.0:8775/healthcheck"
+      HTTP/1.1 200 OK
+      Content-Type: text/plain; charset=UTF-8
+      Content-Length: 2
+      Date: Fri, 11 Sep 2015 18:55:43 GMT
 
-        OK
+      OK
+
+      $ curl -X GET -i -H "Accept: application/json" "http://0.0.0.0:8775/healthcheck"
+      HTTP/1.0 200 OK
+      Date: Wed, 24 Aug 2016 06:09:58 GMT
+      Content-Type: application/json
+      Content-Length: 63
+
+      {
+          "detailed": false,
+          "reasons": [
+              "OK"
+          ]
+      }
+
+      $ curl -X GET -i -H "Accept: text/html" "http://0.0.0.0:8775/healthcheck"
+      HTTP/1.0 200 OK
+      Date: Wed, 24 Aug 2016 06:10:42 GMT
+      Content-Type: text/html; charset=UTF-8
+      Content-Length: 239
+
+      <HTML>
+      <HEAD><TITLE>Healthcheck Status</TITLE></HEAD>
+      <BODY>
+
+      <H2>Result of 1 checks:</H2>
+      <TABLE bgcolor="#ffffff" border="1">
+      <TBODY>
+      <TR>
+
+      <TH>
+      Reason
+      </TH>
+      </TR>
+      <TR>
+          <TD>OK</TD>
+      </TR>
+      </TBODY>
+      </TABLE>
+      <HR></HR>
+
+      </BODY>
+
+    Example requests/responses (**detailed** mode)::
+
+       $ curl -X GET -i -H "Accept: application/json" "http://0.0.0.0:8775/healthcheck"
+       HTTP/1.0 200 OK
+       Date: Wed, 24 Aug 2016 06:11:59 GMT
+       Content-Type: application/json
+       Content-Length: 3480
+
+       {
+           "detailed": true,
+           "gc": {
+               "counts": [
+                   293,
+                   10,
+                   5
+               ],
+               "threshold": [
+                   700,
+                   10,
+                   10
+               ]
+           },
+           "greenthreads": [
+              ...
+           ],
+           "now": "2016-08-24 06:11:59.419267",
+           "platform": "Linux-4.2.0-27-generic-x86_64-with-Ubuntu-14.04-trusty",
+           "python_version": "2.7.6 (default, Jun 22 2015, 17:58:13) \\n[GCC 4.8.2]",
+           "reasons": [
+               {
+                   "class": "HealthcheckResult",
+                   "details": "Path '/tmp/dead' was not found",
+                   "reason": "OK"
+               }
+           ],
+           "threads": [
+               ...
+           ]
+       }
+
+       $ curl -X GET -i -H "Accept: text/html" "http://0.0.0.0:8775/healthcheck"
+       HTTP/1.0 200 OK
+       Date: Wed, 24 Aug 2016 06:36:07 GMT
+       Content-Type: text/html; charset=UTF-8
+       Content-Length: 6838
+
+       <HTML>
+       <HEAD><TITLE>Healthcheck Status</TITLE></HEAD>
+       <BODY>
+       <H1>Server status</H1>
+       <B>Server hostname:</B><PRE>...</PRE>
+       <B>Current time:</B><PRE>2016-08-24 06:36:07.302559</PRE>
+       <B>Python version:</B><PRE>2.7.6 (default, Jun 22 2015, 17:58:13)
+       [GCC 4.8.2]</PRE>
+       <B>Platform:</B><PRE>Linux-4.2.0-27-generic-x86_64-with-Ubuntu-14.04-trusty</PRE>
+       <HR></HR>
+       <H2>Garbage collector:</H2>
+       <B>Counts:</B><PRE>(77, 1, 6)</PRE>
+       <B>Thresholds:</B><PRE>(700, 10, 10)</PRE>
+
+       <HR></HR>
+       <H2>Result of 1 checks:</H2>
+       <TABLE bgcolor="#ffffff" border="1">
+       <TBODY>
+       <TR>
+       <TH>
+       Kind
+       </TH>
+       <TH>
+       Reason
+       </TH>
+       <TH>
+       Details
+       </TH>
+
+       </TR>
+       <TR>
+       <TD>HealthcheckResult</TD>
+           <TD>OK</TD>
+       <TD>Path &#39;/tmp/dead&#39; was not found</TD>
+       </TR>
+       </TBODY>
+       </TABLE>
+       <HR></HR>
+       <H2>1 greenthread(s) active:</H2>
+       <TABLE bgcolor="#ffffff" border="1">
+       <TBODY>
+       <TR>
+           <TD><PRE>  File &#34;oslo_middleware/healthcheck/__main__.py&#34;, line 94, in &lt;module&gt;
+           main()
+         File &#34;oslo_middleware/healthcheck/__main__.py&#34;, line 90, in main
+           server.serve_forever()
+         ...
+       </PRE></TD>
+       </TR>
+       </TBODY>
+       </TABLE>
+       <HR></HR>
+       <H2>1 thread(s) active:</H2>
+       <TABLE bgcolor="#ffffff" border="1">
+       <TBODY>
+       <TR>
+           <TD><PRE>  File &#34;oslo_middleware/healthcheck/__main__.py&#34;, line 94, in &lt;module&gt;
+           main()
+         File &#34;oslo_middleware/healthcheck/__main__.py&#34;, line 90, in main
+           server.serve_forever()
+         ....
+       </TR>
+       </TBODY>
+       </TABLE>
+       </BODY>
+       </HTML>
 
     Example of paste configuration:
 
@@ -91,7 +246,6 @@ class Healthcheck(base.ConfigurableMiddleware):
 
         [pipeline:public_api]
         pipeline = healthcheck sizelimit [...] public_service
-
 
     Multiple filter sections can be defined if it desired to have
     pipelines with different healthcheck configuration, example:
@@ -118,7 +272,6 @@ class Healthcheck(base.ConfigurableMiddleware):
 
     More details on available backends and their configuration can be found
     on this page: :doc:`healthcheck_plugins`.
-
     """
 
     NAMESPACE = "oslo.middleware.healthcheck"
