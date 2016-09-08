@@ -103,6 +103,29 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"https://example.com:8043/bla", response.body)
 
+    def test_forwarded_for_headers(self):
+        @webob.dec.wsgify()
+        def fake_app(req):
+            return req.environ['REMOTE_ADDR']
+
+        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGIMiddleware(
+            fake_app)
+        forwarded_for_addr = '1.2.3.4'
+        forwarded_addr = '8.8.8.8'
+
+        # If both X-Forwarded-For and Fowarded headers are present, it should
+        # use the Forwarded header and ignore the X-Forwarded-For header.
+        self.request.headers['Forwarded'] = (
+            "for=%s;proto=https;host=example.com:8043" % (forwarded_addr))
+        self.request.headers['X-Forwarded-For'] = forwarded_for_addr
+        response = self.request.get_response(self.middleware)
+        self.assertEqual(forwarded_addr.encode(), response.body)
+
+        # Now if only X-Forwarded-For header is present, it should be used.
+        del self.request.headers['Forwarded']
+        response = self.request.get_response(self.middleware)
+        self.assertEqual(forwarded_for_addr.encode(), response.body)
+
 
 class TestHTTPProxyToWSGIDisabled(test_base.BaseTestCase):
 
