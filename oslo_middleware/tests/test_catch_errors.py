@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fixtures
 import mock
 from oslotest import base as test_base
 import webob.dec
@@ -45,3 +46,27 @@ class CatchErrorsTest(test_base.BaseTestCase):
             self._test_has_request_id(application,
                                       webob.exc.HTTPInternalServerError.code)
             self.assertEqual(1, log_exc.call_count)
+
+    def test_filter_tokens_from_log(self):
+        logger = self.useFixture(fixtures.FakeLogger(nuke_handlers=False))
+
+        @webob.dec.wsgify
+        def application(req):
+            raise Exception()
+
+        app = catch_errors.CatchErrors(application)
+        req = webob.Request.blank('/test',
+                                  text=u'test data',
+                                  method='POST',
+                                  headers={'X-Auth-Token': 'secret1',
+                                           'X-Service-Token': 'secret2',
+                                           'X-Other-Token': 'secret3'})
+        res = req.get_response(app)
+        self.assertEqual(500, res.status_int)
+
+        output = logger.output
+
+        self.assertIn('X-Auth-Token: <removed>', output)
+        self.assertIn('X-Service-Token: <removed>', output)
+        self.assertIn('X-Other-Token: <removed>', output)
+        self.assertIn('test data', output)
