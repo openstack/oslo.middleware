@@ -14,6 +14,7 @@
 #    under the License.
 
 import logging
+import re
 
 import webob.dec
 import webob.exc
@@ -23,6 +24,8 @@ from oslo_middleware import base
 
 
 LOG = logging.getLogger(__name__)
+
+_TOKEN_RE = re.compile('^(X-\w+-Token):.*$', flags=re.MULTILINE)
 
 
 class CatchErrors(base.ConfigurableMiddleware):
@@ -37,9 +40,8 @@ class CatchErrors(base.ConfigurableMiddleware):
         try:
             response = req.get_response(self.application)
         except Exception:
-            if hasattr(req, 'environ') and 'HTTP_X_AUTH_TOKEN' in req.environ:
-                req.environ['HTTP_X_AUTH_TOKEN'] = '*****'
+            req_str = _TOKEN_RE.sub(r'\1: *****', req.as_text())
             LOG.exception(_LE('An error occurred during '
-                              'processing the request: %s'), req)
+                              'processing the request: %s'), req_str)
             response = webob.exc.HTTPInternalServerError()
         return response
