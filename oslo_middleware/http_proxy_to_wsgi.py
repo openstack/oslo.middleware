@@ -71,6 +71,10 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
                 if forwarded_host:
                     req.environ['HTTP_HOST'] = forwarded_host
 
+                forwarded_for = proxy.get("for")
+                if forwarded_for:
+                    req.environ['REMOTE_ADDR'] = forwarded_for
+
         else:
             # World before RFC7239
             forwarded_proto = req.environ.get("HTTP_X_FORWARDED_PROTO")
@@ -80,6 +84,10 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
             forwarded_host = req.environ.get("HTTP_X_FORWARDED_HOST")
             if forwarded_host:
                 req.environ['HTTP_HOST'] = forwarded_host
+
+            forwarded_for = req.environ.get("HTTP_X_FORWARDED_FOR")
+            if forwarded_for:
+                req.environ['REMOTE_ADDR'] = forwarded_for
 
         v = req.environ.get("HTTP_X_FORWARDED_PREFIX")
         if v:
