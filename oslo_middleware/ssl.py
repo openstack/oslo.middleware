@@ -24,10 +24,6 @@ OPTS = [
 ]
 
 
-removals.removed_module(__name__,
-                        "oslo_middleware.http_proxy_to_wsgi")
-
-
 class SSLMiddleware(base.ConfigurableMiddleware):
     """SSL termination proxies middleware.
 
@@ -37,6 +33,7 @@ class SSLMiddleware(base.ConfigurableMiddleware):
     """
 
     def __init__(self, application, *args, **kwargs):
+        removals.removed_module(__name__, "oslo_middleware.http_proxy_to_wsgi")
         super(SSLMiddleware, self).__init__(application, *args, **kwargs)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
