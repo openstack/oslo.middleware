@@ -17,6 +17,7 @@ import threading
 import time
 
 import mock
+from oslo_config import fixture as config
 from oslotest import base as test_base
 import requests
 import webob.dec
@@ -49,6 +50,10 @@ class HealthcheckMainTests(test_base.BaseTestCase):
 
 
 class HealthcheckTests(test_base.BaseTestCase):
+
+    def setUp(self):
+        super(HealthcheckTests, self).setUp()
+        self.useFixture(config.Config())
 
     @staticmethod
     @webob.dec.wsgify

@@ -19,6 +19,7 @@ __all__ = [
     'list_opts_ssl',
     'list_opts_cors',
     'list_opts_http_proxy_to_wsgi',
+    'list_opts_healthcheck',
 ]
 
 
@@ -26,6 +27,7 @@ import copy
 import itertools
 
 from oslo_middleware import cors
+from oslo_middleware.healthcheck import opts as healthcheck_opts
 from oslo_middleware import http_proxy_to_wsgi
 from oslo_middleware import sizelimit
 from oslo_middleware import ssl
@@ -56,6 +58,7 @@ def list_opts():
             list_opts_ssl(),
             list_opts_cors(),
             list_opts_http_proxy_to_wsgi(),
+            list_opts_healthcheck(),
         )
     )
 
@@ -154,4 +157,32 @@ def list_opts_http_proxy_to_wsgi():
     """
     return [
         ('oslo_middleware', copy.deepcopy(http_proxy_to_wsgi.OPTS)),
+    ]
+
+
+def list_opts_healthcheck():
+    """Return a list of oslo.config options for healthcheck.
+
+    The returned list includes all oslo.config options which may be registered
+    at runtime by the library.
+
+    Each element of the list is a tuple. The first element is the name of the
+    group under which the list of elements in the second element will be
+    registered. A group name of None corresponds to the [DEFAULT] group in
+    config files.
+
+    This function is also discoverable via the 'oslo.middleware' entry point
+    under the 'oslo.config.opts' namespace.
+
+    The purpose of this is to allow tools like the Oslo sample config file
+    generator to discover the options exposed to users by this library.
+
+    :returns: a list of (group_name, opts) tuples
+    """
+    # standard opts and the most common plugin to turn up in sample config.
+    # can figure out a better way of exposing plugin opts later if required.
+    return [
+        ('healthcheck', copy.deepcopy(healthcheck_opts.HEALTHCHECK_OPTS +
+                                      healthcheck_opts.DISABLE_BY_FILE_OPTS +
+                                      healthcheck_opts.DISABLE_BY_FILES_OPTS))
     ]

@@ -17,6 +17,7 @@ import logging
 import os
 
 from oslo_middleware._i18n import _LW
+from oslo_middleware.healthcheck import opts
 from oslo_middleware.healthcheck import pluginbase
 
 LOG = logging.getLogger(__name__)
@@ -40,23 +41,25 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
       disable_by_file_paths = 5000:/var/run/keystone/healthcheck_disable, \
             35357:/var/run/keystone/admin_healthcheck_disable
     """
-    def __init__(self, conf):
-        super(DisableByFilesPortsHealthcheck, self).__init__(conf)
+
+    def __init__(self, *args, **kwargs):
+        super(DisableByFilesPortsHealthcheck, self).__init__(*args, **kwargs)
+        self.oslo_conf.register_opts(opts.DISABLE_BY_FILES_OPTS,
+                                     group='healthcheck')
         self.status_files = {}
-        self.status_files.update(
-            self._iter_paths_ports(self.conf.get('disable_by_file_paths')))
+        paths = self._conf_get('disable_by_file_paths')
+        self.status_files.update(self._iter_paths_ports(paths))
 
     @staticmethod
     def _iter_paths_ports(paths):
-        if paths:
-            for port_path in paths.split(","):
-                port_path = port_path.strip()
-                if port_path:
-                    # On windows, drive letters are followed by colons,
-                    # which makes split() return 3 elements in this case
-                    port, path = port_path.split(":", 1)
-                    port = int(port)
-                    yield (port, path)
+        for port_path in paths:
+            port_path = port_path.strip()
+            if port_path:
+                # On windows, drive letters are followed by colons,
+                # which makes split() return 3 elements in this case
+                port, path = port_path.split(":", 1)
+                port = int(port)
+                yield (port, path)
 
     def healthcheck(self, server_port):
         path = self.status_files.get(server_port)
@@ -92,9 +95,14 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
       disable_by_file_path = /var/run/nova/healthcheck_disable
     """
 
+    def __init__(self, *args, **kwargs):
+        super(DisableByFileHealthcheck, self).__init__(*args, **kwargs)
+        self.oslo_conf.register_opts(opts.DISABLE_BY_FILE_OPTS,
+                                     group='healthcheck')
+
     def healthcheck(self, server_port):
-        path = self.conf.get('disable_by_file_path')
-        if path is None:
+        path = self._conf_get('disable_by_file_path')
+        if not path:
             LOG.warning(_LW('DisableByFile healthcheck middleware enabled '
                             'without disable_by_file_path set'))
             return pluginbase.HealthcheckResult(

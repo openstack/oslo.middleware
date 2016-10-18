@@ -29,7 +29,9 @@ class HealthcheckResult(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class HealthcheckBaseExtension(object):
-    def __init__(self, conf):
+
+    def __init__(self, oslo_conf, conf):
+        self.oslo_conf = oslo_conf
         self.conf = conf
 
     @abc.abstractmethod
@@ -38,3 +40,10 @@ class HealthcheckBaseExtension(object):
 
         return: HealthcheckResult object
         """
+
+    def _conf_get(self, key, group='healthcheck'):
+        if key in self.conf:
+            # Validate value type
+            self.oslo_conf.set_override(key, self.conf[key], group=group,
+                                        enforce_type=True)
+        return getattr(getattr(self.oslo_conf, group), key)

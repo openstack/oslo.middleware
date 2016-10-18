@@ -37,6 +37,7 @@ except ImportError:
     greenlet = None
 
 from oslo_middleware import base
+from oslo_middleware.healthcheck import opts
 
 
 def _find_objects(t):
@@ -374,18 +375,16 @@ Reason
 </HTML>
 """
 
-    def __init__(self, application, conf):
-        super(Healthcheck, self).__init__(application)
-        self._path = conf.get('path', '/healthcheck')
-        self._show_details = strutils.bool_from_string(conf.get('detailed'))
-        self._backend_names = []
-        backends = conf.get('backends')
-        if backends:
-            self._backend_names = backends.split(',')
+    def __init__(self, *args, **kwargs):
+        super(Healthcheck, self).__init__(*args, **kwargs)
+        self.oslo_conf.register_opts(opts.HEALTHCHECK_OPTS,
+                                     group='healthcheck')
+        self._path = self._conf_get('path')
+        self._show_details = self._conf_get('detailed')
         self._backends = stevedore.NamedExtensionManager(
-            self.NAMESPACE, self._backend_names,
+            self.NAMESPACE, self._conf_get('backends'),
             name_order=True, invoke_on_load=True,
-            invoke_args=(conf,))
+            invoke_args=(self.oslo_conf, self.conf))
         self._accept_to_functor = collections.OrderedDict([
             # Order here matters...
             ('text/plain', self._make_text_response),
@@ -397,6 +396,9 @@ Reason
         # always return text/plain (because sending an error from this
         # middleware actually can cause issues).
         self._default_accept = 'text/plain'
+
+    def _conf_get(self, key, group='healthcheck'):
+        return super(Healthcheck, self)._conf_get(key, group=group)
 
     @staticmethod
     def _get_threadstacks():
