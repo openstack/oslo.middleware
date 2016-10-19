@@ -27,7 +27,6 @@ LOG = logging.getLogger(__name__)
 
 CORS_OPTS = [
     cfg.ListOpt('allowed_origin',
-                default=None,
                 help='Indicate whether this resource may be shared with the '
                      'domain received in the requests "origin" header. '
                      'Format: "<protocol>://<host>[:<port>]", no trailing '
