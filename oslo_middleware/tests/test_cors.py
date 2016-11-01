@@ -361,7 +361,7 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(['http://valid.example.com'], gc.allowed_origin)
         self.assertEqual(False, gc.allow_credentials)
         self.assertEqual([], gc.expose_headers)
-        self.assertEqual(None, gc.max_age)
+        self.assertIsNone(gc.max_age)
         self.assertEqual(['GET'], gc.allow_methods)
         self.assertEqual([], gc.allow_headers)
 
@@ -678,7 +678,7 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(gc.allowed_origin, ['http://valid.example.com'])
         self.assertEqual(gc.allow_credentials, False)
         self.assertEqual(gc.expose_headers, [])
-        self.assertEqual(gc.max_age, None)
+        self.assertIsNone(gc.max_age)
         self.assertEqual(gc.allow_methods, ['GET'])
         self.assertEqual(gc.allow_headers, [])
 
@@ -1195,7 +1195,7 @@ class CORSTestWildcard(CORSTestBase):
         self.assertEqual(['http://default.example.com'], gc.allowed_origin)
         self.assertEqual(True, gc.allow_credentials)
         self.assertEqual([], gc.expose_headers)
-        self.assertEqual(None, gc.max_age)
+        self.assertIsNone(gc.max_age)
         self.assertEqual(['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
                          gc.allow_methods)
         self.assertEqual([], gc.allow_headers)
