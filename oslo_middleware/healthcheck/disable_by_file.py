@@ -40,6 +40,8 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
       backends = disable_by_files_ports
       disable_by_file_paths = 5000:/var/run/keystone/healthcheck_disable, \
             35357:/var/run/keystone/admin_healthcheck_disable
+      # set to True to enable detailed output, False is the default
+      detailed = False
     """
 
     def __init__(self, *args, **kwargs):
@@ -93,6 +95,8 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
       path = /healthcheck
       backends = disable_by_file
       disable_by_file_path = /var/run/nova/healthcheck_disable
+      # set to True to enable detailed output, False is the default
+      detailed = False
     """
 
     def __init__(self, *args, **kwargs):
