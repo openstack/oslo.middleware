@@ -16,6 +16,7 @@ from oslo_config import cfg
 HEALTHCHECK_OPTS = [
     cfg.StrOpt('path',
                default='/healthcheck',
+               deprecated_for_removal=True,
                help='The path to respond to healtcheck requests on.'),
     cfg.BoolOpt('detailed',
                 default=False,

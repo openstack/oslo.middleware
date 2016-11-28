@@ -21,6 +21,7 @@ import socket
 import sys
 import traceback
 
+from debtcollector import removals
 import jinja2
 from oslo_utils import reflection
 from oslo_utils import strutils
@@ -51,11 +52,10 @@ def _expand_template(contents, params):
 
 
 class Healthcheck(base.ConfigurableMiddleware):
-    """Healthcheck middleware used for monitoring.
+    """Healthcheck application used for monitoring.
 
-    If the path is ``/healthcheck``, it will respond 200 with "OK" as
-    the body. Or a 503 with the reason as the body if one of the backends
-    reports an application issue.
+    It will respond 200 with "OK" as the body. Or a 503 with the reason as the
+    body if one of the backends reports an application issue.
 
     This is useful for the following reasons:
 
@@ -239,9 +239,8 @@ class Healthcheck(base.ConfigurableMiddleware):
 
     .. code-block:: ini
 
-        [filter:healthcheck]
-        use = egg:oslo.middleware#healthcheck
-        path = /healthcheck
+        [app:healthcheck]
+        use = egg:oslo.middleware:healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_disable
 
@@ -253,21 +252,29 @@ class Healthcheck(base.ConfigurableMiddleware):
 
     .. code-block:: ini
 
-        [pipeline:public_api]
-        pipeline = healthcheck_public sizelimit [...] public_service
+        [composite:public_api]
+        use = egg:Paste#urlmap
+        / = public_api_pipeline
+        /healthcheck = healthcheck_public
 
-        [pipeline:admin_api]
-        pipeline = healthcheck_admin sizelimit [...] admin_service
+        [composite:admin_api]
+        use = egg:Paste#urlmap
+        / = admin_api_pipeline
+        /healthcheck = healthcheck_admin
 
-        [filter:healthcheck_public]
-        use = egg:oslo.middleware#healthcheck
-        path = /healthcheck_public
+        [pipeline:public_api_pipeline]
+        pipeline = sizelimit [...] public_service
+
+        [pipeline:admin_api_pipeline]
+        pipeline = sizelimit [...] admin_service
+
+        [app:healthcheck_public]
+        use = egg:oslo.middleware:healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_public_disable
 
         [filter:healthcheck_admin]
-        use = egg:oslo.middleware#healthcheck
-        path = /healthcheck_admin
+        use = egg:oslo.middleware:healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_admin_disable
     """
@@ -393,9 +400,34 @@ Reason
         # always return text/plain (because sending an error from this
         # middleware actually can cause issues).
         self._default_accept = 'text/plain'
+        self._ignore_path = False
 
     def _conf_get(self, key, group='healthcheck'):
         return super(Healthcheck, self)._conf_get(key, group=group)
+
+    @removals.remove(
+        message="The healthcheck middleware must now be configured as "
+        "an application, not as a filter")
+    @classmethod
+    def factory(cls, global_conf, **local_conf):
+        return super(Healthcheck, cls).factory(global_conf, **local_conf)
+
+    @classmethod
+    def app_factory(cls, global_conf, **local_conf):
+        """Factory method for paste.deploy.
+
+        :param global_conf: dict of options for all middlewares
+                            (usually the [DEFAULT] section of the paste deploy
+                            configuration file)
+        :param local_conf: options dedicated to this middleware
+                           (usually the option defined in the middleware
+                           section of the paste deploy configuration file)
+        """
+        conf = global_conf.copy() if global_conf else {}
+        conf.update(local_conf)
+        o = cls(application=None, conf=conf)
+        o._ignore_path = True
+        return o
 
     @staticmethod
     def _get_threadstacks():
@@ -510,7 +542,7 @@ Reason
 
     @webob.dec.wsgify
     def process_request(self, req):
-        if req.path != self._path:
+        if not self._ignore_path and req.path != self._path:
             return None
         results = [ext.obj.healthcheck(req.server_port)
                    for ext in self._backends]
