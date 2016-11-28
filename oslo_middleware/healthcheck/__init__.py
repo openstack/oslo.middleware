@@ -270,9 +270,6 @@ class Healthcheck(base.ConfigurableMiddleware):
         path = /healthcheck_admin
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_admin_disable
-
-    More details on available backends and their configuration can be found
-    on this page: :doc:`healthcheck_plugins`.
     """
 
     NAMESPACE = "oslo.middleware.healthcheck"
