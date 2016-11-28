@@ -240,7 +240,7 @@ class Healthcheck(base.ConfigurableMiddleware):
     .. code-block:: ini
 
         [filter:healthcheck]
-        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        use = egg:oslo.middleware#healthcheck
         path = /healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_disable
@@ -260,13 +260,13 @@ class Healthcheck(base.ConfigurableMiddleware):
         pipeline = healthcheck_admin sizelimit [...] admin_service
 
         [filter:healthcheck_public]
-        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        use = egg:oslo.middleware#healthcheck
         path = /healthcheck_public
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_public_disable
 
         [filter:healthcheck_admin]
-        paste.filter_factory = oslo_middleware:Healthcheck.factory
+        use = egg:oslo.middleware#healthcheck
         path = /healthcheck_admin
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_admin_disable

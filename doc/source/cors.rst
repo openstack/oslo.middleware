@@ -62,7 +62,7 @@ If your application is using pastedeploy, the following configuration block
 will add CORS support.::
 
     [filter:cors]
-    paste.filter_factory = oslo_middleware.cors:filter_factory
+    use = egg:oslo.middleware#cors
     allowed_origin=https://website.example.com:443,https://website2.example.com:443
     max_age=3600
     allow_methods=GET,POST,PUT,DELETE
@@ -74,7 +74,7 @@ existing configuration from oslo_config in order to simplify the points of
 configuration, this may be done as follows.::
 
     [filter:cors]
-    paste.filter_factory = oslo_middleware.cors:filter_factory
+    use = egg:oslo.middleware#cors
     oslo_config_project = oslo_project_name
 
     # Optional field, in case the program name is different from the project:
