@@ -23,7 +23,7 @@ Configuration with paste-deploy and the oslo.config
 The paste filter (in /etc/my_app/api-paste.ini) will looks like::
 
     [filter:sizelimit]
-    paste.filter_factory = oslo_middleware.sizelimit:RequestBodySizeLimiter.factory
+    use = egg:oslo.middleware#sizelimit
     # In case of the application doesn't use the global oslo.config 
     # object. The middleware must known the app name to load 
     # the application configuration, by setting this:
@@ -45,7 +45,7 @@ Configuration with pastedeploy only
 The paste filter (in /etc/my_app/api-paste.ini) will looks like::
 
     [filter:sizelimit]
-    paste.filter_factory = oslo_middleware.sizelimit:RequestBodySizeLimiter.factory
+    use = egg:oslo.middleware#sizelimit
     max_request_body_size=1000
 
 This will override any configuration done via oslo.config
