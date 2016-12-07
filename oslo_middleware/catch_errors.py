@@ -37,6 +37,8 @@ class CatchErrors(base.ConfigurableMiddleware):
         try:
             response = req.get_response(self.application)
         except Exception:
+            if hasattr(req, 'environ') and 'HTTP_X_AUTH_TOKEN' in req.environ:
+                req.environ['HTTP_X_AUTH_TOKEN'] = '*****'
             LOG.exception(_LE('An error occurred during '
                               'processing the request: %s'), req)
             response = webob.exc.HTTPInternalServerError()

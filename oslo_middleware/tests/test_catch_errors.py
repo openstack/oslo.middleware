@@ -26,6 +26,7 @@ class CatchErrorsTest(test_base.BaseTestCase):
     def _test_has_request_id(self, application, expected_code=None):
         app = catch_errors.CatchErrors(application)
         req = webob.Request.blank('/test')
+        req.environ['HTTP_X_AUTH_TOKEN'] = 'hello=world'
         res = req.get_response(app)
         self.assertEqual(expected_code, res.status_int)
 
@@ -45,3 +46,5 @@ class CatchErrorsTest(test_base.BaseTestCase):
             self._test_has_request_id(application,
                                       webob.exc.HTTPInternalServerError.code)
             self.assertEqual(1, log_exc.call_count)
+            req_log = log_exc.call_args[0][1]
+            self.assertIn('X-Auth-Token: *****', str(req_log))
