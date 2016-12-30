@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import sys
 
-import six
 import webob.dec
 
 from oslo_middleware import base
@@ -41,7 +40,7 @@ class Debug(base.ConfigurableMiddleware):
         resp = req.get_response(self.application)
 
         print(("*" * 40) + " RESPONSE HEADERS")
-        for (key, value) in six.iteritems(resp.headers):
+        for (key, value) in resp.headers.items():
             print(key, "=", value)
         print()
 
