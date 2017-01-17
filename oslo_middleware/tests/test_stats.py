@@ -39,9 +39,6 @@ class TestStaticMethods(test_base.BaseTestCase):
         self.assertEqual("foo.bar", stat)
 
     def test_strips_dots_from_version(self):
-        # NOTE(bigjools): Good testing practice says to randomise inputs
-        # that have no meaning to the test. However my reviewer has said
-        # not to do this, so the versions are static.
         path = "/v1.2/foo.bar/bar.foo"
         stat = stats.StatsMiddleware.strip_dot_from_version(path)
         self.assertEqual("/v12/foo.bar/bar.foo", stat)
@@ -73,85 +70,73 @@ class TestStatsMiddleware(test_base.BaseTestCase):
 
         return stats.StatsMiddleware(fake_application, conf)
 
-    def get_random_method(self):
-        # NOTE(bigjools): Good testing practice says to randomise inputs
-        # that have no meaning to the test. However my reviewer has said
-        # not to do this, so the methods are static.
-        return "methodXVNMapyr"
-
     def perform_request(self, app, path, method):
         req = webob.Request.blank(path, method=method)
         return req.get_response(app)
 
     def test_sends_counter_to_statsd(self):
         app = self.make_stats_middleware()
-        random_method = self.get_random_method()
         path = '/test/foo/bar'
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}.{path}".format(
-            name=app.stat_name, method=random_method,
+            name=app.stat_name, method='GET',
             path=path.lstrip('/').replace('/', '.'))
         app.statsd.timer.assert_called_once_with(expected_stat)
 
     def test_strips_uuid_if_configured(self):
         app = self.make_stats_middleware(remove_uuid=True)
-        random_method = self.get_random_method()
         random_uuid = str(uuid.uuid4())
         path = '/foo/{uuid}/bar'.format(uuid=random_uuid)
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}.foo.bar".format(
-            name=app.stat_name, method=random_method)
+            name=app.stat_name, method='GET')
         app.statsd.timer.assert_called_once_with(expected_stat)
 
     def test_strips_short_uuid_if_configured(self):
         app = self.make_stats_middleware(remove_short_uuid=True)
-        random_method = self.get_random_method()
         random_uuid = uuid.uuid4().hex
         path = '/foo/{uuid}/bar'.format(uuid=random_uuid)
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}.foo.bar".format(
-            name=app.stat_name, method=random_method)
+            name=app.stat_name, method='GET')
         app.statsd.timer.assert_called_once_with(expected_stat)
 
     def test_strips_both_uuid_types_if_configured(self):
         app = self.make_stats_middleware(
             remove_uuid=True, remove_short_uuid=True)
-        random_method = self.get_random_method()
         random_short_uuid = uuid.uuid4().hex
         random_uuid = str(uuid.uuid4())
         path = '/foo/{uuid}/bar/{short_uuid}'.format(
             uuid=random_uuid, short_uuid=random_short_uuid)
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}.foo.bar".format(
-            name=app.stat_name, method=random_method)
+            name=app.stat_name, method='GET')
         app.statsd.timer.assert_called_once_with(expected_stat)
 
     def test_always_mutates_version_id(self):
         app = self.make_stats_middleware()
-        random_method = self.get_random_method()
         path = '/v2.1/foo/bar'
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}.v21.foo.bar".format(
-            name=app.stat_name, method=random_method)
+            name=app.stat_name, method='GET')
         app.statsd.timer.assert_called_once_with(expected_stat)
 
     def test_empty_path_has_sane_stat_name(self):
         app = self.make_stats_middleware()
-        random_method = self.get_random_method()
         path = '/'
 
-        self.perform_request(app, path, random_method)
+        self.perform_request(app, path, 'GET')
 
         expected_stat = "{name}.{method}".format(
-            name=app.stat_name, method=random_method)
+            name=app.stat_name, method='GET')
         app.statsd.timer.assert_called_once_with(expected_stat)
