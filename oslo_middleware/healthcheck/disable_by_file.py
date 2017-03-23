@@ -16,7 +16,6 @@
 import logging
 import os
 
-from oslo_middleware._i18n import _LW
 from oslo_middleware.healthcheck import opts
 from oslo_middleware.healthcheck import pluginbase
 
@@ -66,9 +65,9 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     def healthcheck(self, server_port):
         path = self.status_files.get(server_port)
         if not path:
-            LOG.warning(_LW('DisableByFilesPorts healthcheck middleware'
-                            ' enabled without disable_by_file_paths set'
-                            ' for port %s') % server_port)
+            LOG.warning('DisableByFilesPorts healthcheck middleware'
+                        ' enabled without disable_by_file_paths set'
+                        ' for port %s', server_port)
             return pluginbase.HealthcheckResult(available=True,
                                                 reason="OK")
         else:
@@ -107,8 +106,8 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
     def healthcheck(self, server_port):
         path = self._conf_get('disable_by_file_path')
         if not path:
-            LOG.warning(_LW('DisableByFile healthcheck middleware enabled '
-                            'without disable_by_file_path set'))
+            LOG.warning('DisableByFile healthcheck middleware enabled '
+                        'without disable_by_file_path set')
             return pluginbase.HealthcheckResult(
                 available=True, reason="OK",
                 details="No 'disable_by_file_path' configuration value"
