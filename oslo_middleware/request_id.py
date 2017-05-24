@@ -30,11 +30,21 @@ class RequestId(base.ConfigurableMiddleware):
     request environment. The request ID is also added to API response.
     """
 
+    # if compat_headers is set, we also return the request_id in those
+    # headers as well. This allows projects like Nova to adopt
+    # oslo.middleware without impacting existing users.
+    compat_headers = []
+
     @webob.dec.wsgify
     def __call__(self, req):
         req_id = context.generate_request_id()
         req.environ[ENV_REQUEST_ID] = req_id
         response = req.get_response(self.application)
-        if HTTP_RESP_HEADER_REQUEST_ID not in response.headers:
-            response.headers.add(HTTP_RESP_HEADER_REQUEST_ID, req_id)
+
+        return_headers = [HTTP_RESP_HEADER_REQUEST_ID]
+        return_headers.extend(self.compat_headers)
+
+        for header in return_headers:
+            if header not in response.headers:
+                response.headers.add(header, req_id)
         return response
