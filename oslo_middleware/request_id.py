@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
+
 from oslo_context import context
 import webob.dec
 
@@ -20,7 +22,11 @@ from oslo_middleware import base
 
 
 ENV_REQUEST_ID = 'openstack.request_id'
+GLOBAL_REQ_ID = 'openstack.global_request_id'
 HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
+INBOUND_HEADER = 'X-Openstack-Request-Id'
+ID_FORMAT = (r'^req-[a-f0-9]{8}-[a-f0-9]{4}-'
+             r'[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
 
 
 class RequestId(base.ConfigurableMiddleware):
@@ -35,8 +41,18 @@ class RequestId(base.ConfigurableMiddleware):
     # oslo.middleware without impacting existing users.
     compat_headers = []
 
+    def set_global_req_id(self, req):
+        gr_id = req.headers.get(INBOUND_HEADER, "")
+        if re.match(ID_FORMAT, gr_id):
+            req.environ[GLOBAL_REQ_ID] = gr_id
+        # TODO(sdague): it would be nice to warn if we dropped a bogus
+        # request_id, but the infrastructure for doing that isn't yet
+        # setup at this stage.
+
     @webob.dec.wsgify
     def __call__(self, req):
+        self.set_global_req_id(req)
+
         req_id = context.generate_request_id()
         req.environ[ENV_REQUEST_ID] = req_id
         response = req.get_response(self.application)
