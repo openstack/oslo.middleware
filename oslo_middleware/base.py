@@ -99,8 +99,7 @@ class ConfigurableMiddleware(object):
     def _conf_get(self, key, group="oslo_middleware"):
         if key in self.conf:
             # Validate value type
-            self.oslo_conf.set_override(key, self.conf[key], group=group,
-                                        enforce_type=True)
+            self.oslo_conf.set_override(key, self.conf[key], group=group)
         return getattr(getattr(self.oslo_conf, group), key)
 
     @staticmethod

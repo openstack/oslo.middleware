@@ -31,8 +31,7 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
         self.middleware.oslo_conf.set_override('enable_proxy_headers_parsing',
                                                True,
-                                               group='oslo_middleware',
-                                               enforce_type=True)
+                                               group='oslo_middleware')
         self.request = webob.Request.blank('/foo/bar', method='POST')
 
     def test_backward_compat(self):
@@ -139,8 +138,7 @@ class TestHTTPProxyToWSGIDisabled(test_base.BaseTestCase):
         self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
         self.middleware.oslo_conf.set_override('enable_proxy_headers_parsing',
                                                False,
-                                               group='oslo_middleware',
-                                               enforce_type=True)
+                                               group='oslo_middleware')
         self.request = webob.Request.blank('/foo/bar', method='POST')
 
     def test_no_headers(self):
