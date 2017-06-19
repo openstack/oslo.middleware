@@ -132,7 +132,6 @@ def list_opts_cors():
     """
     return [
         ('cors', copy.deepcopy(cors.CORS_OPTS)),
-        ('cors.subdomain', copy.deepcopy(cors.CORS_OPTS))
     ]
 
 
