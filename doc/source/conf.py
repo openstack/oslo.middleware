@@ -23,10 +23,18 @@ sys.path.insert(0, os.path.abspath('../..'))
 extensions = [
     'sphinx.ext.autodoc',
     #'sphinx.ext.intersphinx',
-    'oslosphinx',
     'oslo_config.sphinxext',
+    'openstackdocstheme',
     'stevedore.sphinxext',
 ]
+
+# openstackdocstheme options
+repository_name = 'openstack/oslo.middleware'
+bug_project = 'oslo.middleware'
+bug_tag = ''
+
+# Must set this variable to include year, month, day, hours, and minutes.
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
