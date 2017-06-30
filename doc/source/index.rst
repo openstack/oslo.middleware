@@ -6,12 +6,10 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   installation
-   api
-   healthcheck_plugins
-   cors
-   oslo_config
-   contributing
+   install/index
+   contributor/index
+   configuration/index
+   reference/index
 
 Release Notes
 =============
@@ -19,4 +17,4 @@ Release Notes
 .. toctree::
    :maxdepth: 1
 
-   history
+   user/history
