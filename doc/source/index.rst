@@ -9,7 +9,9 @@ Contents
    install/index
    contributor/index
    configuration/index
+   admin/index
    reference/index
+   glossary
 
 Release Notes
 =============
