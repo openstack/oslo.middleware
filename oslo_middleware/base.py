@@ -15,7 +15,13 @@
 
 """Base class(es) for WSGI Middleware."""
 
-from inspect import getargspec
+import six
+
+if six.PY2:
+    from inspect import getargspec as getfullargspec
+else:
+    from inspect import getfullargspec
+
 import webob.dec
 import webob.request
 import webob.response
@@ -124,7 +130,7 @@ class ConfigurableMiddleware(object):
             return response
         response = req.get_response(self.application)
 
-        (args, varargs, varkw, defaults) = getargspec(self.process_response)
+        args = getfullargspec(self.process_response)[0]
         if 'request' in args:
             return self.process_response(response, request=req)
         return self.process_response(response)
