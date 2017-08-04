@@ -558,4 +558,5 @@ Reason
             functor = self._accept_to_functor[accept_type]
         body, content_type = functor(results, healthy)
         return webob.response.Response(status=status, body=body,
+                                       charset='UTF-8',
                                        content_type=content_type)

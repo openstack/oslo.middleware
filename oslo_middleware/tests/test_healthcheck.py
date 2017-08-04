@@ -18,6 +18,7 @@ import time
 
 import mock
 from oslo_config import fixture as config
+from oslo_serialization import jsonutils
 from oslotest import base as test_base
 import requests
 import webob.dec
@@ -192,3 +193,10 @@ class HealthcheckTests(test_base.BaseTestCase):
                       expected_body=b'DISABLED BY FILE',
                       server_port=81)
         self.assertIn('disable_by_files_ports', self.app._backends.names())
+
+    def test_json_response(self):
+        expected_body = jsonutils.dumps({'detailed': False, 'reasons': []},
+                                        indent=4,
+                                        sort_keys=True).encode('utf-8')
+        self._do_test(expected_body=expected_body,
+                      accept='application/json')
