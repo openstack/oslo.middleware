@@ -49,7 +49,7 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
             entry = {}
             for d in proxy.split(";"):
                 key, _, value = d.partition("=")
-                entry[key.lower()] = value
+                entry[key.lower().strip()] = value.strip()
             result.append(entry)
         return result
 
