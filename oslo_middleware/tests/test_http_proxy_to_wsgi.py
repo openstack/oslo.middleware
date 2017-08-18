@@ -90,6 +90,18 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"https://localhost:80/", response.body)
 
+    def test__parse_rfc7239_header(self):
+        expected_result = [{'for': 'foobar', 'proto': 'https'},
+                           {'for': 'foobaz', 'proto': 'http'}]
+
+        result = self.middleware._parse_rfc7239_header(
+            "for=foobar;proto=https, for=foobaz;proto=http")
+        self.assertEqual(expected_result, result)
+
+        result = self.middleware._parse_rfc7239_header(
+            "for=foobar; proto=https, for=foobaz; proto=http")
+        self.assertEqual(expected_result, result)
+
     def test_rfc7239_proto_host(self):
         self.request.headers['Forwarded'] = (
             "for=foobar;proto=https;host=example.com, for=foobaz;proto=http")
