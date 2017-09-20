@@ -39,8 +39,7 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         def fake_app(req):
             return util.application_uri(req.environ)
 
-        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGIMiddleware(
-            fake_app)
+        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"http://localhost:80/", response.body)
 
@@ -119,8 +118,7 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         def fake_app(req):
             return req.environ['REMOTE_ADDR']
 
-        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGIMiddleware(
-            fake_app)
+        self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
         forwarded_for_addr = '1.2.3.4'
         forwarded_addr = '8.8.8.8'
 
