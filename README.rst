@@ -16,6 +16,7 @@ enhanced with functionality like add/delete/modification of http headers
 and support for limiting size/connection etc.
 
 * Free software: Apache license
-* Documentation: https://docs.openstack.org/oslo.middleware/latest
+* Documentation: https://docs.openstack.org/oslo.middleware/latest/
 * Source: https://git.openstack.org/cgit/openstack/oslo.middleware
 * Bugs: https://bugs.launchpad.net/oslo.middleware
+* Release notes: https://docs.openstack.org/releasenotes/oslo.middleware/
