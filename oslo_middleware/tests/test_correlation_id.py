@@ -13,11 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
+import fixtures
 import mock
 from oslotest import base as test_base
-from oslotest import moxstubout
 
 from oslo_middleware import correlation_id
 
@@ -26,7 +24,6 @@ class CorrelationIdTest(test_base.BaseTestCase):
 
     def setUp(self):
         super(CorrelationIdTest, self).setUp()
-        self.stubs = self.useFixture(moxstubout.MoxStubout()).stubs
 
     def test_process_request(self):
         app = mock.Mock()
@@ -35,7 +32,7 @@ class CorrelationIdTest(test_base.BaseTestCase):
 
         mock_uuid4 = mock.Mock()
         mock_uuid4.return_value = "fake_uuid"
-        self.stubs.Set(uuid, 'uuid4', mock_uuid4)
+        self.useFixture(fixtures.MockPatch('uuid.uuid4', mock_uuid4))
 
         middleware = correlation_id.CorrelationId(app)
         middleware(req)
