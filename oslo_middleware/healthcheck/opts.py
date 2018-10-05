@@ -20,7 +20,11 @@ HEALTHCHECK_OPTS = [
                help='The path to respond to healtcheck requests on.'),
     cfg.BoolOpt('detailed',
                 default=False,
-                help='Show more detailed information as part of the response'),
+                help='Show more detailed information as part of the response. '
+                     'Security note: Enabling this option may expose '
+                     'sensitive details about the service being monitored. '
+                     'Be sure to verify that it will not violate your '
+                     'security policies.'),
     cfg.ListOpt('backends',
                 default=[],
                 help='Additional backends that can perform health checks and '
