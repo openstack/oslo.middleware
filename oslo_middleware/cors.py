@@ -140,8 +140,8 @@ class CORS(base.ConfigurableMiddleware):
         allow_methods: List of HTTP methods to permit.
         allow_headers: List of HTTP headers to permit from the client.
         """
-        if ('allowed_origin' not in local_conf
-           and 'oslo_config_project' not in local_conf):
+        if ('allowed_origin' not in local_conf and
+           'oslo_config_project' not in local_conf):
             raise TypeError("allowed_origin or oslo_config_project "
                             "is required")
         return super(CORS, cls).factory(global_conf, **local_conf)
