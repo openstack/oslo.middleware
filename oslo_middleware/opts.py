@@ -12,6 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+import itertools
+
+from oslo_middleware import cors
+from oslo_middleware.healthcheck import opts as healthcheck_opts
+from oslo_middleware import http_proxy_to_wsgi
+from oslo_middleware import sizelimit
+from oslo_middleware import ssl
 
 __all__ = [
     'list_opts',
@@ -21,16 +29,6 @@ __all__ = [
     'list_opts_http_proxy_to_wsgi',
     'list_opts_healthcheck',
 ]
-
-
-import copy
-import itertools
-
-from oslo_middleware import cors
-from oslo_middleware.healthcheck import opts as healthcheck_opts
-from oslo_middleware import http_proxy_to_wsgi
-from oslo_middleware import sizelimit
-from oslo_middleware import ssl
 
 
 def list_opts():
