@@ -24,7 +24,7 @@ from oslo_middleware import base
 
 LOG = logging.getLogger(__name__)
 
-_TOKEN_RE = re.compile('^(X-\w+-Token):.*$', flags=re.MULTILINE)
+_TOKEN_RE = re.compile(r'^(X-\w+-Token):.*$', flags=re.MULTILINE)
 
 
 class CatchErrors(base.ConfigurableMiddleware):
