@@ -552,8 +552,10 @@ Reason
             status = self.HEAD_HEALTHY_TO_STATUS_CODES[healthy]
         else:
             status = self.HEALTHY_TO_STATUS_CODES[healthy]
-            accept_type = req.accept.best_match(self._accept_order)
-            if not accept_type:
+            try:
+                offers = req.accept.acceptable_offers(self._accept_order)
+                accept_type = offers[0][0]
+            except IndexError:
                 accept_type = self._default_accept
             functor = self._accept_to_functor[accept_type]
         body, content_type = functor(results, healthy)
