@@ -17,12 +17,16 @@ Request Body limiting middleware.
 
 """
 
+import logging
+
 from oslo_config import cfg
 import webob.dec
 import webob.exc
 
 from oslo_middleware._i18n import _
 from oslo_middleware import base
+
+LOG = logging.getLogger(__name__)
 
 
 _oldopts = [cfg.DeprecatedOpt('osapi_max_request_body_size',
@@ -56,7 +60,7 @@ class LimitingReader(object):
         for chunk in self.data:
             self.bytes_read += len(chunk)
             if self.bytes_read > self.limit:
-                msg = _("Request is too large.")
+                msg = _("Request is too large. Larger than %s") % self.limit
                 raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
             else:
                 yield chunk
@@ -70,7 +74,7 @@ class LimitingReader(object):
             result = self.data.read(i)
         self.bytes_read += len(result)
         if self.bytes_read > self.limit:
-            msg = _("Request is too large.")
+            msg = _("Request is too large. Larger than %s.") % self.limit
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
         return result
 
@@ -87,7 +91,9 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
         max_size = self._conf_get('max_request_body_size')
         if (req.content_length is not None and
                 req.content_length > max_size):
-            msg = _("Request is too large.")
+            msg = _("Request is too large. "
+                    "Larger than max_request_body_size (%s).") % max_size
+            LOG.info(msg)
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
         if req.content_length is None:
             limiter = LimitingReader(req.body_file, max_size)
