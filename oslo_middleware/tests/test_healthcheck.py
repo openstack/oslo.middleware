@@ -15,8 +15,8 @@
 
 import threading
 import time
+from unittest import mock
 
-import mock
 from oslo_config import fixture as config
 from oslo_serialization import jsonutils
 from oslotest import base as test_base
