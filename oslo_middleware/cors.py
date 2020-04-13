@@ -396,5 +396,6 @@ class CORS(base.ConfigurableMiddleware):
             response.headers['Access-Control-Expose-Headers'] = \
                 ','.join(cors_config['expose_headers'])
 
+
 # NOTE(sileht): Shortcut for backwards compatibility
 filter_factory = CORS.factory
