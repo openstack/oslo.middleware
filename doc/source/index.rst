@@ -16,7 +16,5 @@ Contents
 Release Notes
 =============
 
-.. toctree::
-   :maxdepth: 1
-
-   user/history
+Read also the `oslo.middleware Release Notes
+<https://docs.openstack.org/releasenotes/oslo.middleware/>`_.
