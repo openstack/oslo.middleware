@@ -15,6 +15,7 @@
 
 import collections
 import gc
+import io
 import json
 import platform
 import socket
@@ -26,7 +27,6 @@ import jinja2
 from oslo_utils import reflection
 from oslo_utils import strutils
 from oslo_utils import timeutils
-import six
 import stevedore
 import webob.dec
 import webob.exc
@@ -395,7 +395,7 @@ Reason
             ('text/html', self._make_html_response),
             ('application/json', self._make_json_response),
         ])
-        self._accept_order = tuple(six.iterkeys(self._accept_to_functor))
+        self._accept_order = tuple(self._accept_to_functor)
         # When no accept type matches instead of returning 406 we will
         # always return text/plain (because sending an error from this
         # middleware actually can cause issues).
@@ -437,8 +437,8 @@ Reason
         except AttributeError:
             pass
         else:
-            buf = six.StringIO()
-            for stack in six.itervalues(active_frames):
+            buf = io.StringIO()
+            for stack in active_frames.values():
                 traceback.print_stack(stack, file=buf)
                 threadstacks.append(buf.getvalue())
                 buf.seek(0)
@@ -449,7 +449,7 @@ Reason
     def _get_greenstacks():
         greenstacks = []
         if greenlet is not None:
-            buf = six.StringIO()
+            buf = io.StringIO()
             for gt in _find_objects(greenlet.greenlet):
                 traceback.print_stack(gt.gr_frame, file=buf)
                 greenstacks.append(buf.getvalue())

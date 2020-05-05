@@ -15,8 +15,6 @@
 
 import abc
 
-import six
-
 
 class HealthcheckResult(object):
     """Result of a ``healthcheck`` method call should be this object."""
@@ -27,8 +25,7 @@ class HealthcheckResult(object):
         self.details = details
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HealthcheckBaseExtension(object):
+class HealthcheckBaseExtension(metaclass=abc.ABCMeta):
 
     def __init__(self, oslo_conf, conf):
         self.oslo_conf = oslo_conf

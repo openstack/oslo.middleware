@@ -18,7 +18,6 @@ import logging
 import debtcollector
 from oslo_config import cfg
 from oslo_middleware import base
-import six
 import webob.exc
 
 
@@ -209,7 +208,7 @@ class CORS(base.ConfigurableMiddleware):
 
         # NOTE(dims): Support older code that still passes in
         # a string for allowed_origin instead of a list
-        if isinstance(allowed_origin, six.string_types):
+        if isinstance(allowed_origin, str):
             # TODO(krotscheck): https://review.opendev.org/#/c/312687/
             LOG.warning('DEPRECATED: The `allowed_origin` keyword argument in '
                         '`add_origin()` should be a list, found String.')
