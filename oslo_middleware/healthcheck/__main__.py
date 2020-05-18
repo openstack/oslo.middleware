@@ -12,15 +12,15 @@
 #    under the License.
 
 import argparse
+from http import server
+import socketserver
 
-from six.moves import SimpleHTTPServer  # noqa
-from six.moves import socketserver
 import webob
 
 from oslo_middleware import healthcheck
 
 
-class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class HttpHandler(server.SimpleHTTPRequestHandler):
     def do_GET(self):
         @webob.dec.wsgify
         def dummy_application(req):

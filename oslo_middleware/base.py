@@ -15,17 +15,11 @@
 
 """Base class(es) for WSGI Middleware."""
 
-import six
-
+from inspect import getfullargspec
 from oslo_config import cfg
 import webob.dec
 import webob.request
 import webob.response
-
-if six.PY2:
-    from inspect import getargspec as getfullargspec
-else:
-    from inspect import getfullargspec
 
 
 class NoContentTypeResponse(webob.response.Response):
