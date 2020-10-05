@@ -3,7 +3,7 @@ Middlewares and configuration
 =============================
 
 Middlewares can be configured in multiple fashion depending of the
-application needs. Here is some use-cases: 
+application needs. Here is some use-cases:
 
 Configuration from the application
 ----------------------------------
@@ -24,8 +24,8 @@ The paste filter (in /etc/my_app/api-paste.ini) will looks like::
 
     [filter:sizelimit]
     use = egg:oslo.middleware#sizelimit
-    # In case of the application doesn't use the global oslo.config 
-    # object. The middleware must known the app name to load 
+    # In case of the application doesn't use the global oslo.config
+    # object. The middleware must known the app name to load
     # the application configuration, by setting this:
     #  oslo_config_project = my_app
 
