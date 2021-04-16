@@ -60,7 +60,7 @@ class CatchErrorsTest(test_base.BaseTestCase):
 
         app = catch_errors.CatchErrors(application)
         req = webob.Request.blank('/test',
-                                  text=u'test data',
+                                  text='test data',
                                   method='POST',
                                   headers={'X-Auth-Token': 'secret1',
                                            'X-Service-Token': 'secret2',
