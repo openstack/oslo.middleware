@@ -65,6 +65,12 @@ class Healthcheck(base.ConfigurableMiddleware):
       the activity of the server.
     * *(and more)*
 
+    .. note::
+
+        This middleware indicates that the API is accessible but it does
+        indicate that it is necessarily functional or that any other API
+        request will actually work.
+
     Example requests/responses (**not** detailed mode)::
 
       $ curl -i -X HEAD "http://0.0.0.0:8775/healthcheck"
