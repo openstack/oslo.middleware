@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The new ``[healthcheck] allowed_source_ranges`` parameter has been added.
+    This parameter defines a list of network ranges from which access to
+    ``/healthcheck`` endpoint is allowed.

@@ -29,6 +29,11 @@ HEALTHCHECK_OPTS = [
                 default=[],
                 help='Additional backends that can perform health checks and '
                      'report that information back as part of a request.'),
+    cfg.ListOpt('allowed_source_ranges',
+                default=[],
+                help='A list of network addresses to limit source ip allowed '
+                     'to access healthcheck information. Any request from ip '
+                     'outside of these network addresses are ignored.'),
 ]
 
 
