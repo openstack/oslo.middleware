@@ -10,7 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-__all__ = ['CatchErrors',
+__all__ = ['BasicAuthMiddleware',
+           'CatchErrors',
            'CorrelationId',
            'CORS',
            'Debug',
@@ -20,6 +21,7 @@ __all__ = ['CatchErrors',
            'RequestBodySizeLimiter',
            'SSLMiddleware']
 
+from oslo_middleware.basic_auth import BasicAuthMiddleware
 from oslo_middleware.catch_errors import CatchErrors
 from oslo_middleware.correlation_id import CorrelationId
 from oslo_middleware.cors import CORS
