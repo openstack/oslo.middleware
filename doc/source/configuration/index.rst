@@ -53,5 +53,5 @@ This will override any configuration done via oslo.config
 
 .. note::
 
-    healtcheck middleware does not yet use oslo.config, see :doc:`../reference/healthcheck_plugins`
+    healthcheck middleware does not yet use oslo.config, see :doc:`../reference/healthcheck_plugins`
 
