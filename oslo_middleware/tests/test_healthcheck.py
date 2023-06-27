@@ -41,7 +41,7 @@ class HealthcheckMainTests(test_base.BaseTestCase):
                 # The operating system will return WSAEADDRNOTAVAIL which
                 # in turn will throw a requests.ConnectionError
                 r = requests.get("http://127.0.0.1:%s" % (
-                    server.server_address[1]))
+                    server.server_address[1]), timeout=10)
             except requests.ConnectionError:
                 # Server hasn't started up yet, try again in a few.
                 time.sleep(1)
