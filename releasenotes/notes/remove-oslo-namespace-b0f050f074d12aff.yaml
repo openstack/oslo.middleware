@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``olso.middleware`` package has been removed. This package was earlier
+    deprecated to be replaced by the ``oslo_middleware`` package.
