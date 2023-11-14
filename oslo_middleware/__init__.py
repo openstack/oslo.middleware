@@ -18,8 +18,7 @@ __all__ = ['BasicAuthMiddleware',
            'Healthcheck',
            'HTTPProxyToWSGI',
            'RequestId',
-           'RequestBodySizeLimiter',
-           'SSLMiddleware']
+           'RequestBodySizeLimiter']
 
 from oslo_middleware.basic_auth import BasicAuthMiddleware
 from oslo_middleware.catch_errors import CatchErrors
@@ -30,4 +29,3 @@ from oslo_middleware.healthcheck import Healthcheck
 from oslo_middleware.http_proxy_to_wsgi import HTTPProxyToWSGI
 from oslo_middleware.request_id import RequestId
 from oslo_middleware.sizelimit import RequestBodySizeLimiter
-from oslo_middleware.ssl import SSLMiddleware

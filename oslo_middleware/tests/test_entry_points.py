@@ -27,7 +27,6 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
             'http_proxy_to_wsgi': 'HTTPProxyToWSGI',
             'request_id': 'RequestId',
             'sizelimit': 'RequestBodySizeLimiter',
-            'ssl': 'SSLMiddleware',
         }
 
         em = stevedore.ExtensionManager('paste.filter_factory')

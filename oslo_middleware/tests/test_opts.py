@@ -26,6 +26,3 @@ class TestOptionDiscovery(BaseTestCase):
 
     def test_cors(self):
         opts.list_opts_cors()
-
-    def test_ssl(self):
-        opts.list_opts_ssl()

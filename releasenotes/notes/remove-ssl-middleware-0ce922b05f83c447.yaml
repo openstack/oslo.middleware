@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The SSL middleware has been removed. It was deprecated in favor of
+    the HTTPProxyToWSGI middleware.
