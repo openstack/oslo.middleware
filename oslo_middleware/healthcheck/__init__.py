@@ -16,6 +16,7 @@
 import collections
 import gc
 import io
+import ipaddress
 import json
 import platform
 import socket
@@ -391,6 +392,9 @@ Reason
                                      group='healthcheck')
         self._path = self._conf_get('path')
         self._show_details = self._conf_get('detailed')
+        self._source_ranges = [
+            ipaddress.ip_network(r)
+            for r in self._conf_get('allowed_source_ranges')]
         self._backends = stevedore.NamedExtensionManager(
             self.NAMESPACE, self._conf_get('backends'),
             name_order=True, invoke_on_load=True,
@@ -550,6 +554,17 @@ Reason
     def process_request(self, req):
         if not self._ignore_path and req.path != self._path:
             return None
+
+        if self._source_ranges:
+            remote_addr = ipaddress.ip_address(req.remote_addr)
+            for r in self._source_ranges:
+                if r.version == remote_addr.version and remote_addr in r:
+                    break
+            else:
+                # Because source ip is not included in allowed ranges, ignore
+                # the request in this middleware.
+                return None
+
         results = [ext.obj.healthcheck(req.server_port)
                    for ext in self._backends]
         healthy = self._are_results_healthy(results)

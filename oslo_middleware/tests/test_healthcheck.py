@@ -63,20 +63,22 @@ class HealthcheckTests(test_base.BaseTestCase):
 
     def _do_test_request(self, conf={}, path='/healthcheck',
                          accept='text/plain', method='GET',
-                         server_port=80):
+                         server_port=80, remote_addr='127.0.0.1'):
         self.app = healthcheck.Healthcheck(self.application, conf)
         req = webob.Request.blank(path, accept=accept, method=method)
         req.server_port = server_port
+        req.remote_addr = remote_addr
         res = req.get_response(self.app)
         return res
 
     def _do_test(self, conf={}, path='/healthcheck',
                  expected_code=webob.exc.HTTPOk.code,
                  expected_body=b'', accept='text/plain',
-                 method='GET', server_port=80):
+                 method='GET', server_port=80, remote_addr='127.0.0.1'):
         res = self._do_test_request(conf=conf, path=path,
                                     accept=accept, method=method,
-                                    server_port=server_port)
+                                    server_port=server_port,
+                                    remote_addr=remote_addr)
         self.assertEqual(expected_code, res.status_int)
         self.assertEqual(expected_body, res.body)
 
@@ -200,3 +202,16 @@ class HealthcheckTests(test_base.BaseTestCase):
                                         sort_keys=True).encode('utf-8')
         self._do_test(expected_body=expected_body,
                       accept='application/json')
+
+    def test_source_within_allowed_ranges(self):
+        conf = {'allowed_source_ranges': ['192.168.0.0/24', '192.168.1.0/24']}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      remote_addr='192.168.0.1')
+
+    def test_source_out_of_allowed_ranges(self):
+        conf = {'allowed_source_ranges': ['192.168.0.0/24', '192.168.1.0/24']}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      expected_body=b'Hello, World!!!',
+                      remote_addr='192.168.3.1')
