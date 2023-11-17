@@ -395,6 +395,8 @@ Reason
         self._source_ranges = [
             ipaddress.ip_network(r)
             for r in self._conf_get('allowed_source_ranges')]
+        self._ignore_proxied_requests = self._conf_get(
+            'ignore_proxied_requests')
         self._backends = stevedore.NamedExtensionManager(
             self.NAMESPACE, self._conf_get('backends'),
             name_order=True, invoke_on_load=True,
@@ -564,6 +566,13 @@ Reason
                 # Because source ip is not included in allowed ranges, ignore
                 # the request in this middleware.
                 return None
+
+        if self._ignore_proxied_requests:
+            for hdr in [
+                'FORWARDED', 'FORWARDED_PROTO', 'FORWARDED_HOST',
+                'FORWARDED_FOR', 'FORWARDED_PREFIX']:
+                if req.environ.get("HTTP_X_%s" % hdr):
+                    return None
 
         results = [ext.obj.healthcheck(req.server_port)
                    for ext in self._backends]

@@ -34,6 +34,9 @@ HEALTHCHECK_OPTS = [
                 help='A list of network addresses to limit source ip allowed '
                      'to access healthcheck information. Any request from ip '
                      'outside of these network addresses are ignored.'),
+    cfg.BoolOpt('ignore_proxied_requests',
+                default=False,
+                help='Ignore requests with proxy headers.')
 ]
 
 
