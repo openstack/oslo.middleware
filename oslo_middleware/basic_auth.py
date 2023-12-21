@@ -13,9 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import base64
 import binascii
 import logging
+import typing as ty
 
 import bcrypt
 import webob
@@ -23,6 +26,11 @@ import webob
 from oslo_config import cfg
 from oslo_middleware import base
 from oslo_middleware import exceptions
+
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+    import webob.request
+    import webob.response
 
 LOG = logging.getLogger(__name__)
 
@@ -37,15 +45,24 @@ OPTS = [
 cfg.CONF.register_opts(OPTS, group='oslo_middleware')
 
 
+class AuthEntry(ty.TypedDict):
+    HTTP_X_USER: str
+    HTTP_X_USER_NAME: str
+
+
 class BasicAuthMiddleware(base.ConfigurableMiddleware):
     """Middleware which performs HTTP basic authentication on requests"""
 
-    def __init__(self, application, conf=None):
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
         super().__init__(application, conf)
         self.auth_file = cfg.CONF.oslo_middleware.http_basic_auth_user_file
         validate_auth_file(self.auth_file)
 
-    def format_exception(self, e):
+    def format_exception(self, e: Exception) -> webob.response.Response:
         result = {'error': {'message': str(e), 'code': 401}}
         headers = [('Content-Type', 'application/json')]
         return webob.Response(
@@ -56,20 +73,28 @@ class BasicAuthMiddleware(base.ConfigurableMiddleware):
         )
 
     @webob.dec.wsgify
-    def __call__(self, req):
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         try:
             token = parse_header(req.environ)
             username, password = parse_token(token)
             req.environ.update(
                 authenticate(self.auth_file, username, password)
             )
-            return self.application
+            response = req.get_response(self.application)
         except Exception as e:
             response = self.format_exception(e)
-            return self.process_response(response)
+
+        return response
 
 
-def authenticate(auth_file, username, password):
+def authenticate(
+    auth_file: str,
+    username: str,
+    password: bytes,
+) -> AuthEntry:
     """Finds username and password match in Apache style user auth file
 
     The user auth file format is expected to comply with Apache
@@ -100,7 +125,7 @@ def authenticate(auth_file, username, password):
     raise webob.exc.HTTPUnauthorized()
 
 
-def auth_entry(entry, password):
+def auth_entry(entry: str, password: bytes) -> AuthEntry:
     """Compare a password with a single user auth file entry
 
     :param: entry: Line from auth user file to use for authentication
@@ -109,7 +134,6 @@ def auth_entry(entry, password):
     :raises: HTTPUnauthorized, if the entry doesn't match supplied password or
         if the entry is crypted with a method other than bcrypt
     """
-
     username, crypted = parse_entry(entry)
     if not bcrypt.checkpw(password, crypted):
         LOG.info('Password for %s does not match', username)
@@ -117,13 +141,12 @@ def auth_entry(entry, password):
     return {'HTTP_X_USER': username, 'HTTP_X_USER_NAME': username}
 
 
-def validate_auth_file(auth_file):
+def validate_auth_file(auth_file: str) -> None:
     """Read the auth user file and validate its correctness
 
     :param: auth_file: Path to user auth file
     :raises: ConfigInvalid on validation error
     """
-
     try:
         with open(auth_file) as f:
             for line in f:
@@ -136,7 +159,7 @@ def validate_auth_file(auth_file):
         )
 
 
-def parse_entry(entry):
+def parse_entry(entry: str) -> tuple[str, bytes]:
     """Extrace the username and crypted password from a user auth file entry
 
     :param: entry: Line from auth user file to use for authentication
@@ -144,7 +167,6 @@ def parse_entry(entry):
     :raises: ConfigInvalid if the password is not in the supported bcrypt
     format
     """
-
     username, crypted_str = entry.split(':', maxsplit=1)
     crypted = crypted_str.encode('utf-8')
     if crypted[:4] not in (b'$2y$', b'$2a$', b'$2b$'):
@@ -155,7 +177,7 @@ def parse_entry(entry):
     return username, crypted
 
 
-def parse_token(token):
+def parse_token(token: str | bytes) -> tuple[str, bytes]:
     """Parse the token portion of the Authentication header value
 
     :param: token: Token value from basic authorization header
@@ -163,12 +185,11 @@ def parse_token(token):
     :raises: BadRequest, if username and password could not be parsed for any
         reason
     """
-
     try:
         if isinstance(token, str):
             token = token.encode('utf-8')
         auth_pair = base64.b64decode(token, validate=True)
-        (username, password) = auth_pair.split(b':', maxsplit=1)
+        username, password = auth_pair.split(b':', maxsplit=1)
         return (username.decode('utf-8'), password)
     except (TypeError, binascii.Error, ValueError) as exc:
         LOG.info('Could not decode authorization token: %s', exc)
@@ -177,7 +198,7 @@ def parse_token(token):
         )
 
 
-def parse_header(env):
+def parse_header(env: dict[str, str]) -> str:
     """Parse WSGI environment for Authorization header of type Basic
 
     :param: env: WSGI environment to get header from

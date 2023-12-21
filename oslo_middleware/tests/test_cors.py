@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import typing as ty
+
 from oslo_config import fixture
 from oslotest import base as test_base
 import webob
@@ -262,7 +264,7 @@ class CORSTestFilterFactory(CORSTestBase):
         self.assertIn('http://other.example.com', application.allowed_origins)
 
     def test_no_origin_fail(self):
-        '''Assert that a filter factory with no allowed_origin fails.'''
+        """Assert that a filter factory with no allowed_origin fails."""
         self.assertRaises(
             TypeError,
             cors.filter_factory,
@@ -276,11 +278,11 @@ class CORSTestFilterFactory(CORSTestBase):
         )
 
     def test_no_origin_but_oslo_config_project(self):
-        '''Assert that a filter factory with oslo_config_project succeed.'''
+        """Assert that a filter factory with oslo_config_project succeed."""
         cors.filter_factory(global_conf=None, oslo_config_project='foobar')
 
     def test_cor_config_sections_with_defaults(self):
-        '''Assert cors.* config sections with default values work.'''
+        """Assert cors.* config sections with default values work."""
 
         # Set up the config fixture.
         self.config_fixture.load_raw_values(group='cors.subdomain')
@@ -296,7 +298,9 @@ class CORSRegularRequestTest(CORSTestBase):
     """
 
     # List of HTTP methods (other than OPTIONS) to test with.
-    methods = ['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']
+    methods: list[
+        ty.Literal['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']
+    ] = ['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']
 
     def setUp(self):
         """Setup the tests."""
@@ -431,6 +435,7 @@ class CORSRegularRequestTest(CORSTestBase):
         """
         for method in self.methods:
             request = webob.Request.blank('/')
+            request.method = method
             response = request.get_response(self.application)
             self.assertCORSResponse(
                 response,

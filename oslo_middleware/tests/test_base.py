@@ -34,13 +34,13 @@ class TestBase(BaseTestCase):
         middleware's implementation.
         """
         # Bootstrap the application
-        self.application = RequestBase(application)
+        app = RequestBase(application)
 
         # Send a request through.
         request = webob.Request({}, method='GET')
-        request.get_response(self.application)
+        request.get_response(app)
 
-        self.assertTrue(self.application.called_with_request)
+        self.assertTrue(app.called_with_request)
 
     def test_extend_without_request(self):
         """Assert that an older middleware behaves as appropriate.
@@ -50,21 +50,20 @@ class TestBase(BaseTestCase):
         errors.
         """
         # Bootstrap the application
-        self.application = NoRequestBase(application)
+        app = NoRequestBase(application)
 
         # Send a request through.
         request = webob.Request({}, method='GET')
-        request.get_response(self.application)
+        request.get_response(app)
 
-        self.assertTrue(self.application.called_without_request)
+        self.assertTrue(app.called_without_request)
 
     def test_no_content_type_added(self):
         class TestMiddleware(Middleware):
-            @staticmethod
-            def process_request(req):
+            def process_request(self, req):
                 return "foobar"
 
-        m = TestMiddleware(None)
+        m = TestMiddleware(application)
         request = webob.Request({}, method='GET')
         response = request.get_response(m)
         self.assertNotIn('Content-Type', response.headers)

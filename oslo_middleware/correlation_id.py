@@ -13,16 +13,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import typing as ty
+
 from oslo_utils import uuidutils
 
 from oslo_middleware import base
+
+if ty.TYPE_CHECKING:
+    import webob.request
+    import webob.response
 
 
 class CorrelationId(base.ConfigurableMiddleware):
     "Middleware that attaches a correlation id to WSGI request"
 
-    def process_request(self, req):
+    @staticmethod
+    def process_request(
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         correlation_id = (
             req.headers.get("X_CORRELATION_ID") or uuidutils.generate_uuid()
         )
         req.headers['X_CORRELATION_ID'] = correlation_id
+        return None

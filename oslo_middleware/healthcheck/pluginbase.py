@@ -13,31 +13,46 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import abc
+import typing as ty
+
+if ty.TYPE_CHECKING:
+    from oslo_config import cfg
 
 
 class HealthcheckResult:
     """Result of a ``healthcheck`` method call should be this object."""
 
-    def __init__(self, available, reason, details=None):
+    def __init__(
+        self,
+        available: bool,
+        reason: str,
+        details: str | None = None,
+    ) -> None:
         self.available = available
         self.reason = reason
         self.details = details
 
 
 class HealthcheckBaseExtension(metaclass=abc.ABCMeta):
-    def __init__(self, oslo_conf, conf):
+    def __init__(
+        self,
+        oslo_conf: cfg.ConfigOpts,
+        conf: dict[str, ty.Any],
+    ) -> None:
         self.oslo_conf = oslo_conf
         self.conf = conf
 
     @abc.abstractmethod
-    def healthcheck(self, server_port):
+    def healthcheck(self, server_port: int) -> HealthcheckResult:
         """method called by the healthcheck middleware
 
         return: HealthcheckResult object
         """
 
-    def _conf_get(self, key, group='healthcheck'):
+    def _conf_get(self, key: str, group: str = 'healthcheck') -> ty.Any:
         if key in self.conf:
             # Validate value type
             self.oslo_conf.set_override(key, self.conf[key], group=group)

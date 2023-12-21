@@ -12,13 +12,29 @@
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import logging
+import typing as ty
 
 import debtcollector
 from oslo_config import cfg
 from oslo_middleware import base
 import webob.exc
+
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+    import webob.request
+    import webob.response
+
+
+class AllowedOrigin(ty.TypedDict):
+    allow_credentials: bool
+    expose_headers: list[str]
+    max_age: int | None
+    allow_methods: list[str]
+    allow_headers: list[str]
 
 
 LOG = logging.getLogger(__name__)
@@ -73,7 +89,7 @@ OPTS = [
 CORS_OPTS = OPTS
 
 
-def set_defaults(**kwargs):
+def set_defaults(**kwargs: cfg.Opt) -> None:
     """Override the default values for configuration options.
 
     This method permits a project to override the default CORS option values.
@@ -112,11 +128,9 @@ def set_defaults(**kwargs):
 class InvalidOriginError(Exception):
     """Exception raised when Origin is invalid."""
 
-    def __init__(self, origin):
+    def __init__(self, origin: str):
         self.origin = origin
-        super().__init__(
-            f'CORS request from origin \'{origin}\' not permitted.'
-        )
+        super().__init__(f"CORS request from origin '{origin}' not permitted.")
 
 
 class CORS(base.ConfigurableMiddleware):
@@ -139,20 +153,22 @@ class CORS(base.ConfigurableMiddleware):
         'Pragma',
     ]
 
-    def __init__(self, application, *args, **kwargs):
-        super().__init__(application, *args, **kwargs)
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
+        super().__init__(application, conf)
         # Begin constructing our configuration hash.
-        self.allowed_origins = {}
+        self.allowed_origins: dict[str, AllowedOrigin] = {}
         self._init_conf()
 
-        def sanitize(csv_list):
-            try:
-                return [str.strip(x) for x in csv_list.split(',')]
-            except Exception:
-                return None
-
     @classmethod
-    def factory(cls, global_conf, **local_conf):
+    def factory(
+        cls: type[base.MiddlewareType],
+        global_conf: dict[str, ty.Any] | None,
+        **local_conf: ty.Any,
+    ) -> ty.Callable[[WSGIApplication], base.MiddlewareType]:
         """factory method for paste.deploy
 
         allowed_origin: Protocol, host, and port for the allowed origin.
@@ -171,8 +187,8 @@ class CORS(base.ConfigurableMiddleware):
             )
         return super().factory(global_conf, **local_conf)
 
-    def _init_conf(self):
-        '''Initialize this middleware from an oslo.config instance.'''
+    def _init_conf(self) -> None:
+        """Initialize this middleware from an oslo.config instance."""
 
         # First, check the configuration and register global options.
         self.oslo_conf.register_opts(OPTS, 'cors')
@@ -226,14 +242,14 @@ class CORS(base.ConfigurableMiddleware):
 
     def add_origin(
         self,
-        allowed_origin,
-        allow_credentials=True,
-        expose_headers=None,
-        max_age=None,
-        allow_methods=None,
-        allow_headers=None,
-    ):
-        '''Add another origin to this filter.
+        allowed_origin: str | list[str],
+        allow_credentials: bool = True,
+        expose_headers: list[str] | None = None,
+        max_age: int | None = None,
+        allow_methods: list[str] | None = None,
+        allow_headers: list[str] | None = None,
+    ) -> None:
+        """Add another origin to this filter.
 
         :param allowed_origin: Protocol, host, and port for the allowed origin.
         :param allow_credentials: Whether to permit credentials.
@@ -242,7 +258,7 @@ class CORS(base.ConfigurableMiddleware):
         :param allow_methods: List of HTTP methods to permit.
         :param allow_headers: List of HTTP headers to permit from the client.
         :return:
-        '''
+        """
 
         # NOTE(dims): Support older code that still passes in
         # a string for allowed_origin instead of a list
@@ -265,14 +281,18 @@ class CORS(base.ConfigurableMiddleware):
 
                 self.allowed_origins[origin] = {
                     'allow_credentials': allow_credentials,
-                    'expose_headers': expose_headers,
+                    'expose_headers': expose_headers or [],
                     'max_age': max_age,
-                    'allow_methods': allow_methods,
-                    'allow_headers': allow_headers,
+                    'allow_methods': allow_methods or [],
+                    'allow_headers': allow_headers or [],
                 }
 
-    def process_response(self, response, request=None):
-        '''Check for CORS headers, and decorate if necessary.
+    def process_response(
+        self,
+        response: webob.response.Response,
+        request: webob.request.Request | None = None,
+    ) -> webob.response.Response:
+        """Check for CORS headers, and decorate if necessary.
 
         Perform two checks. First, if an OPTIONS request was issued, let the
         application handle it, and (if necessary) decorate the response with
@@ -281,15 +301,21 @@ class CORS(base.ConfigurableMiddleware):
         OPTIONS requests, the response code is overridden.
 
         In the case of all other requests, regular request headers are applied.
-        '''
+        """
 
         # Sanity precheck: If we detect CORS headers provided by something in
         # in the middleware chain, assume that it knows better.
         if 'Access-Control-Allow-Origin' in response.headers:
             return response
 
+        # We need the request object
+        if not request:
+            return response
+
         # Doublecheck for an OPTIONS request.
-        if request.method == 'OPTIONS':
+        # TODO(stephenfin): typeshed typing is incomplete and doesn't include
+        # OPTIONS
+        if request.method == 'OPTIONS':  # type: ignore
             return self._apply_cors_preflight_headers(
                 request=request, response=response
             )
@@ -301,7 +327,10 @@ class CORS(base.ConfigurableMiddleware):
         return response
 
     @staticmethod
-    def _split_header_values(request, header_name):
+    def _split_header_values(
+        request: webob.request.Request,
+        header_name: str,
+    ) -> list[str]:
         """Convert a comma-separated header value into a list of values."""
         values = []
         if header_name in request.headers:
@@ -311,7 +340,11 @@ class CORS(base.ConfigurableMiddleware):
                     values.append(value)
         return values
 
-    def _apply_cors_preflight_headers(self, request, response):
+    def _apply_cors_preflight_headers(
+        self,
+        request: webob.request.Request,
+        response: webob.response.Response,
+    ) -> webob.response.Response:
         """Handle CORS Preflight (Section 6.2)
 
         Given a request and a response, apply the CORS preflight headers
@@ -322,7 +355,9 @@ class CORS(base.ConfigurableMiddleware):
         # underlying middleware's response content needs to be persisted.
         # Otherwise, create a new response.
         if 200 > response.status_code or response.status_code >= 300:
-            response = base.NoContentTypeResponse(status=webob.exc.HTTPOk.code)
+            response = base.NoContentTypeResponse(
+                status=str(webob.exc.HTTPOk.code)
+            )
 
         # Does the request have an origin header? (Section 6.2.1)
         if 'Origin' not in request.headers:
@@ -405,7 +440,10 @@ class CORS(base.ConfigurableMiddleware):
 
         return response
 
-    def _get_cors_config_by_origin(self, origin):
+    def _get_cors_config_by_origin(
+        self,
+        origin: str,
+    ) -> tuple[str, AllowedOrigin]:
         if origin not in self.allowed_origins:
             if '*' in self.allowed_origins:
                 origin = '*'
@@ -416,7 +454,11 @@ class CORS(base.ConfigurableMiddleware):
                 raise InvalidOriginError(origin)
         return origin, self.allowed_origins[origin]
 
-    def _apply_cors_request_headers(self, request, response):
+    def _apply_cors_request_headers(
+        self,
+        request: webob.request.Request,
+        response: webob.response.Response,
+    ) -> None:
         """Handle Basic CORS Request (Section 6.1)
 
         Given a request and a response, apply the CORS headers appropriate

@@ -13,11 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import logging
 import os
+import typing as ty
 
 from oslo_middleware.healthcheck import opts
 from oslo_middleware.healthcheck import pluginbase
+
+if ty.TYPE_CHECKING:
+    from oslo_config import cfg
 
 LOG = logging.getLogger(__name__)
 
@@ -43,27 +49,32 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
       detailed = False
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        oslo_conf: cfg.ConfigOpts,
+        conf: dict[str, ty.Any],
+    ) -> None:
+        super().__init__(oslo_conf, conf)
         self.oslo_conf.register_opts(
             opts.DISABLE_BY_FILES_OPTS, group='healthcheck'
         )
-        self.status_files = {}
+        self.status_files: dict[int, str] = {}
         paths = self._conf_get('disable_by_file_paths')
         self.status_files.update(self._iter_paths_ports(paths))
 
     @staticmethod
-    def _iter_paths_ports(paths):
+    def _iter_paths_ports(
+        paths: list[str],
+    ) -> ty.Generator[tuple[int, str], None, None]:
         for port_path in paths:
             port_path = port_path.strip()
             if port_path:
                 # On windows, drive letters are followed by colons,
                 # which makes split() return 3 elements in this case
                 port, path = port_path.split(":", 1)
-                port = int(port)
-                yield (port, path)
+                yield (int(port), path)
 
-    def healthcheck(self, server_port):
+    def healthcheck(self, server_port: int) -> pluginbase.HealthcheckResult:
         path = self.status_files.get(server_port)
         if not path:
             LOG.warning(
@@ -103,13 +114,17 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
       detailed = False
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        oslo_conf: cfg.ConfigOpts,
+        conf: dict[str, ty.Any],
+    ) -> None:
+        super().__init__(oslo_conf, conf)
         self.oslo_conf.register_opts(
             opts.DISABLE_BY_FILE_OPTS, group='healthcheck'
         )
 
-    def healthcheck(self, server_port):
+    def healthcheck(self, server_port: int) -> pluginbase.HealthcheckResult:
         path = self._conf_get('disable_by_file_path')
         if not path:
             LOG.warning(

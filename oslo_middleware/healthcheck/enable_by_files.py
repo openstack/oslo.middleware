@@ -15,11 +15,15 @@
 
 import logging
 import os
+import typing as ty
 
 from oslo_middleware.healthcheck import opts
 from oslo_middleware.healthcheck import pluginbase
 
 LOG = logging.getLogger(__name__)
+
+if ty.TYPE_CHECKING:
+    from oslo_config import cfg
 
 
 class EnableByFilesHealthcheck(pluginbase.HealthcheckBaseExtension):
@@ -41,14 +45,18 @@ class EnableByFilesHealthcheck(pluginbase.HealthcheckBaseExtension):
       detailed = False
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        oslo_conf: 'cfg.ConfigOpts',
+        conf: dict[str, ty.Any],
+    ) -> None:
+        super().__init__(oslo_conf=oslo_conf, conf=conf)
         self.oslo_conf.register_opts(
             opts.ENABLE_BY_FILES_OPTS, group='healthcheck'
         )
         self.file_paths = self._conf_get('enable_by_file_paths')
 
-    def healthcheck(self, server_port):
+    def healthcheck(self, server_port: int) -> pluginbase.HealthcheckResult:
         for file_path in self.file_paths:
             if not os.path.exists(file_path):
                 LOG.warning(

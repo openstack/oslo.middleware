@@ -15,15 +15,24 @@
 
 """Base class(es) for WSGI Middleware."""
 
+from __future__ import annotations
+
 from inspect import getfullargspec
+import typing as ty
+
 from oslo_config import cfg
 import webob.dec
 import webob.request
 import webob.response
 
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+
+MiddlewareType = ty.TypeVar('MiddlewareType', bound='ConfigurableMiddleware')
+
 
 class NoContentTypeResponse(webob.response.Response):
-    default_content_type = None  # prevents webob assigning content type
+    default_content_type = ''  # prevents webob assigning content type
 
 
 class NoContentTypeRequest(webob.request.Request):
@@ -39,30 +48,41 @@ class ConfigurableMiddleware:
     """
 
     @classmethod
-    def factory(cls, global_conf, **local_conf):
+    def factory(
+        cls: type[MiddlewareType],
+        global_conf: dict[str, ty.Any] | None,
+        **local_conf: ty.Any,
+    ) -> ty.Callable[[WSGIApplication], MiddlewareType]:
         """Factory method for paste.deploy.
 
-        :param global_conf: dict of options for all middlewares
-                            (usually the [DEFAULT] section of the paste deploy
-                            configuration file)
-        :param local_conf: options dedicated to this middleware
-                           (usually the option defined in the middleware
-                           section of the paste deploy configuration file)
+        :param global_conf: dict of options for all middlewares (usually the
+            ``[DEFAULT]`` section of the paste deploy configuration file)
+        :param local_conf: options dedicated to this middleware (usually the
+            option defined in the middleware's section of the paste deploy
+            configuration file)
         """
         conf = global_conf.copy() if global_conf else {}
         conf.update(local_conf)
 
-        def middleware_filter(app):
+        def _factory(
+            app: WSGIApplication,
+        ) -> MiddlewareType:
             return cls(app, conf)
 
-        return middleware_filter
+        return _factory
 
-    def __init__(self, application, conf=None):
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
         """Base middleware constructor
 
-        :param  conf: a dict of options or a cfg.ConfigOpts object
+        :param conf: a dict of options or a cfg.ConfigOpts object
         """
         self.application = application
+        self.conf: dict[str, ty.Any]
+        self.oslo_conf: cfg.ConfigOpts
 
         # NOTE(sileht): If the configuration come from oslo.config
         # just use it.
@@ -95,14 +115,16 @@ class ConfigurableMiddleware:
                 # Fallback to global object
                 self.oslo_conf = cfg.CONF
 
-    def _conf_get(self, key, group="oslo_middleware"):
+    def _conf_get(self, key: str, group: str = "oslo_middleware") -> ty.Any:
         if key in self.conf:
             # Validate value type
             self.oslo_conf.set_override(key, self.conf[key], group=group)
         return getattr(getattr(self.oslo_conf, group), key)
 
-    @staticmethod
-    def process_request(req):
+    def process_request(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         """Called on each request.
 
         If this returns None, the next application down the stack will be
@@ -111,13 +133,19 @@ class ConfigurableMiddleware:
         """
         return None
 
-    @staticmethod
-    def process_response(response, request=None):
+    def process_response(
+        self,
+        response: webob.response.Response,
+        request: webob.request.Request | None = None,
+    ) -> webob.response.Response:
         """Do whatever you'd like to the response."""
         return response
 
-    @webob.dec.wsgify(RequestClass=NoContentTypeRequest)
-    def __call__(self, req):
+    @webob.dec.wsgify(RequestClass=NoContentTypeRequest)  # type: ignore
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         response = self.process_request(req)
         if response:
             return response
@@ -137,6 +165,16 @@ class Middleware(ConfigurableMiddleware):
     """
 
     @classmethod
-    def factory(cls, global_conf, **local_conf):
+    def factory(
+        cls: type[MiddlewareType],
+        global_conf: dict[str, ty.Any] | None,
+        **local_conf: ty.Any,
+    ) -> ty.Callable[[WSGIApplication], MiddlewareType]:
         """Factory method for paste.deploy."""
-        return cls
+
+        def _factory(
+            app: WSGIApplication,
+        ) -> MiddlewareType:
+            return cls(app)
+
+        return _factory

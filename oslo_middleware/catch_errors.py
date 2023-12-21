@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import logging
 import re
 
@@ -35,7 +37,10 @@ class CatchErrors(base.ConfigurableMiddleware):
     """
 
     @webob.dec.wsgify
-    def __call__(self, req):
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         try:
             response = req.get_response(self.application)
         except Exception:

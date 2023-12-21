@@ -12,13 +12,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import annotations
+
 import logging
 import re
+import typing as ty
 
 import statsd
 import webob.dec
 
 from oslo_middleware import base
+
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+    from oslo_config import cfg
 
 LOG = logging.getLogger(__name__)
 VERSION_REGEX = re.compile(r"/(v[0-9]{1}\.[0-9]{1})")
@@ -64,9 +71,15 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         # collect generic stats rather than one per server instance.
     """
 
-    def __init__(self, application, conf):
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
         super().__init__(application, conf)
         self.application = application
+        if conf is None:
+            raise AttributeError('conf must be provided')
         self.stat_name = conf.get('name')
         if self.stat_name is None:
             raise AttributeError('name must be specified')
@@ -78,7 +91,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         self.statsd = statsd.StatsClient(self.stats_host)
 
     @staticmethod
-    def strip_short_uuid(path):
+    def strip_short_uuid(path: str) -> str:
         """Remove short-form UUID from supplied path.
 
         Only call after replacing slashes with dots in path.
@@ -89,7 +102,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         return path.replace(match.group(1), '')
 
     @staticmethod
-    def strip_uuid(path):
+    def strip_uuid(path: str) -> str:
         """Remove normal-form UUID from supplied path.
 
         Only call after replacing slashes with dots in path.
@@ -100,7 +113,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         return path.replace(match.group(1), '')
 
     @staticmethod
-    def strip_dot_from_version(path):
+    def strip_dot_from_version(path: str) -> str:
         # Replace vN.N with vNN.
         match = VERSION_REGEX.match(path)
         if match is None:
@@ -108,15 +121,18 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         return path.replace(match.group(1), match.group(1).replace('.', ''))
 
     @webob.dec.wsgify
-    def __call__(self, request):
-        path = request.path
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
+        path = req.path
         path = self.strip_dot_from_version(path)
 
         # Remove leading slash, if any, so we can be sure of the number
         # of dots just below.
         path = path.lstrip('/')
 
-        stat = f"{self.stat_name}.{request.method}"
+        stat = f"{self.stat_name}.{req.method}"
         if path != '':
             stat += '.' + path.replace('/', '.')
 
@@ -128,4 +144,4 @@ class StatsMiddleware(base.ConfigurableMiddleware):
 
         LOG.debug("Incrementing stat count %s", stat)
         with self.statsd.timer(stat):
-            return request.get_response(self.application)
+            return req.get_response(self.application)

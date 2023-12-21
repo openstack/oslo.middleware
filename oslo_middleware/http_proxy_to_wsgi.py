@@ -10,9 +10,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 # implied. See the License for the specific language governing permissions and
 # limitations under the License.
+
+from __future__ import annotations
+
+import typing as ty
+
 from oslo_config import cfg
 from oslo_middleware import base
 
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+    import webob.request
+    import webob.response
 
 OPTS = [
     cfg.BoolOpt(
@@ -30,15 +39,18 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
 
     This middleware overloads WSGI environment variables with the one provided
     by the remote HTTP reverse proxy.
-
     """
 
-    def __init__(self, application, *args, **kwargs):
-        super().__init__(application, *args, **kwargs)
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
+        super().__init__(application, conf)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     @staticmethod
-    def _parse_rfc7239_header(header):
+    def _parse_rfc7239_header(header: str) -> list[dict[str, str]]:
         """Parses RFC7239 Forward headers.
 
         e.g. for=192.0.2.60;proto=http, for=192.0.2.60;by=203.0.113.43
@@ -53,9 +65,13 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
             result.append(entry)
         return result
 
-    def process_request(self, req):
+    def process_request(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         if not self._conf_get('enable_proxy_headers_parsing'):
-            return
+            return None
+
         fwd_hdr = req.environ.get("HTTP_FORWARDED")
         if fwd_hdr:
             proxies = self._parse_rfc7239_header(fwd_hdr)
@@ -92,3 +108,5 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
         v = req.environ.get("HTTP_X_FORWARDED_PREFIX")
         if v:
             req.environ['SCRIPT_NAME'] = v + req.environ['SCRIPT_NAME']
+
+        return None

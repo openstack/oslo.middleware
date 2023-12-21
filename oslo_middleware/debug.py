@@ -15,7 +15,10 @@
 
 """Debug middleware"""
 
+from __future__ import annotations
+
 import sys
+import typing as ty
 
 import webob.dec
 
@@ -30,7 +33,10 @@ class Debug(base.ConfigurableMiddleware):
     """
 
     @webob.dec.wsgify
-    def __call__(self, req):
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         print(("*" * 40) + " REQUEST ENVIRON")
         for key, value in req.environ.items():
             print(key, "=", value)
@@ -47,11 +53,13 @@ class Debug(base.ConfigurableMiddleware):
         return resp
 
     @staticmethod
-    def print_generator(app_iter):
+    def print_generator(
+        app_iter: ty.Iterable[bytes],
+    ) -> ty.Iterator[bytes]:
         """Prints the contents of a wrapper string iterator when iterated."""
         print(("*" * 40) + " BODY")
         for part in app_iter:
-            sys.stdout.write(part)
+            sys.stdout.write(part.decode())
             sys.stdout.flush()
             yield part
         print()

@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import collections
 import gc
 import io
@@ -22,6 +24,7 @@ import platform
 import socket
 import sys
 import traceback
+import typing as ty
 
 from debtcollector import removals
 import jinja2
@@ -41,14 +44,22 @@ from oslo_middleware import base
 from oslo_middleware.exceptions import ConfigInvalid
 from oslo_middleware.healthcheck import opts
 
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
+    from oslo_config import cfg
+    from oslo_middleware.healthcheck import pluginbase
 
-def _find_objects(t):
+
+def _find_objects(t: type[ty.Any]) -> list[ty.Any]:
     return [o for o in gc.get_objects() if isinstance(o, t)]
 
 
-def _expand_template(contents, params):
+def _expand_template(contents: str, params: dict[str, ty.Any]) -> ty.Any:
     tpl = jinja2.Template(source=contents, undefined=jinja2.StrictUndefined)
     return tpl.render(**params)
+
+
+Reason = ty.TypedDict("Reason", {"reason": str, "details": str, "class": str})
 
 
 class Healthcheck(base.ConfigurableMiddleware):
@@ -385,8 +396,12 @@ Reason
 </HTML>
 """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
+        super().__init__(application, conf)
         self.oslo_conf.register_opts(
             opts.HEALTHCHECK_OPTS, group='healthcheck'
         )
@@ -426,7 +441,7 @@ Reason
         self._default_accept = 'text/plain'
         self._ignore_path = False
 
-    def _verify_configured_plugins(self):
+    def _verify_configured_plugins(self) -> None:
         backends = self._conf_get('backends')
         exclusive_plugins = ['disable_by_file', 'enable_by_files']
 
@@ -437,19 +452,27 @@ Reason
                 'enabled at the same time.'
             )
 
-    def _conf_get(self, key, group='healthcheck'):
+    def _conf_get(self, key: str, group: str = 'healthcheck') -> ty.Any:
         return super()._conf_get(key, group=group)
 
-    @removals.remove(
+    @removals.remove(  # type: ignore
         message="The healthcheck middleware must now be configured as "
         "an application, not as a filter"
     )
     @classmethod
-    def factory(cls, global_conf, **local_conf):
+    def factory(
+        cls,
+        global_conf: dict[str, ty.Any] | None,
+        **local_conf: ty.Any,
+    ) -> ty.Callable[[WSGIApplication], base.ConfigurableMiddleware]:
         return super().factory(global_conf, **local_conf)
 
     @classmethod
-    def app_factory(cls, global_conf, **local_conf):
+    def app_factory(
+        cls,
+        global_conf: dict[str, ty.Any] | None,
+        **local_conf: ty.Any,
+    ) -> ty.Callable[[WSGIApplication], base.ConfigurableMiddleware]:
         """Factory method for paste.deploy.
 
         :param global_conf: dict of options for all middlewares
@@ -461,12 +484,18 @@ Reason
         """
         conf = global_conf.copy() if global_conf else {}
         conf.update(local_conf)
-        o = cls(application=None, conf=conf)
-        o._ignore_path = True
-        return o
+
+        def _factory(
+            app: WSGIApplication,
+        ) -> base.ConfigurableMiddleware:
+            middleware = cls(app, conf)
+            middleware._ignore_path = True
+            return middleware
+
+        return _factory
 
     @staticmethod
-    def _get_threadstacks():
+    def _get_threadstacks() -> list[ty.Any]:
         threadstacks = []
         try:
             active_frames = sys._current_frames()
@@ -482,7 +511,7 @@ Reason
         return threadstacks
 
     @staticmethod
-    def _get_greenstacks():
+    def _get_greenstacks() -> list[ty.Any]:
         greenstacks = []
         if greenlet is not None:
             buf = io.StringIO()
@@ -494,17 +523,23 @@ Reason
         return greenstacks
 
     @staticmethod
-    def _pretty_json_dumps(contents):
+    def _pretty_json_dumps(contents: dict[str, ty.Any]) -> str:
         return json.dumps(contents, indent=4, sort_keys=True)
 
     @staticmethod
-    def _are_results_healthy(results):
+    def _are_results_healthy(
+        results: list[pluginbase.HealthcheckResult],
+    ) -> bool:
         for result in results:
             if not result.available:
                 return False
         return True
 
-    def _make_text_response(self, results, healthy):
+    def _make_text_response(
+        self,
+        results: list[pluginbase.HealthcheckResult],
+        healthy: bool,
+    ) -> tuple[str, str]:
         params = {
             'reasons': [result.reason for result in results],
             'detailed': self._show_details,
@@ -512,7 +547,11 @@ Reason
         body = _expand_template(self.PLAIN_RESPONSE_TEMPLATE, params)
         return (body.strip(), 'text/plain')
 
-    def _make_json_response(self, results, healthy):
+    def _make_json_response(
+        self,
+        results: list[pluginbase.HealthcheckResult],
+        healthy: bool,
+    ) -> tuple[str, str]:
         if self._show_details:
             body = {
                 'detailed': True,
@@ -524,7 +563,7 @@ Reason
                     'threshold': gc.get_threshold(),
                 },
             }
-            reasons = []
+            reasons: list[Reason] = []
             for result in results:
                 reasons.append(
                     {
@@ -545,20 +584,28 @@ Reason
             }
         return (self._pretty_json_dumps(body), 'application/json')
 
-    def _make_head_response(self, results, healthy):
+    def _make_head_response(
+        self,
+        results: list[pluginbase.HealthcheckResult],
+        healthy: bool,
+    ) -> tuple[str, str]:
         return ("", "text/plain")
 
-    def _make_html_response(self, results, healthy):
+    def _make_html_response(
+        self,
+        results: list[pluginbase.HealthcheckResult],
+        healthy: bool,
+    ) -> tuple[str, str]:
         try:
             hostname = socket.gethostname()
         except OSError:
             hostname = None
-        translated_results = []
+        translated_results: list[Reason] = []
         for result in results:
             translated_results.append(
                 {
-                    'details': result.details or '',
                     'reason': result.reason,
+                    'details': result.details or '',
                     'class': reflection.get_class_name(
                         result, fully_qualified=False
                     ),
@@ -583,11 +630,17 @@ Reason
         return (body.strip(), 'text/html')
 
     @webob.dec.wsgify
-    def process_request(self, req):
+    def process_request(  # type: ignore[override]
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         if not self._ignore_path and req.path != self._path:
             return None
 
         if self._source_ranges:
+            if not req.remote_addr:
+                return None
+
             remote_addr = ipaddress.ip_address(req.remote_addr)
             for r in self._source_ranges:
                 if r.version == remote_addr.version and remote_addr in r:
@@ -625,7 +678,7 @@ Reason
             functor = self._accept_to_functor[accept_type]
         body, content_type = functor(results, healthy)
         return webob.response.Response(
-            status=status,
+            status=str(status),
             body=body,
             charset='UTF-8',
             content_type=content_type,

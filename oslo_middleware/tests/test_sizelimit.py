@@ -25,14 +25,14 @@ class TestLimitingReader(test_base.BaseTestCase):
     def test_limiting_reader(self):
         BYTES = 1024
         bytes_read = 0
-        data = io.StringIO("*" * BYTES)
+        data = io.BytesIO(b"*" * BYTES)
         for chunk in sizelimit.LimitingReader(data, BYTES):
             bytes_read += len(chunk)
 
         self.assertEqual(BYTES, bytes_read)
 
         bytes_read = 0
-        data = io.StringIO("*" * BYTES)
+        data = io.BytesIO(b"*" * BYTES)
         reader = sizelimit.LimitingReader(data, BYTES)
         byte = reader.read(1)
         while len(byte) != 0:
@@ -43,8 +43,8 @@ class TestLimitingReader(test_base.BaseTestCase):
 
     def test_read_default_value(self):
         BYTES = 1024
-        data_str = "*" * BYTES
-        data = io.StringIO(data_str)
+        data_str = b"*" * BYTES
+        data = io.BytesIO(data_str)
         reader = sizelimit.LimitingReader(data, BYTES)
         res = reader.read()
         self.assertEqual(data_str, res)
@@ -54,7 +54,7 @@ class TestLimitingReader(test_base.BaseTestCase):
 
         def _consume_all_iter():
             bytes_read = 0
-            data = io.StringIO("*" * BYTES)
+            data = io.BytesIO(b"*" * BYTES)
             for chunk in sizelimit.LimitingReader(data, BYTES - 1):
                 bytes_read += len(chunk)
 
@@ -64,7 +64,7 @@ class TestLimitingReader(test_base.BaseTestCase):
 
         def _consume_all_read():
             bytes_read = 0
-            data = io.StringIO("*" * BYTES)
+            data = io.BytesIO(b"*" * BYTES)
             reader = sizelimit.LimitingReader(data, BYTES - 1)
             byte = reader.read(1)
             while len(byte) != 0:

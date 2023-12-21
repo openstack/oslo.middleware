@@ -13,7 +13,6 @@
 """oslo.i18n integration module.
 
 See https://docs.openstack.org/oslo.i18n/latest/user/index.html
-
 """
 
 import oslo_i18n

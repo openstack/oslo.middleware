@@ -14,10 +14,12 @@
 
 """
 Request Body limiting middleware.
-
 """
 
+from __future__ import annotations
+
 import logging
+import typing as ty
 
 from oslo_config import cfg
 import webob.dec
@@ -25,6 +27,9 @@ import webob.exc
 
 from oslo_middleware._i18n import _
 from oslo_middleware import base
+
+if ty.TYPE_CHECKING:
+    from _typeshed.wsgi import WSGIApplication
 
 LOG = logging.getLogger(__name__)
 
@@ -41,7 +46,7 @@ OPTS = [
 class LimitingReader:
     """Reader to limit the size of an incoming request."""
 
-    def __init__(self, data, limit):
+    def __init__(self, data: ty.IO[bytes], limit: int) -> None:
         """Initiates LimitingReader object.
 
         :param data: Underlying data object
@@ -51,7 +56,7 @@ class LimitingReader:
         self.limit = limit
         self.bytes_read = 0
 
-    def __iter__(self):
+    def __iter__(self) -> ty.Iterator[bytes]:
         for chunk in self.data:
             self.bytes_read += len(chunk)
             if self.bytes_read > self.limit:
@@ -60,7 +65,7 @@ class LimitingReader:
             else:
                 yield chunk
 
-    def read(self, i=None):
+    def read(self, i: int | None = None) -> bytes:
         # NOTE(jamielennox): We can't simply provide the default to the read()
         # call as the expected default differs between mod_wsgi and eventlet
         if i is None:
@@ -77,12 +82,19 @@ class LimitingReader:
 class RequestBodySizeLimiter(base.ConfigurableMiddleware):
     """Limit the size of incoming requests."""
 
-    def __init__(self, application, conf=None):
+    def __init__(
+        self,
+        application: WSGIApplication,
+        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+    ) -> None:
         super().__init__(application, conf)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     @webob.dec.wsgify
-    def __call__(self, req):
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         max_size = self._conf_get('max_request_body_size')
         if req.content_length is not None and req.content_length > max_size:
             msg = _(
@@ -90,7 +102,11 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
             )
             LOG.info(msg, max_size)
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
+
         if req.content_length is None:
-            limiter = LimitingReader(req.body_file, max_size)
+            # the type stub for this is incomplete: body_file is not just
+            # readable - it's also iterable
+            limiter = LimitingReader(req.body_file, max_size)  # type: ignore
             req.body_file = limiter
-        return self.application
+
+        return req.get_response(self.application)

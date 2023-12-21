@@ -13,5 +13,5 @@
 
 
 class ConfigInvalid(Exception):
-    def __init__(self, error_msg):
-        super().__init__('Invalid configuration. %(error_msg)s')
+    def __init__(self, error_msg: str) -> None:
+        super().__init__('Invalid configuration file. %(error_msg)s')

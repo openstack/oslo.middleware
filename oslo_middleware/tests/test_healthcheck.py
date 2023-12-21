@@ -361,9 +361,8 @@ class HealthcheckTests(test_base.BaseTestCase):
         )
 
     def test_proxied_not_ignored(self):
-        conf = {}
         self._do_test(
-            conf,
+            {},
             expected_code=webob.exc.HTTPOk.code,
             headers={'Forwarded-For': 'http://localhost'},
         )

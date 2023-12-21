@@ -12,14 +12,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import copy
 import itertools
+import typing as ty
 
 from oslo_middleware import basic_auth
 from oslo_middleware import cors
 from oslo_middleware.healthcheck import opts as healthcheck_opts
 from oslo_middleware import http_proxy_to_wsgi
 from oslo_middleware import sizelimit
+
+if ty.TYPE_CHECKING:
+    from oslo_config import cfg
 
 __all__ = [
     'list_opts',
@@ -31,7 +37,7 @@ __all__ = [
 ]
 
 
-def list_opts():
+def list_opts() -> list[cfg.Opt]:
     """Return a list of oslo.config options for ALL of the middleware classes.
 
     The returned list includes all oslo.config options which may be registered
@@ -61,7 +67,7 @@ def list_opts():
     )
 
 
-def list_opts_sizelimit():
+def list_opts_sizelimit() -> list[tuple[str, list[cfg.Opt]]]:
     """Return a list of oslo.config options for the sizelimit middleware.
 
     The returned list includes all oslo.config options which may be registered
@@ -85,7 +91,7 @@ def list_opts_sizelimit():
     ]
 
 
-def list_opts_cors():
+def list_opts_cors() -> list[tuple[str, list[cfg.Opt]]]:
     """Return a list of oslo.config options for the cors middleware.
 
     The returned list includes all oslo.config options which may be registered
@@ -109,7 +115,7 @@ def list_opts_cors():
     ]
 
 
-def list_opts_http_proxy_to_wsgi():
+def list_opts_http_proxy_to_wsgi() -> list[tuple[str, list[cfg.Opt]]]:
     """Return a list of oslo.config options for http_proxy_to_wsgi.
 
     The returned list includes all oslo.config options which may be registered
@@ -133,7 +139,7 @@ def list_opts_http_proxy_to_wsgi():
     ]
 
 
-def list_opts_healthcheck():
+def list_opts_healthcheck() -> list[tuple[str, list[cfg.Opt]]]:
     """Return a list of oslo.config options for healthcheck.
 
     The returned list includes all oslo.config options which may be registered
@@ -167,7 +173,7 @@ def list_opts_healthcheck():
     ]
 
 
-def list_opts_basic_auth():
+def list_opts_basic_auth() -> list[tuple[str, list[cfg.Opt]]]:
     """Return a list of oslo.config options for basic auth middleware.
 
     The returned list includes all oslo.config options which may be registered

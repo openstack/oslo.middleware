@@ -150,10 +150,10 @@ class TestAuthBasic(test_base.BaseTestCase):
 
     def test_parse_token(self):
         # success with bytes
-        token = base64.b64encode(b'myName:myPassword')
-        self.assertEqual(('myName', b'myPassword'), auth.parse_token(token))
+        btoken = base64.b64encode(b'myName:myPassword')
+        self.assertEqual(('myName', b'myPassword'), auth.parse_token(btoken))
         # success with string
-        token = str(token, encoding='utf-8')
+        token = str(btoken, encoding='utf-8')
         self.assertEqual(('myName', b'myPassword'), auth.parse_token(token))
         # failed, invalid base64
         e = self.assertRaises(

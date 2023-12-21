@@ -13,12 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import re
+import typing as ty
 
 from oslo_context import context
 import webob.dec
 
 from oslo_middleware import base
+
+if ty.TYPE_CHECKING:
+    import webob.request
+    import webob.response
 
 
 ENV_REQUEST_ID = 'openstack.request_id'
@@ -40,9 +47,9 @@ class RequestId(base.ConfigurableMiddleware):
     # if compat_headers is set, we also return the request_id in those
     # headers as well. This allows projects like Nova to adopt
     # oslo.middleware without impacting existing users.
-    compat_headers = []
+    compat_headers: list[str] = []
 
-    def set_global_req_id(self, req):
+    def set_global_req_id(self, req: webob.request.Request) -> None:
         gr_id = req.headers.get(INBOUND_HEADER, "")
         if re.match(ID_FORMAT, gr_id):
             req.environ[GLOBAL_REQ_ID] = gr_id
@@ -51,7 +58,10 @@ class RequestId(base.ConfigurableMiddleware):
         # setup at this stage.
 
     @webob.dec.wsgify
-    def __call__(self, req):
+    def __call__(
+        self,
+        req: webob.request.Request,
+    ) -> webob.response.Response | None:
         self.set_global_req_id(req)
 
         req_id = context.generate_request_id()
