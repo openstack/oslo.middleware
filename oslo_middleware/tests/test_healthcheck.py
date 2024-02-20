@@ -63,10 +63,13 @@ class HealthcheckTests(test_base.BaseTestCase):
 
     def _do_test_request(self, conf={}, path='/healthcheck',
                          accept='text/plain', method='GET',
-                         server_port=80, remote_addr='127.0.0.1'):
+                         server_port=80, headers=None,
+                         remote_addr='127.0.0.1'):
         self.app = healthcheck.Healthcheck(self.application, conf)
         req = webob.Request.blank(path, accept=accept, method=method)
         req.server_port = server_port
+        if headers:
+            req.headers = headers
         req.remote_addr = remote_addr
         res = req.get_response(self.app)
         return res
@@ -74,10 +77,12 @@ class HealthcheckTests(test_base.BaseTestCase):
     def _do_test(self, conf={}, path='/healthcheck',
                  expected_code=webob.exc.HTTPOk.code,
                  expected_body=b'', accept='text/plain',
-                 method='GET', server_port=80, remote_addr='127.0.0.1'):
+                 method='GET', server_port=80, headers=None,
+                 remote_addr='127.0.0.1'):
         res = self._do_test_request(conf=conf, path=path,
                                     accept=accept, method=method,
                                     server_port=server_port,
+                                    headers=headers,
                                     remote_addr=remote_addr)
         self.assertEqual(expected_code, res.status_int)
         self.assertEqual(expected_body, res.body)
@@ -215,3 +220,28 @@ class HealthcheckTests(test_base.BaseTestCase):
                       expected_code=webob.exc.HTTPOk.code,
                       expected_body=b'Hello, World!!!',
                       remote_addr='192.168.3.1')
+
+    def test_proxied_not_ignored(self):
+        conf = {}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      headers={'Forwarded-For': 'http://localhost'})
+
+    def test_proxied_ignored(self):
+        conf = {'ignore_proxied_requests': True}
+        modern_headers = {
+            'x-forwarded': 'https://localhost'
+        }
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      expected_body=b'Hello, World!!!',
+                      headers=modern_headers)
+        legacy_headers = {
+            'x-forwarded-proto': 'https',
+            'x-forwarded-host': 'localhost',
+            'x-forwarded-for': '192.0.2.11',
+        }
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPOk.code,
+                      expected_body=b'Hello, World!!!',
+                      headers=legacy_headers)

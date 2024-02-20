@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    The new ``[healthcheck] ignore_proxied_requests`` option has been added.
+    When this option is set to true, the healthcheck middleware ignores
+    requests with any of the following headers, which indicates that
+    the requests came through a reverse proxy or a load balancer.
+
+    - ``x-forwarded``
+    - ``x-forwarded-proto``
+    - ``x-forwarded-host``
+    - ``x-forwarded-for``
+    - ``x-forwarded-prefix``
