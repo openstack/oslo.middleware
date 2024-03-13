@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The following deprecated options were removed. Use
+    ``[oslo_middleware] max_request_body_size`` instead.
+
+    - ``[DEFAULT] osapi_max_request_body_size``
+    - ``[DEFAULT] max_request_body_size``
