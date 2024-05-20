@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The new ``enable_by_files`` healthcheck plugin has been added.
+    This plugin will help to check whether specified file paths in
+    ``[healthcheck] enable_by_file_paths`` are present or not.

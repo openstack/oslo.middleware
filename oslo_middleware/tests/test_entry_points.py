@@ -35,3 +35,17 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
         factory_names = [extension.name for extension in em]
         self.assertThat(factory_names,
                         matchers.ContainsAll(factory_classes))
+
+    def test_healthcheck_entry_points(self):
+        healthcheck_plugins = {
+            'disable_by_file': 'DisableByFileHealthcheck',
+            'disable_by_files_ports': 'DisableByFilesPortsHealthcheck',
+            'enable_by_files': 'EnableByFilesHealthcheck'
+        }
+
+        em = stevedore.ExtensionManager('oslo.middleware.healthcheck')
+
+        # Ensure all the healthcheck plugins are defined by their names
+        plugin_names = [extension.name for extension in em]
+        self.assertThat(plugin_names,
+                        matchers.ContainsAll(healthcheck_plugins))

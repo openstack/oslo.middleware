@@ -57,3 +57,11 @@ DISABLE_BY_FILES_OPTS = [
                      'Expects a "port:path" list of strings. Used by '
                      'DisableByFilesPortsHealthcheck plugin.'),
 ]
+
+
+ENABLE_BY_FILES_OPTS = [
+    cfg.ListOpt('enable_by_file_paths',
+                default=[],
+                help='Check the presence of files. Used by '
+                     'EnableByFilesHealthcheck plugin.'),
+]

@@ -39,6 +39,7 @@ except ImportError:
     greenlet = None
 
 from oslo_middleware import base
+from oslo_middleware.basic_auth import ConfigInvalid
 from oslo_middleware.healthcheck import opts
 
 
@@ -397,6 +398,11 @@ Reason
             for r in self._conf_get('allowed_source_ranges')]
         self._ignore_proxied_requests = self._conf_get(
             'ignore_proxied_requests')
+
+        # (abhishekk): Verify that if `enable_by_files` and
+        # `disable_by_file` backends are not enabled at same time.
+        self._verify_configured_plugins()
+
         self._backends = stevedore.NamedExtensionManager(
             self.NAMESPACE, self._conf_get('backends'),
             name_order=True, invoke_on_load=True,
@@ -413,6 +419,16 @@ Reason
         # middleware actually can cause issues).
         self._default_accept = 'text/plain'
         self._ignore_path = False
+
+    def _verify_configured_plugins(self):
+        backends = self._conf_get('backends')
+        desired_plugins = ['disable_by_file', 'enable_by_files']
+
+        if set(desired_plugins).issubset(set(backends)):
+            raise ConfigInvalid('`enable_by_files` and `disable_by_file`'
+                                ' healthcheck middleware should not be '
+                                'configured at once.')
+
 
     def _conf_get(self, key, group='healthcheck'):
         return super(Healthcheck, self)._conf_get(key, group=group)

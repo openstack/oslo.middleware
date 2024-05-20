@@ -24,6 +24,7 @@ import requests
 import webob.dec
 import webob.exc
 
+from oslo_middleware.basic_auth import ConfigInvalid
 from oslo_middleware import healthcheck
 from oslo_middleware.healthcheck import __main__
 
@@ -200,6 +201,63 @@ class HealthcheckTests(test_base.BaseTestCase):
                       expected_body=b'DISABLED BY FILE',
                       server_port=81)
         self.assertIn('disable_by_files_ports', self.app._backends.names())
+
+    def test_enablefile_disablefile_configured(self):
+        conf = {'backends': 'disable_by_file,enable_by_files'}
+        self.assertRaises(ConfigInvalid,
+                          healthcheck.Healthcheck, self.application, conf)
+
+    def test_enablefile_unconfigured(self):
+        conf = {'backends': 'enable_by_files'}
+        self._do_test(conf, expected_body=b'OK')
+        self.assertIn('enable_by_files', self.app._backends.names())
+
+    def test_enablefile_enabled(self):
+        filename = self.create_tempfiles([('.test', '.foobar')])[0]
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': filename}
+        self._do_test(conf, expected_body=b'OK')
+        self.assertIn('enable_by_files', self.app._backends.names())
+
+    def test_enablefile_enabled_head(self):
+        filename = self.create_tempfiles([('.test', '.foobar')])[0]
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': filename}
+        self._do_test(conf, expected_body=b'', method='HEAD',
+                      expected_code=webob.exc.HTTPNoContent.code)
+
+    def test_enablefile_enabled_html_detailed(self):
+        filename = self.create_tempfiles([('.test', '.foobar')])[0]
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': filename, 'detailed': True}
+        res = self._do_test_request(conf, accept="text/html")
+        self.assertIn(b'Result of 1 checks:', res.body)
+        self.assertIn(b'<TD>OK</TD>', res.body)
+        self.assertEqual(webob.exc.HTTPOk.code, res.status_int)
+
+    def test_enablefile_disabled(self):
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': '.foobar'}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'FILE PATH MISSING')
+        self.assertIn('enable_by_files', self.app._backends.names())
+
+    def test_enablefile_disabled_head(self):
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': '.foobar'}
+        self._do_test(conf,
+                      expected_code=webob.exc.HTTPServiceUnavailable.code,
+                      expected_body=b'', method='HEAD')
+        self.assertIn('enable_by_files', self.app._backends.names())
+
+    def test_enablefile_disabled_html_detailed(self):
+        conf = {'backends': 'enable_by_files',
+                'enable_by_file_paths': '.foobar', 'detailed': True}
+        res = self._do_test_request(conf, accept="text/html")
+        self.assertIn(b'<TD>FILE PATH MISSING</TD>', res.body)
+        self.assertEqual(webob.exc.HTTPServiceUnavailable.code,
+                         res.status_int)
 
     def test_json_response(self):
         expected_body = jsonutils.dumps({'detailed': False, 'reasons': []},
