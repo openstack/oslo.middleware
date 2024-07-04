@@ -39,7 +39,7 @@ except ImportError:
     greenlet = None
 
 from oslo_middleware import base
-from oslo_middleware.basic_auth import ConfigInvalid
+from oslo_middleware.exceptions import ConfigInvalid
 from oslo_middleware.healthcheck import opts
 
 
@@ -422,13 +422,12 @@ Reason
 
     def _verify_configured_plugins(self):
         backends = self._conf_get('backends')
-        desired_plugins = ['disable_by_file', 'enable_by_files']
+        exclusive_plugins = ['disable_by_file', 'enable_by_files']
 
-        if set(desired_plugins).issubset(set(backends)):
-            raise ConfigInvalid('`enable_by_files` and `disable_by_file`'
-                                ' healthcheck middleware should not be '
-                                'configured at once.')
-
+        if set(exclusive_plugins).issubset(set(backends)):
+            raise ConfigInvalid('`enable_by_files` plugin and '
+                                '`disable_by_file` plugin should not be '
+                                'enabled at the same time.')
 
     def _conf_get(self, key, group='healthcheck'):
         return super(Healthcheck, self)._conf_get(key, group=group)

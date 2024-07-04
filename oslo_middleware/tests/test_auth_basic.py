@@ -21,6 +21,7 @@ from oslo_config import cfg
 import webob
 
 from oslo_middleware import basic_auth as auth
+from oslo_middleware import exceptions as exc
 from oslotest import base as test_base
 
 
@@ -116,7 +117,7 @@ class TestAuthBasic(test_base.BaseTestCase):
         auth.validate_auth_file(auth_file)
         # failed, missing auth file
         auth_file = auth_file + '.missing'
-        self.assertRaises(auth.ConfigInvalid,
+        self.assertRaises(exc.ConfigInvalid,
                           auth.validate_auth_file, auth_file)
         # failed, invalid entry
         auth_file = self.write_auth_file(

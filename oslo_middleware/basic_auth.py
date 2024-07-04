@@ -22,6 +22,7 @@ import webob
 
 from oslo_config import cfg
 from oslo_middleware import base
+from oslo_middleware import exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -32,12 +33,6 @@ OPTS = [
 ]
 
 cfg.CONF.register_opts(OPTS, group='oslo_middleware')
-
-
-class ConfigInvalid(Exception):
-    def __init__(self, error_msg):
-        super().__init__(
-            'Invalid configuration file. %(error_msg)s')
 
 
 class BasicAuthMiddleware(base.ConfigurableMiddleware):
@@ -135,7 +130,8 @@ def validate_auth_file(auth_file):
                 if entry and ':' in entry:
                     parse_entry(entry)
     except OSError:
-        raise ConfigInvalid(error_msg='Problem reading auth user file')
+        raise exceptions.ConfigInvalid(
+            error_msg='Problem reading auth user file')
 
 
 def parse_entry(entry):

@@ -24,7 +24,7 @@ import requests
 import webob.dec
 import webob.exc
 
-from oslo_middleware.basic_auth import ConfigInvalid
+from oslo_middleware.exceptions import ConfigInvalid
 from oslo_middleware import healthcheck
 from oslo_middleware.healthcheck import __main__
 
