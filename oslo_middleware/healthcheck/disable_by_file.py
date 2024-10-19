@@ -44,7 +44,7 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     """
 
     def __init__(self, *args, **kwargs):
-        super(DisableByFilesPortsHealthcheck, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.oslo_conf.register_opts(opts.DISABLE_BY_FILES_OPTS,
                                      group='healthcheck')
         self.status_files = {}
@@ -99,7 +99,7 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
     """
 
     def __init__(self, *args, **kwargs):
-        super(DisableByFileHealthcheck, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.oslo_conf.register_opts(opts.DISABLE_BY_FILE_OPTS,
                                      group='healthcheck')
 

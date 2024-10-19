@@ -82,7 +82,7 @@ def authenticate(auth_file, username, password):
 
     line_prefix = username + ':'
     try:
-        with open(auth_file, 'r') as f:
+        with open(auth_file) as f:
             for line in f:
                 entry = line.strip()
                 if entry and entry.startswith(line_prefix):
@@ -124,7 +124,7 @@ def validate_auth_file(auth_file):
     """
 
     try:
-        with open(auth_file, 'r') as f:
+        with open(auth_file) as f:
             for line in f:
                 entry = line.strip()
                 if entry and ':' in entry:

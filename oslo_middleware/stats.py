@@ -64,7 +64,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
     """
 
     def __init__(self, application, conf):
-        super(StatsMiddleware, self).__init__(application, conf)
+        super().__init__(application, conf)
         self.application = application
         self.stat_name = conf.get('name')
         if self.stat_name is None:

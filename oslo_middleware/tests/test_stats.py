@@ -47,7 +47,7 @@ class TestStaticMethods(test_base.BaseTestCase):
 class TestStatsMiddleware(test_base.BaseTestCase):
 
     def setUp(self):
-        super(TestStatsMiddleware, self).setUp()
+        super().setUp()
         self.patch(statsd, 'StatsClient', mock.MagicMock())
 
     def make_stats_middleware(self, stat_name=None, stats_host=None,

@@ -54,7 +54,7 @@ class HealthcheckMainTests(test_base.BaseTestCase):
 class HealthcheckTests(test_base.BaseTestCase):
 
     def setUp(self):
-        super(HealthcheckTests, self).setUp()
+        super().setUp()
         self.useFixture(config.Config())
 
     @staticmethod
@@ -191,8 +191,9 @@ class HealthcheckTests(test_base.BaseTestCase):
     def test_disable_by_port_many_files(self):
         filename = self.create_tempfiles([('test', 'foobar')])[0]
         filename2 = self.create_tempfiles([('test2', 'foobar2')])[0]
-        conf = {'backends': 'disable_by_files_ports',
-                'disable_by_file_paths': "80:%s,81:%s" % (filename, filename2)}
+        conf = {
+            'backends': 'disable_by_files_ports',
+            'disable_by_file_paths': "80:{},81:{}".format(filename, filename2)}
         self._do_test(conf,
                       expected_code=webob.exc.HTTPServiceUnavailable.code,
                       expected_body=b'DISABLED BY FILE')

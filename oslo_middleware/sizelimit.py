@@ -44,7 +44,7 @@ _opts = [
 ]
 
 
-class LimitingReader(object):
+class LimitingReader:
     """Reader to limit the size of an incoming request."""
     def __init__(self, data, limit):
         """Initiates LimitingReader object.
@@ -83,7 +83,7 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
     """Limit the size of incoming requests."""
 
     def __init__(self, application, conf=None):
-        super(RequestBodySizeLimiter, self).__init__(application, conf)
+        super().__init__(application, conf)
         self.oslo_conf.register_opts(_opts, group='oslo_middleware')
 
     @webob.dec.wsgify

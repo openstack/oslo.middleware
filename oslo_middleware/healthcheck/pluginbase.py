@@ -16,7 +16,7 @@
 import abc
 
 
-class HealthcheckResult(object):
+class HealthcheckResult:
     """Result of a ``healthcheck`` method call should be this object."""
 
     def __init__(self, available, reason, details=None):

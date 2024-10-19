@@ -78,7 +78,7 @@ class TestLimitingReader(test_base.BaseTestCase):
 class TestRequestBodySizeLimiter(test_base.BaseTestCase):
 
     def setUp(self):
-        super(TestRequestBodySizeLimiter, self).setUp()
+        super().setUp()
         self.useFixture(config.Config())
 
         @webob.dec.wsgify()
