@@ -24,7 +24,7 @@ from oslo_middleware import correlation_id
 class CorrelationIdTest(test_base.BaseTestCase):
 
     def setUp(self):
-        super(CorrelationIdTest, self).setUp()
+        super().setUp()
 
     def test_process_request(self):
         app = mock.Mock()

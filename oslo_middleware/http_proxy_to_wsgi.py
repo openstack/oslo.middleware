@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +32,7 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
     """
 
     def __init__(self, application, *args, **kwargs):
-        super(HTTPProxyToWSGI, self).__init__(application, *args, **kwargs)
+        super().__init__(application, *args, **kwargs)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     @staticmethod

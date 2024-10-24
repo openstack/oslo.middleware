@@ -74,9 +74,9 @@ def set_defaults(**kwargs):
     # there's no good way for a user to override only one option, because all
     # the others would be overridden to 'None'.
 
-    valid_params = set(k.name for k in CORS_OPTS
-                       if k.name != 'allowed_origin')
-    passed_params = set(k for k in kwargs)
+    valid_params = {k.name for k in CORS_OPTS
+                    if k.name != 'allowed_origin'}
+    passed_params = {k for k in kwargs}
 
     wrong_params = passed_params - valid_params
     if wrong_params:
@@ -92,7 +92,7 @@ class InvalidOriginError(Exception):
 
     def __init__(self, origin):
         self.origin = origin
-        super(InvalidOriginError, self).__init__(
+        super().__init__(
             'CORS request from origin \'%s\' not permitted.' % origin)
 
 
@@ -117,7 +117,7 @@ class CORS(base.ConfigurableMiddleware):
     ]
 
     def __init__(self, application, *args, **kwargs):
-        super(CORS, self).__init__(application, *args, **kwargs)
+        super().__init__(application, *args, **kwargs)
         # Begin constructing our configuration hash.
         self.allowed_origins = {}
         self._init_conf()
@@ -143,7 +143,7 @@ class CORS(base.ConfigurableMiddleware):
            'oslo_config_project' not in local_conf):
             raise TypeError("allowed_origin or oslo_config_project "
                             "is required")
-        return super(CORS, cls).factory(global_conf, **local_conf)
+        return super().factory(global_conf, **local_conf)
 
     def _init_conf(self):
         '''Initialize this middleware from an oslo.config instance.'''

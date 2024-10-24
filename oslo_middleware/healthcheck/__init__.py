@@ -388,7 +388,7 @@ Reason
 """
 
     def __init__(self, *args, **kwargs):
-        super(Healthcheck, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.oslo_conf.register_opts(opts.HEALTHCHECK_OPTS,
                                      group='healthcheck')
         self._path = self._conf_get('path')
@@ -430,14 +430,14 @@ Reason
                                 'enabled at the same time.')
 
     def _conf_get(self, key, group='healthcheck'):
-        return super(Healthcheck, self)._conf_get(key, group=group)
+        return super()._conf_get(key, group=group)
 
     @removals.remove(
         message="The healthcheck middleware must now be configured as "
         "an application, not as a filter")
     @classmethod
     def factory(cls, global_conf, **local_conf):
-        return super(Healthcheck, cls).factory(global_conf, **local_conf)
+        return super().factory(global_conf, **local_conf)
 
     @classmethod
     def app_factory(cls, global_conf, **local_conf):
@@ -539,7 +539,7 @@ Reason
     def _make_html_response(self, results, healthy):
         try:
             hostname = socket.gethostname()
-        except socket.error:
+        except OSError:
             hostname = None
         translated_results = []
         for result in results:

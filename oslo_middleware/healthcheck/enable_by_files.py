@@ -42,7 +42,7 @@ class EnableByFilesHealthcheck(pluginbase.HealthcheckBaseExtension):
     """
 
     def __init__(self, *args, **kwargs):
-        super(EnableByFilesHealthcheck, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.oslo_conf.register_opts(opts.ENABLE_BY_FILES_OPTS,
                                      group='healthcheck')
         self.file_paths = self._conf_get('enable_by_file_paths')

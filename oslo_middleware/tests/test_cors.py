@@ -56,7 +56,7 @@ class CORSTestBase(test_base.BaseTestCase):
 
     def setUp(self):
         """Setup the tests."""
-        super(CORSTestBase, self).setUp()
+        super().setUp()
 
         # Set up the config fixture.
         self.config_fixture = self.useFixture(fixture.Config())
@@ -132,7 +132,7 @@ class CORSTestBase(test_base.BaseTestCase):
 
 class CORSTestDefaultOverrides(CORSTestBase):
     def setUp(self):
-        super(CORSTestDefaultOverrides, self).setUp()
+        super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
 
@@ -292,7 +292,7 @@ class CORSRegularRequestTest(CORSTestBase):
 
     def setUp(self):
         """Setup the tests."""
-        super(CORSRegularRequestTest, self).setUp()
+        super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
         fixture.load_raw_values(group='cors',
@@ -613,7 +613,7 @@ class CORSPreflightRequestTest(CORSTestBase):
     """
 
     def setUp(self):
-        super(CORSPreflightRequestTest, self).setUp()
+        super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
         fixture.load_raw_values(group='cors',
@@ -1146,7 +1146,7 @@ class CORSTestWildcard(CORSTestBase):
     """Test the CORS wildcard specification."""
 
     def setUp(self):
-        super(CORSTestWildcard, self).setUp()
+        super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
         fixture.load_raw_values(group='cors',

@@ -32,7 +32,7 @@ class NoContentTypeRequest(webob.request.Request):
     ResponseClass = NoContentTypeResponse
 
 
-class ConfigurableMiddleware(object):
+class ConfigurableMiddleware:
     """Base WSGI middleware wrapper.
 
     These classes require an application to be initialized that will be called

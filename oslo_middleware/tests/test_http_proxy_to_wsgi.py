@@ -22,7 +22,7 @@ from oslo_middleware import http_proxy_to_wsgi
 class TestHTTPProxyToWSGI(test_base.BaseTestCase):
 
     def setUp(self):
-        super(TestHTTPProxyToWSGI, self).setUp()
+        super().setUp()
 
         @webob.dec.wsgify()
         def fake_app(req):
@@ -139,7 +139,7 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
 class TestHTTPProxyToWSGIDisabled(test_base.BaseTestCase):
 
     def setUp(self):
-        super(TestHTTPProxyToWSGIDisabled, self).setUp()
+        super().setUp()
 
         @webob.dec.wsgify()
         def fake_app(req):
