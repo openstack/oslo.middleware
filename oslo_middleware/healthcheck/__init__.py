@@ -26,7 +26,6 @@ import traceback
 from debtcollector import removals
 import jinja2
 from oslo_utils import reflection
-from oslo_utils import strutils
 from oslo_utils import timeutils
 import stevedore
 import webob.dec
@@ -48,8 +47,7 @@ def _find_objects(t):
 
 
 def _expand_template(contents, params):
-    tpl = jinja2.Template(source=contents,
-                          undefined=jinja2.StrictUndefined)
+    tpl = jinja2.Template(source=contents, undefined=jinja2.StrictUndefined)
     return tpl.render(**params)
 
 
@@ -389,30 +387,38 @@ Reason
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.oslo_conf.register_opts(opts.HEALTHCHECK_OPTS,
-                                     group='healthcheck')
+        self.oslo_conf.register_opts(
+            opts.HEALTHCHECK_OPTS, group='healthcheck'
+        )
         self._path = self._conf_get('path')
         self._show_details = self._conf_get('detailed')
         self._source_ranges = [
             ipaddress.ip_network(r)
-            for r in self._conf_get('allowed_source_ranges')]
+            for r in self._conf_get('allowed_source_ranges')
+        ]
         self._ignore_proxied_requests = self._conf_get(
-            'ignore_proxied_requests')
+            'ignore_proxied_requests'
+        )
 
         # (abhishekk): Verify that if `enable_by_files` and
         # `disable_by_file` backends are not enabled at same time.
         self._verify_configured_plugins()
 
         self._backends = stevedore.NamedExtensionManager(
-            self.NAMESPACE, self._conf_get('backends'),
-            name_order=True, invoke_on_load=True,
-            invoke_args=(self.oslo_conf, self.conf))
-        self._accept_to_functor = collections.OrderedDict([
-            # Order here matters...
-            ('text/plain', self._make_text_response),
-            ('text/html', self._make_html_response),
-            ('application/json', self._make_json_response),
-        ])
+            self.NAMESPACE,
+            self._conf_get('backends'),
+            name_order=True,
+            invoke_on_load=True,
+            invoke_args=(self.oslo_conf, self.conf),
+        )
+        self._accept_to_functor = collections.OrderedDict(
+            [
+                # Order here matters...
+                ('text/plain', self._make_text_response),
+                ('text/html', self._make_html_response),
+                ('application/json', self._make_json_response),
+            ]
+        )
         self._accept_order = tuple(self._accept_to_functor)
         # When no accept type matches instead of returning 406 we will
         # always return text/plain (because sending an error from this
@@ -425,16 +431,19 @@ Reason
         exclusive_plugins = ['disable_by_file', 'enable_by_files']
 
         if set(exclusive_plugins).issubset(set(backends)):
-            raise ConfigInvalid('`enable_by_files` plugin and '
-                                '`disable_by_file` plugin should not be '
-                                'enabled at the same time.')
+            raise ConfigInvalid(
+                '`enable_by_files` plugin and '
+                '`disable_by_file` plugin should not be '
+                'enabled at the same time.'
+            )
 
     def _conf_get(self, key, group='healthcheck'):
         return super()._conf_get(key, group=group)
 
     @removals.remove(
         message="The healthcheck middleware must now be configured as "
-        "an application, not as a filter")
+        "an application, not as a filter"
+    )
     @classmethod
     def factory(cls, global_conf, **local_conf):
         return super().factory(global_conf, **local_conf)
@@ -517,12 +526,15 @@ Reason
             }
             reasons = []
             for result in results:
-                reasons.append({
-                    'reason': result.reason,
-                    'details': result.details or '',
-                    'class': reflection.get_class_name(result,
-                                                       fully_qualified=False),
-                })
+                reasons.append(
+                    {
+                        'reason': result.reason,
+                        'details': result.details or '',
+                        'class': reflection.get_class_name(
+                            result, fully_qualified=False
+                        ),
+                    }
+                )
             body['reasons'] = reasons
             body['greenthreads'] = self._get_greenstacks()
             body['threads'] = self._get_threadstacks()
@@ -534,7 +546,7 @@ Reason
         return (self._pretty_json_dumps(body), 'application/json')
 
     def _make_head_response(self, results, healthy):
-        return ( "", "text/plain")
+        return ("", "text/plain")
 
     def _make_html_response(self, results, healthy):
         try:
@@ -543,12 +555,15 @@ Reason
             hostname = None
         translated_results = []
         for result in results:
-            translated_results.append({
-                'details': result.details or '',
-                'reason': result.reason,
-                'class': reflection.get_class_name(result,
-                                                   fully_qualified=False),
-            })
+            translated_results.append(
+                {
+                    'details': result.details or '',
+                    'reason': result.reason,
+                    'class': reflection.get_class_name(
+                        result, fully_qualified=False
+                    ),
+                }
+            )
         params = {
             'healthy': healthy,
             'hostname': hostname,
@@ -560,9 +575,9 @@ Reason
             'gc': {
                 'counts': gc.get_count(),
                 'threshold': gc.get_threshold(),
-             },
-             'threads': self._get_threadstacks(),
-             'greenthreads': self._get_threadstacks(),
+            },
+            'threads': self._get_threadstacks(),
+            'greenthreads': self._get_threadstacks(),
         }
         body = _expand_template(self.HTML_RESPONSE_TEMPLATE, params)
         return (body.strip(), 'text/html')
@@ -584,13 +599,18 @@ Reason
 
         if self._ignore_proxied_requests:
             for hdr in [
-                'FORWARDED', 'FORWARDED_PROTO', 'FORWARDED_HOST',
-                'FORWARDED_FOR', 'FORWARDED_PREFIX']:
-                if req.environ.get("HTTP_X_%s" % hdr):
+                'FORWARDED',
+                'FORWARDED_PROTO',
+                'FORWARDED_HOST',
+                'FORWARDED_FOR',
+                'FORWARDED_PREFIX',
+            ]:
+                if req.environ.get(f"HTTP_X_{hdr}"):
                     return None
 
-        results = [ext.obj.healthcheck(req.server_port)
-                   for ext in self._backends]
+        results = [
+            ext.obj.healthcheck(req.server_port) for ext in self._backends
+        ]
         healthy = self._are_results_healthy(results)
         if req.method == "HEAD":
             functor = self._make_head_response
@@ -604,6 +624,9 @@ Reason
                 accept_type = self._default_accept
             functor = self._accept_to_functor[accept_type]
         body, content_type = functor(results, healthy)
-        return webob.response.Response(status=status, body=body,
-                                       charset='UTF-8',
-                                       content_type=content_type)
+        return webob.response.Response(
+            status=status,
+            body=body,
+            charset='UTF-8',
+            content_type=content_type,
+        )

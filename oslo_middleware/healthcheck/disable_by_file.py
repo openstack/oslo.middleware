@@ -45,8 +45,9 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.oslo_conf.register_opts(opts.DISABLE_BY_FILES_OPTS,
-                                     group='healthcheck')
+        self.oslo_conf.register_opts(
+            opts.DISABLE_BY_FILES_OPTS, group='healthcheck'
+        )
         self.status_files = {}
         paths = self._conf_get('disable_by_file_paths')
         self.status_files.update(self._iter_paths_ports(paths))
@@ -65,18 +66,22 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     def healthcheck(self, server_port):
         path = self.status_files.get(server_port)
         if not path:
-            LOG.warning('DisableByFilesPorts healthcheck middleware '
-                        'enabled without disable_by_file_paths set '
-                        'for port %s', server_port)
-            return pluginbase.HealthcheckResult(available=True,
-                                                reason="OK")
+            LOG.warning(
+                'DisableByFilesPorts healthcheck middleware '
+                'enabled without disable_by_file_paths set '
+                'for port %s',
+                server_port,
+            )
+            return pluginbase.HealthcheckResult(available=True, reason="OK")
         else:
             if not os.path.exists(path):
-                return pluginbase.HealthcheckResult(available=True,
-                                                    reason="OK")
+                return pluginbase.HealthcheckResult(
+                    available=True, reason="OK"
+                )
             else:
-                return pluginbase.HealthcheckResult(available=False,
-                                                    reason="DISABLED BY FILE")
+                return pluginbase.HealthcheckResult(
+                    available=False, reason="DISABLED BY FILE"
+                )
 
 
 class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
@@ -100,23 +105,32 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.oslo_conf.register_opts(opts.DISABLE_BY_FILE_OPTS,
-                                     group='healthcheck')
+        self.oslo_conf.register_opts(
+            opts.DISABLE_BY_FILE_OPTS, group='healthcheck'
+        )
 
     def healthcheck(self, server_port):
         path = self._conf_get('disable_by_file_path')
         if not path:
-            LOG.warning('DisableByFile healthcheck middleware enabled '
-                        'without disable_by_file_path set')
+            LOG.warning(
+                'DisableByFile healthcheck middleware enabled '
+                'without disable_by_file_path set'
+            )
             return pluginbase.HealthcheckResult(
-                available=True, reason="OK",
+                available=True,
+                reason="OK",
                 details="No 'disable_by_file_path' configuration value"
-                        " specified")
+                " specified",
+            )
         elif not os.path.exists(path):
             return pluginbase.HealthcheckResult(
-                available=True, reason="OK",
-                details="Path '%s' was not found" % path)
+                available=True,
+                reason="OK",
+                details=f"Path '{path}' was not found",
+            )
         else:
             return pluginbase.HealthcheckResult(
-                available=False, reason="DISABLED BY FILE",
-                details="Path '%s' was found" % path)
+                available=False,
+                reason="DISABLED BY FILE",
+                details=f"Path '{path}' was found",
+            )

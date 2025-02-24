@@ -155,10 +155,15 @@ def list_opts_healthcheck():
     # standard opts and the most common plugin to turn up in sample config.
     # can figure out a better way of exposing plugin opts later if required.
     return [
-        ('healthcheck', copy.deepcopy(healthcheck_opts.HEALTHCHECK_OPTS +
-                                      healthcheck_opts.DISABLE_BY_FILE_OPTS +
-                                      healthcheck_opts.DISABLE_BY_FILES_OPTS +
-                                      healthcheck_opts.ENABLE_BY_FILES_OPTS))
+        (
+            'healthcheck',
+            copy.deepcopy(
+                healthcheck_opts.HEALTHCHECK_OPTS
+                + healthcheck_opts.DISABLE_BY_FILE_OPTS
+                + healthcheck_opts.DISABLE_BY_FILES_OPTS
+                + healthcheck_opts.ENABLE_BY_FILES_OPTS
+            ),
+        )
     ]
 
 

@@ -17,7 +17,6 @@ from oslotest.base import BaseTestCase
 
 
 class TestOptionDiscovery(BaseTestCase):
-
     def test_all(self):
         opts.list_opts()
 

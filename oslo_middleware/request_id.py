@@ -25,8 +25,9 @@ ENV_REQUEST_ID = 'openstack.request_id'
 GLOBAL_REQ_ID = 'openstack.global_request_id'
 HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 INBOUND_HEADER = 'X-Openstack-Request-Id'
-ID_FORMAT = (r'^req-[a-f0-9]{8}-[a-f0-9]{4}-'
-             r'[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+ID_FORMAT = (
+    r'^req-[a-f0-9]{8}-[a-f0-9]{4}-' r'[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+)
 
 
 class RequestId(base.ConfigurableMiddleware):

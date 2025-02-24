@@ -40,7 +40,9 @@ class CatchErrors(base.ConfigurableMiddleware):
             response = req.get_response(self.application)
         except Exception:
             req_str = _TOKEN_RE.sub(r'\1: *****', req.as_text())
-            LOG.exception('An error occurred during '
-                          'processing the request: %s', req_str)
+            LOG.exception(
+                'An error occurred during processing the request: %s',
+                req_str,
+            )
             response = webob.exc.HTTPInternalServerError()
         return response

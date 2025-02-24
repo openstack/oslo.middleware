@@ -24,31 +24,49 @@ import webob.exc
 LOG = logging.getLogger(__name__)
 
 OPTS = [
-    cfg.ListOpt('allowed_origin',
-                help='Indicate whether this resource may be shared with the '
-                     'domain received in the requests "origin" header. '
-                     'Format: "<protocol>://<host>[:<port>]", no trailing '
-                     'slash. Example: https://horizon.example.com'),
-    cfg.BoolOpt('allow_credentials',
-                default=True,
-                help='Indicate that the actual request can include user '
-                     'credentials'),
-    cfg.ListOpt('expose_headers',
-                default=[],
-                help='Indicate which headers are safe to expose to the API. '
-                     'Defaults to HTTP Simple Headers.'),
-    cfg.IntOpt('max_age',
-               default=3600,
-               help='Maximum cache age of CORS preflight requests.'),
-    cfg.ListOpt('allow_methods',
-                default=['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
-                         'TRACE', 'PATCH'],  # RFC 2616, RFC 5789
-                help='Indicate which methods can be used during the actual '
-                     'request.'),
-    cfg.ListOpt('allow_headers',
-                default=[],
-                help='Indicate which header field names may be used during '
-                     'the actual request.')
+    cfg.ListOpt(
+        'allowed_origin',
+        help='Indicate whether this resource may be shared with the '
+        'domain received in the requests "origin" header. '
+        'Format: "<protocol>://<host>[:<port>]", no trailing '
+        'slash. Example: https://horizon.example.com',
+    ),
+    cfg.BoolOpt(
+        'allow_credentials',
+        default=True,
+        help='Indicate that the actual request can include user credentials',
+    ),
+    cfg.ListOpt(
+        'expose_headers',
+        default=[],
+        help='Indicate which headers are safe to expose to the API. '
+        'Defaults to HTTP Simple Headers.',
+    ),
+    cfg.IntOpt(
+        'max_age',
+        default=3600,
+        help='Maximum cache age of CORS preflight requests.',
+    ),
+    cfg.ListOpt(
+        'allow_methods',
+        default=[
+            'OPTIONS',
+            'GET',
+            'HEAD',
+            'POST',
+            'PUT',
+            'DELETE',
+            'TRACE',
+            'PATCH',
+        ],  # RFC 2616, RFC 5789
+        help='Indicate which methods can be used during the actual request.',
+    ),
+    cfg.ListOpt(
+        'allow_headers',
+        default=[],
+        help='Indicate which header field names may be used during '
+        'the actual request.',
+    ),
 ]
 
 # legacy alias, since many projects reference this directly
@@ -82,8 +100,10 @@ def set_defaults(**kwargs):
 
     wrong_params = passed_params - valid_params
     if wrong_params:
-        raise AttributeError('Parameter(s) [%s] invalid, please only use [%s]'
-                             % (wrong_params, valid_params))
+        raise AttributeError(
+            f'Parameter(s) [{wrong_params}] invalid, please only use '
+            f'[{valid_params}]'
+        )
 
     # Set global defaults.
     cfg.set_defaults(OPTS, **kwargs)
@@ -95,7 +115,8 @@ class InvalidOriginError(Exception):
     def __init__(self, origin):
         self.origin = origin
         super().__init__(
-            'CORS request from origin \'%s\' not permitted.' % origin)
+            f'CORS request from origin \'{origin}\' not permitted.'
+        )
 
 
 class CORS(base.ConfigurableMiddleware):
@@ -115,7 +136,7 @@ class CORS(base.ConfigurableMiddleware):
         'Content-Language',
         'Expires',
         'Last-Modified',
-        'Pragma'
+        'Pragma',
     ]
 
     def __init__(self, application, *args, **kwargs):
@@ -141,10 +162,13 @@ class CORS(base.ConfigurableMiddleware):
         allow_methods: List of HTTP methods to permit.
         allow_headers: List of HTTP headers to permit from the client.
         """
-        if ('allowed_origin' not in local_conf and
-           'oslo_config_project' not in local_conf):
-            raise TypeError("allowed_origin or oslo_config_project "
-                            "is required")
+        if (
+            'allowed_origin' not in local_conf
+            and 'oslo_config_project' not in local_conf
+        ):
+            raise TypeError(
+                "allowed_origin or oslo_config_project is required"
+            )
         return super().factory(global_conf, **local_conf)
 
     def _init_conf(self):
@@ -165,38 +189,50 @@ class CORS(base.ConfigurableMiddleware):
         # of **kwargs), since we don't accidentally want to catch
         # allowed_origin.
         subgroup_opts = copy.deepcopy(OPTS)
-        cfg.set_defaults(subgroup_opts,
-                         allow_credentials=allow_credentials,
-                         expose_headers=expose_headers,
-                         max_age=max_age,
-                         allow_methods=allow_methods,
-                         allow_headers=allow_headers)
+        cfg.set_defaults(
+            subgroup_opts,
+            allow_credentials=allow_credentials,
+            expose_headers=expose_headers,
+            max_age=max_age,
+            allow_methods=allow_methods,
+            allow_headers=allow_headers,
+        )
 
         # If the default configuration contains an allowed_origin, don't
         # forget to register that.
-        self.add_origin(allowed_origin=allowed_origin,
-                        allow_credentials=allow_credentials,
-                        expose_headers=expose_headers,
-                        max_age=max_age,
-                        allow_methods=allow_methods,
-                        allow_headers=allow_headers)
+        self.add_origin(
+            allowed_origin=allowed_origin,
+            allow_credentials=allow_credentials,
+            expose_headers=expose_headers,
+            max_age=max_age,
+            allow_methods=allow_methods,
+            allow_headers=allow_headers,
+        )
 
         # Iterate through all the loaded config sections, looking for ones
         # prefixed with 'cors.'
         for section in self.oslo_conf.list_all_sections():
             if section.startswith('cors.'):
-                debtcollector.deprecate('Multiple configuration blocks are '
-                                        'deprecated and will be removed in '
-                                        'future versions. Please consolidate '
-                                        'your configuration in the [cors] '
-                                        'configuration block.')
+                debtcollector.deprecate(
+                    'Multiple configuration blocks are '
+                    'deprecated and will be removed in '
+                    'future versions. Please consolidate '
+                    'your configuration in the [cors] '
+                    'configuration block.'
+                )
                 # Register with the preconstructed defaults
                 self.oslo_conf.register_opts(subgroup_opts, section)
                 self.add_origin(**self.oslo_conf[section])
 
-    def add_origin(self, allowed_origin, allow_credentials=True,
-                   expose_headers=None, max_age=None, allow_methods=None,
-                   allow_headers=None):
+    def add_origin(
+        self,
+        allowed_origin,
+        allow_credentials=True,
+        expose_headers=None,
+        max_age=None,
+        allow_methods=None,
+        allow_headers=None,
+    ):
         '''Add another origin to this filter.
 
         :param allowed_origin: Protocol, host, and port for the allowed origin.
@@ -212,16 +248,19 @@ class CORS(base.ConfigurableMiddleware):
         # a string for allowed_origin instead of a list
         if isinstance(allowed_origin, str):
             # TODO(krotscheck): https://review.opendev.org/#/c/312687/
-            LOG.warning('DEPRECATED: The `allowed_origin` keyword argument in '
-                        '`add_origin()` should be a list, found String.')
+            LOG.warning(
+                'DEPRECATED: The `allowed_origin` keyword argument in '
+                '`add_origin()` should be a list, found String.'
+            )
             allowed_origin = [allowed_origin]
 
         if allowed_origin:
             for origin in allowed_origin:
-
                 if origin in self.allowed_origins:
-                    LOG.warning('Allowed origin [%s] already exists, skipping',
-                                allowed_origin)
+                    LOG.warning(
+                        'Allowed origin [%s] already exists, skipping',
+                        allowed_origin,
+                    )
                     continue
 
                 self.allowed_origins[origin] = {
@@ -229,7 +268,7 @@ class CORS(base.ConfigurableMiddleware):
                     'expose_headers': expose_headers,
                     'max_age': max_age,
                     'allow_methods': allow_methods,
-                    'allow_headers': allow_headers
+                    'allow_headers': allow_headers,
                 }
 
     def process_response(self, response, request=None):
@@ -251,8 +290,9 @@ class CORS(base.ConfigurableMiddleware):
 
         # Doublecheck for an OPTIONS request.
         if request.method == 'OPTIONS':
-            return self._apply_cors_preflight_headers(request=request,
-                                                      response=response)
+            return self._apply_cors_preflight_headers(
+                request=request, response=response
+            )
 
         # Apply regular CORS headers.
         self._apply_cors_request_headers(request=request, response=response)
@@ -291,22 +331,25 @@ class CORS(base.ConfigurableMiddleware):
         # Is this origin registered? (Section 6.2.2)
         try:
             origin, cors_config = self._get_cors_config_by_origin(
-                request.headers['Origin'])
+                request.headers['Origin']
+            )
         except InvalidOriginError:
             return response
 
         # If there's no request method, exit. (Section 6.2.3)
         if 'Access-Control-Request-Method' not in request.headers:
-            LOG.debug('CORS request does not contain '
-                      'Access-Control-Request-Method header.')
+            LOG.debug(
+                'CORS request does not contain '
+                'Access-Control-Request-Method header.'
+            )
             return response
         request_method = request.headers['Access-Control-Request-Method']
 
         # Extract Request headers. If parsing fails, exit. (Section 6.2.4)
         try:
-            request_headers = \
-                self._split_header_values(request,
-                                          'Access-Control-Request-Headers')
+            request_headers = self._split_header_values(
+                request, 'Access-Control-Request-Headers'
+            )
         except Exception:
             LOG.debug('Cannot parse request headers.')
             return response
@@ -314,20 +357,27 @@ class CORS(base.ConfigurableMiddleware):
         # Compare request method to permitted methods (Section 6.2.5)
         permitted_methods = cors_config['allow_methods']
         if request_method not in permitted_methods:
-            LOG.debug('Request method \'%s\' not in permitted list: %s',
-                      request_method, permitted_methods)
+            LOG.debug(
+                'Request method \'%s\' not in permitted list: %s',
+                request_method,
+                permitted_methods,
+            )
             return response
 
         # Compare request headers to permitted headers, case-insensitively.
         # (Section 6.2.6)
-        permitted_headers = [header.upper() for header in
-                             (cors_config['allow_headers'] +
-                              self.simple_headers)]
+        permitted_headers = [
+            header.upper()
+            for header in (cors_config['allow_headers'] + self.simple_headers)
+        ]
         for requested_header in request_headers:
             upper_header = requested_header.upper()
             if upper_header not in permitted_headers:
-                LOG.debug('Request header \'%s\' not in permitted list: %s',
-                          requested_header, permitted_headers)
+                LOG.debug(
+                    'Request header \'%s\' not in permitted list: %s',
+                    requested_header,
+                    permitted_headers,
+                )
                 return response
 
         # Set the default origin permission headers. (Sections 6.2.7, 6.4)
@@ -340,16 +390,18 @@ class CORS(base.ConfigurableMiddleware):
 
         # Attach Access-Control-Max-Age if appropriate. (Section 6.2.8)
         if 'max_age' in cors_config and cors_config['max_age']:
-            response.headers['Access-Control-Max-Age'] = \
-                str(cors_config['max_age'])
+            response.headers['Access-Control-Max-Age'] = str(
+                cors_config['max_age']
+            )
 
         # Attach Access-Control-Allow-Methods. (Section 6.2.9)
         response.headers['Access-Control-Allow-Methods'] = request_method
 
         # Attach  Access-Control-Allow-Headers. (Section 6.2.10)
         if request_headers:
-            response.headers['Access-Control-Allow-Headers'] = \
-                ','.join(request_headers)
+            response.headers['Access-Control-Allow-Headers'] = ','.join(
+                request_headers
+            )
 
         return response
 
@@ -358,8 +410,9 @@ class CORS(base.ConfigurableMiddleware):
             if '*' in self.allowed_origins:
                 origin = '*'
             else:
-                LOG.debug('CORS request from origin \'%s\' not permitted.',
-                          origin)
+                LOG.debug(
+                    'CORS request from origin \'%s\' not permitted.', origin
+                )
                 raise InvalidOriginError(origin)
         return origin, self.allowed_origins[origin]
 
@@ -377,7 +430,8 @@ class CORS(base.ConfigurableMiddleware):
         # Is this origin registered? (Section 6.1.2)
         try:
             origin, cors_config = self._get_cors_config_by_origin(
-                request.headers['Origin'])
+                request.headers['Origin']
+            )
         except InvalidOriginError:
             return
 
@@ -394,8 +448,9 @@ class CORS(base.ConfigurableMiddleware):
 
         # Attach the exposed headers and exit. (Section 6.1.4)
         if cors_config['expose_headers']:
-            response.headers['Access-Control-Expose-Headers'] = \
-                ','.join(cors_config['expose_headers'])
+            response.headers['Access-Control-Expose-Headers'] = ','.join(
+                cors_config['expose_headers']
+            )
 
 
 # NOTE(sileht): Shortcut for backwards compatibility

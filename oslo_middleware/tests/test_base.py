@@ -70,18 +70,21 @@ class TestBase(BaseTestCase):
         self.assertNotIn('Content-Type', response.headers)
 
     def test_paste_deploy_legacy(self):
-        app = LegacyMiddlewareTest.factory(
-            {'global': True}, local=True)(application)
+        app = LegacyMiddlewareTest.factory({'global': True}, local=True)(
+            application
+        )
         self.assertEqual({}, app.conf)
 
     def test_paste_deploy_configurable(self):
-        app = ConfigurableMiddlewareTest.factory(
-            {'global': True}, local=True)(application)
+        app = ConfigurableMiddlewareTest.factory({'global': True}, local=True)(
+            application
+        )
         self.assertEqual({'global': True, 'local': True}, app.conf)
 
 
 class NoRequestBase(Middleware):
     """Test middleware, implements old model."""
+
     def process_response(self, response):
         self.called_without_request = True
         return response
@@ -89,6 +92,7 @@ class NoRequestBase(Middleware):
 
 class RequestBase(Middleware):
     """Test middleware, implements new model."""
+
     def process_response(self, response, request):
         self.called_with_request = True
         return response

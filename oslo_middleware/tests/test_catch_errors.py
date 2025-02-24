@@ -24,7 +24,6 @@ from oslo_middleware import catch_errors
 
 
 class CatchErrorsTest(test_base.BaseTestCase):
-
     def _test_has_request_id(self, application, expected_code=None):
         app = catch_errors.CatchErrors(application)
         req = webob.Request.blank('/test')
@@ -45,8 +44,9 @@ class CatchErrorsTest(test_base.BaseTestCase):
             raise Exception()
 
         with mock.patch.object(catch_errors.LOG, 'exception') as log_exc:
-            self._test_has_request_id(application,
-                                      webob.exc.HTTPInternalServerError.code)
+            self._test_has_request_id(
+                application, webob.exc.HTTPInternalServerError.code
+            )
             self.assertEqual(1, log_exc.call_count)
             req_log = log_exc.call_args[0][1]
             self.assertIn('X-Auth-Token: *****', str(req_log))
@@ -59,12 +59,16 @@ class CatchErrorsTest(test_base.BaseTestCase):
             raise Exception()
 
         app = catch_errors.CatchErrors(application)
-        req = webob.Request.blank('/test',
-                                  text='test data',
-                                  method='POST',
-                                  headers={'X-Auth-Token': 'secret1',
-                                           'X-Service-Token': 'secret2',
-                                           'X-Other-Token': 'secret3'})
+        req = webob.Request.blank(
+            '/test',
+            text='test data',
+            method='POST',
+            headers={
+                'X-Auth-Token': 'secret1',
+                'X-Service-Token': 'secret2',
+                'X-Other-Token': 'secret3',
+            },
+        )
         res = req.get_response(app)
         self.assertEqual(500, res.status_int)
 

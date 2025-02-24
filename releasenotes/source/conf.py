@@ -32,10 +32,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'reno.sphinxext',
-    'openstackdocstheme'
-]
+extensions = ['reno.sphinxext', 'openstackdocstheme']
 
 # openstackdocstheme options
 openstackdocs_repo_name = 'openstack/oslo.middleware'
@@ -179,9 +176,13 @@ html_static_path = ['_static']
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'oslo.middlewareReleaseNotes',
-     'oslo.middleware Release Notes Documentation',
-     ['oslo.middleware Developers'], 1)
+    (
+        'index',
+        'oslo.middlewareReleaseNotes',
+        'oslo.middleware Release Notes Documentation',
+        ['oslo.middleware Developers'],
+        1,
+    )
 ]
 
 # If true, show URL addresses after external links.
@@ -194,12 +195,16 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'oslo.middlewareReleaseNotes',
-     'oslo.middleware Release Notes Documentation',
-     'oslo.middleware Developers', 'oslo.middlewareReleaseNotes',
-     'The library includes components that can be injected into wsgi pipelines'
-     ' to intercept request/response flows.',
-     'Miscellaneous'),
+    (
+        'index',
+        'oslo.middlewareReleaseNotes',
+        'oslo.middleware Release Notes Documentation',
+        'oslo.middleware Developers',
+        'oslo.middlewareReleaseNotes',
+        'The library includes components that can be injected into wsgi pipelines'
+        ' to intercept request/response flows.',
+        'Miscellaneous',
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.

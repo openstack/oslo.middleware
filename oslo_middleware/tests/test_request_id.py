@@ -52,6 +52,7 @@ class RequestIdTest(test_base.BaseTestCase):
         request_id.
 
         """
+
         @webob.dec.wsgify
         def application(req):
             return req.environ[request_id.ENV_REQUEST_ID]
@@ -67,15 +68,16 @@ class RequestIdTest(test_base.BaseTestCase):
 
     def test_global_request_id_set(self):
         """Test that global request_id is set."""
+
         @webob.dec.wsgify
         def application(req):
             return req.environ[request_id.GLOBAL_REQ_ID]
 
-        global_req = "req-%s" % uuid.uuid4()
+        global_req = f"req-{uuid.uuid4()}"
         app = request_id.RequestId(application)
         req = webob.Request.blank(
-            '/test',
-            headers={"X-OpenStack-Request-ID": global_req})
+            '/test', headers={"X-OpenStack-Request-ID": global_req}
+        )
         res = req.get_response(app)
         res_req_id = res.headers.get(request_id.HTTP_RESP_HEADER_REQUEST_ID)
         if isinstance(res_req_id, bytes):
@@ -89,15 +91,16 @@ class RequestIdTest(test_base.BaseTestCase):
 
         This ensures that badly formatted ids are dropped entirely.
         """
+
         @webob.dec.wsgify
         def application(req):
             return req.environ.get(request_id.GLOBAL_REQ_ID)
 
-        global_req = "req-%s-bad" % uuid.uuid4()
+        global_req = f"req-{uuid.uuid4()}-bad"
         app = request_id.RequestId(application)
         req = webob.Request.blank(
-            '/test',
-            headers={"X-OpenStack-Request-ID": global_req})
+            '/test', headers={"X-OpenStack-Request-ID": global_req}
+        )
         res = req.get_response(app)
         res_req_id = res.headers.get(request_id.HTTP_RESP_HEADER_REQUEST_ID)
         if isinstance(res_req_id, bytes):

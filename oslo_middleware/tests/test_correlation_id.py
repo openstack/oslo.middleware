@@ -22,7 +22,6 @@ from oslo_middleware import correlation_id
 
 
 class CorrelationIdTest(test_base.BaseTestCase):
-
     def setUp(self):
         super().setUp()
 

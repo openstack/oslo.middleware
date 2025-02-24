@@ -20,7 +20,6 @@ from oslo_middleware import http_proxy_to_wsgi
 
 
 class TestHTTPProxyToWSGI(test_base.BaseTestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -29,9 +28,9 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
             return util.application_uri(req.environ)
 
         self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
-        self.middleware.oslo_conf.set_override('enable_proxy_headers_parsing',
-                                               True,
-                                               group='oslo_middleware')
+        self.middleware.oslo_conf.set_override(
+            'enable_proxy_headers_parsing', True, group='oslo_middleware'
+        )
         self.request = webob.Request.blank('/foo/bar', method='POST')
 
     def test_backward_compat(self):
@@ -78,37 +77,45 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
 
     def test_rfc7239_invalid(self):
         self.request.headers['Forwarded'] = (
-            "iam=anattacker;metoo, I will crash you!!P;m,xx")
+            "iam=anattacker;metoo, I will crash you!!P;m,xx"
+        )
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"http://localhost:80/", response.body)
 
     def test_rfc7239_proto(self):
         self.request.headers['Forwarded'] = (
-            "for=foobar;proto=https, for=foobaz;proto=http")
+            "for=foobar;proto=https, for=foobaz;proto=http"
+        )
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"https://localhost:80/", response.body)
 
     def test__parse_rfc7239_header(self):
-        expected_result = [{'for': 'foobar', 'proto': 'https'},
-                           {'for': 'foobaz', 'proto': 'http'}]
+        expected_result = [
+            {'for': 'foobar', 'proto': 'https'},
+            {'for': 'foobaz', 'proto': 'http'},
+        ]
 
         result = self.middleware._parse_rfc7239_header(
-            "for=foobar;proto=https, for=foobaz;proto=http")
+            "for=foobar;proto=https, for=foobaz;proto=http"
+        )
         self.assertEqual(expected_result, result)
 
         result = self.middleware._parse_rfc7239_header(
-            "for=foobar; proto=https, for=foobaz; proto=http")
+            "for=foobar; proto=https, for=foobaz; proto=http"
+        )
         self.assertEqual(expected_result, result)
 
     def test_rfc7239_proto_host(self):
         self.request.headers['Forwarded'] = (
-            "for=foobar;proto=https;host=example.com, for=foobaz;proto=http")
+            "for=foobar;proto=https;host=example.com, for=foobaz;proto=http"
+        )
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"https://example.com/", response.body)
 
     def test_rfc7239_proto_host_base(self):
         self.request.headers['Forwarded'] = (
-            "for=foobar;proto=https;host=example.com:8043, for=foobaz")
+            "for=foobar;proto=https;host=example.com:8043, for=foobaz"
+        )
         self.request.headers['X-Forwarded-Prefix'] = "/bla"
         response = self.request.get_response(self.middleware)
         self.assertEqual(b"https://example.com:8043/bla", response.body)
@@ -125,7 +132,8 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
         # If both X-Forwarded-For and Fowarded headers are present, it should
         # use the Forwarded header and ignore the X-Forwarded-For header.
         self.request.headers['Forwarded'] = (
-            "for=%s;proto=https;host=example.com:8043" % (forwarded_addr))
+            f"for={forwarded_addr};proto=https;host=example.com:8043"
+        )
         self.request.headers['X-Forwarded-For'] = forwarded_for_addr
         response = self.request.get_response(self.middleware)
         self.assertEqual(forwarded_addr.encode(), response.body)
@@ -137,7 +145,6 @@ class TestHTTPProxyToWSGI(test_base.BaseTestCase):
 
 
 class TestHTTPProxyToWSGIDisabled(test_base.BaseTestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -146,9 +153,9 @@ class TestHTTPProxyToWSGIDisabled(test_base.BaseTestCase):
             return util.application_uri(req.environ)
 
         self.middleware = http_proxy_to_wsgi.HTTPProxyToWSGI(fake_app)
-        self.middleware.oslo_conf.set_override('enable_proxy_headers_parsing',
-                                               False,
-                                               group='oslo_middleware')
+        self.middleware.oslo_conf.set_override(
+            'enable_proxy_headers_parsing', False, group='oslo_middleware'
+        )
         self.request = webob.Request.blank('/foo/bar', method='POST')
 
     def test_no_headers(self):

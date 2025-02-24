@@ -43,18 +43,26 @@ class EnableByFilesHealthcheck(pluginbase.HealthcheckBaseExtension):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.oslo_conf.register_opts(opts.ENABLE_BY_FILES_OPTS,
-                                     group='healthcheck')
+        self.oslo_conf.register_opts(
+            opts.ENABLE_BY_FILES_OPTS, group='healthcheck'
+        )
         self.file_paths = self._conf_get('enable_by_file_paths')
 
     def healthcheck(self, server_port):
         for file_path in self.file_paths:
             if not os.path.exists(file_path):
-                LOG.warning('EnableByFiles healthcheck middleware: Path %s '
-                            'is not present', file_path)
+                LOG.warning(
+                    'EnableByFiles healthcheck middleware: Path %s '
+                    'is not present',
+                    file_path,
+                )
                 return pluginbase.HealthcheckResult(
-                    available=False, reason="FILE PATH MISSING",
-                    details='File path %s is missing' % file_path)
+                    available=False,
+                    reason="FILE PATH MISSING",
+                    details=f'File path {file_path} is missing',
+                )
         return pluginbase.HealthcheckResult(
-            available=True, reason="OK",
-            details='Specified file paths are available')
+            available=True,
+            reason="OK",
+            details='Specified file paths are available',
+        )

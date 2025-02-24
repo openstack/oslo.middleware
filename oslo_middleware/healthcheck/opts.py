@@ -14,54 +14,70 @@ from oslo_config import cfg
 
 
 HEALTHCHECK_OPTS = [
-    cfg.StrOpt('path',
-               default='/healthcheck',
-               deprecated_for_removal=True,
-               help='The path to respond to healtcheck requests on.'),
-    cfg.BoolOpt('detailed',
-                default=False,
-                help='Show more detailed information as part of the response. '
-                     'Security note: Enabling this option may expose '
-                     'sensitive details about the service being monitored. '
-                     'Be sure to verify that it will not violate your '
-                     'security policies.'),
-    cfg.ListOpt('backends',
-                default=[],
-                help='Additional backends that can perform health checks and '
-                     'report that information back as part of a request.'),
-    cfg.ListOpt('allowed_source_ranges',
-                default=[],
-                help='A list of network addresses to limit source ip allowed '
-                     'to access healthcheck information. Any request from ip '
-                     'outside of these network addresses are ignored.'),
-    cfg.BoolOpt('ignore_proxied_requests',
-                default=False,
-                help='Ignore requests with proxy headers.')
+    cfg.StrOpt(
+        'path',
+        default='/healthcheck',
+        deprecated_for_removal=True,
+        help='The path to respond to healtcheck requests on.',
+    ),
+    cfg.BoolOpt(
+        'detailed',
+        default=False,
+        help='Show more detailed information as part of the response. '
+        'Security note: Enabling this option may expose '
+        'sensitive details about the service being monitored. '
+        'Be sure to verify that it will not violate your '
+        'security policies.',
+    ),
+    cfg.ListOpt(
+        'backends',
+        default=[],
+        help='Additional backends that can perform health checks and '
+        'report that information back as part of a request.',
+    ),
+    cfg.ListOpt(
+        'allowed_source_ranges',
+        default=[],
+        help='A list of network addresses to limit source ip allowed '
+        'to access healthcheck information. Any request from ip '
+        'outside of these network addresses are ignored.',
+    ),
+    cfg.BoolOpt(
+        'ignore_proxied_requests',
+        default=False,
+        help='Ignore requests with proxy headers.',
+    ),
 ]
 
 
 DISABLE_BY_FILE_OPTS = [
-    cfg.StrOpt('disable_by_file_path',
-               default=None,
-               help='Check the presence of a file to determine if an '
-                    'application is running on a port. Used by '
-                    'DisableByFileHealthcheck plugin.'),
+    cfg.StrOpt(
+        'disable_by_file_path',
+        default=None,
+        help='Check the presence of a file to determine if an '
+        'application is running on a port. Used by '
+        'DisableByFileHealthcheck plugin.',
+    ),
 ]
 
 
 DISABLE_BY_FILES_OPTS = [
-    cfg.ListOpt('disable_by_file_paths',
-                default=[],
-                help='Check the presence of a file based on a port to '
-                     'determine if an application is running on a port. '
-                     'Expects a "port:path" list of strings. Used by '
-                     'DisableByFilesPortsHealthcheck plugin.'),
+    cfg.ListOpt(
+        'disable_by_file_paths',
+        default=[],
+        help='Check the presence of a file based on a port to '
+        'determine if an application is running on a port. '
+        'Expects a "port:path" list of strings. Used by '
+        'DisableByFilesPortsHealthcheck plugin.',
+    ),
 ]
 
 
 ENABLE_BY_FILES_OPTS = [
-    cfg.ListOpt('enable_by_file_paths',
-                default=[],
-                help='Check the presence of files. Used by '
-                     'EnableByFilesHealthcheck plugin.'),
+    cfg.ListOpt(
+        'enable_by_file_paths',
+        default=[],
+        help='Check the presence of files. Used by '
+        'EnableByFilesHealthcheck plugin.',
+    ),
 ]

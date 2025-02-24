@@ -23,12 +23,10 @@ import webob.response
 
 
 class NoContentTypeResponse(webob.response.Response):
-
     default_content_type = None  # prevents webob assigning content type
 
 
 class NoContentTypeRequest(webob.request.Request):
-
     ResponseClass = NoContentTypeResponse
 
 
@@ -85,11 +83,13 @@ class ConfigurableMiddleware:
                     program = None
 
                 self.oslo_conf = cfg.ConfigOpts()
-                self.oslo_conf([],
-                               project=self.conf['oslo_config_project'],
-                               prog=program,
-                               default_config_files=default_config_files,
-                               validate_default_values=True)
+                self.oslo_conf(
+                    [],
+                    project=self.conf['oslo_config_project'],
+                    prog=program,
+                    default_config_files=default_config_files,
+                    validate_default_values=True,
+                )
 
             else:
                 # Fallback to global object

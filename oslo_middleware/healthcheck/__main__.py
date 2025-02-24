@@ -25,9 +25,11 @@ class HttpHandler(server.SimpleHTTPRequestHandler):
         @webob.dec.wsgify
         def dummy_application(req):
             return 'test'
+
         app = healthcheck.Healthcheck(dummy_application, {'detailed': True})
-        req = webob.Request.blank("/healthcheck", accept='text/html',
-                                  method='GET')
+        req = webob.Request.blank(
+            "/healthcheck", accept='text/html', method='GET'
+        )
         res = req.get_response(app)
         self.send_response(res.status_code)
         for header_name, header_value in res.headerlist:
@@ -40,7 +42,7 @@ class HttpHandler(server.SimpleHTTPRequestHandler):
 def positive_int(blob):
     value = int(blob)
     if value < 0:
-        msg = "%r is not a positive integer" % blob
+        msg = f"{blob!r} is not a positive integer"
         raise argparse.ArgumentTypeError(msg)
     return value
 
@@ -54,14 +56,18 @@ def create_server(port=0):
 def main(args=None):
     """Runs a basic http server to show healthcheck functionality."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port",
-                        help="Unused port to run the tiny"
-                             " http server on (or zero to select a"
-                             " random unused port)",
-                        type=positive_int, required=True)
+    parser.add_argument(
+        "-p",
+        "--port",
+        help="Unused port to run the tiny"
+        " http server on (or zero to select a"
+        " random unused port)",
+        type=positive_int,
+        required=True,
+    )
     args = parser.parse_args(args=args)
     server = create_server(args.port)
-    print("Serving at port: %s" % server.server_address[1])
+    print(f"Serving at port: {server.server_address[1]}")
     server.serve_forever()
 
 

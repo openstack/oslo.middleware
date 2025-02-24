@@ -22,7 +22,6 @@ from oslo_middleware import sizelimit
 
 
 class TestLimitingReader(test_base.BaseTestCase):
-
     def test_limiting_reader(self):
         BYTES = 1024
         bytes_read = 0
@@ -59,8 +58,9 @@ class TestLimitingReader(test_base.BaseTestCase):
             for chunk in sizelimit.LimitingReader(data, BYTES - 1):
                 bytes_read += len(chunk)
 
-        self.assertRaises(webob.exc.HTTPRequestEntityTooLarge,
-                          _consume_all_iter)
+        self.assertRaises(
+            webob.exc.HTTPRequestEntityTooLarge, _consume_all_iter
+        )
 
         def _consume_all_read():
             bytes_read = 0
@@ -71,12 +71,12 @@ class TestLimitingReader(test_base.BaseTestCase):
                 bytes_read += 1
                 byte = reader.read(1)
 
-        self.assertRaises(webob.exc.HTTPRequestEntityTooLarge,
-                          _consume_all_read)
+        self.assertRaises(
+            webob.exc.HTTPRequestEntityTooLarge, _consume_all_read
+        )
 
 
 class TestRequestBodySizeLimiter(test_base.BaseTestCase):
-
     def setUp(self):
         super().setUp()
         self.useFixture(config.Config())
@@ -87,7 +87,8 @@ class TestRequestBodySizeLimiter(test_base.BaseTestCase):
 
         self.middleware = sizelimit.RequestBodySizeLimiter(fake_app)
         self.MAX_REQUEST_BODY_SIZE = (
-            self.middleware.oslo_conf.oslo_middleware.max_request_body_size)
+            self.middleware.oslo_conf.oslo_middleware.max_request_body_size
+        )
         self.request = webob.Request.blank('/', method='POST')
 
     def test_content_length_acceptable(self):

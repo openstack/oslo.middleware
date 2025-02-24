@@ -24,7 +24,8 @@ LOG = logging.getLogger(__name__)
 VERSION_REGEX = re.compile(r"/(v[0-9]{1}\.[0-9]{1})")
 UUID_REGEX = re.compile(
     r'.*(\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*a',
-    re.IGNORECASE)
+    re.IGNORECASE,
+)
 # UUIDs without the - char, used in some places in Nova URLs.
 SHORT_UUID_REGEX = re.compile(r'.*(\.[0-9a-fA-F]{32}).*')
 
@@ -115,8 +116,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
         # of dots just below.
         path = path.lstrip('/')
 
-        stat = "{name}.{method}".format(
-            name=self.stat_name, method=request.method)
+        stat = f"{self.stat_name}.{request.method}"
         if path != '':
             stat += '.' + path.replace('/', '.')
 

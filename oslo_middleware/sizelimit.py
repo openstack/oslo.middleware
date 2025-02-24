@@ -40,6 +40,7 @@ OPTS = [
 
 class LimitingReader:
     """Reader to limit the size of an incoming request."""
+
     def __init__(self, data, limit):
         """Initiates LimitingReader object.
 
@@ -83,10 +84,10 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
     @webob.dec.wsgify
     def __call__(self, req):
         max_size = self._conf_get('max_request_body_size')
-        if (req.content_length is not None and
-                req.content_length > max_size):
-            msg = _("Request is too large. "
-                    "Larger than max_request_body_size (%s).")
+        if req.content_length is not None and req.content_length > max_size:
+            msg = _(
+                "Request is too large. Larger than max_request_body_size (%s)."
+            )
             LOG.info(msg, max_size)
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
         if req.content_length is None:

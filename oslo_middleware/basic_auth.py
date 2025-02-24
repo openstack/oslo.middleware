@@ -27,9 +27,11 @@ from oslo_middleware import exceptions
 LOG = logging.getLogger(__name__)
 
 OPTS = [
-    cfg.StrOpt('http_basic_auth_user_file',
-               default='/etc/htpasswd',
-               help="HTTP basic auth password file.")
+    cfg.StrOpt(
+        'http_basic_auth_user_file',
+        default='/etc/htpasswd',
+        help="HTTP basic auth password file.",
+    )
 ]
 
 cfg.CONF.register_opts(OPTS, group='oslo_middleware')
@@ -46,18 +48,21 @@ class BasicAuthMiddleware(base.ConfigurableMiddleware):
     def format_exception(self, e):
         result = {'error': {'message': str(e), 'code': 401}}
         headers = [('Content-Type', 'application/json')]
-        return webob.Response(content_type='application/json',
-                              status_code=401,
-                              json_body=result,
-                              headerlist=headers)
+        return webob.Response(
+            content_type='application/json',
+            status_code=401,
+            json_body=result,
+            headerlist=headers,
+        )
 
     @webob.dec.wsgify
     def __call__(self, req):
         try:
             token = parse_header(req.environ)
             username, password = parse_token(token)
-            req.environ.update(authenticate(
-                self.auth_file, username, password))
+            req.environ.update(
+                authenticate(self.auth_file, username, password)
+            )
             return self.application
         except Exception as e:
             response = self.format_exception(e)
@@ -89,8 +94,7 @@ def authenticate(auth_file, username, password):
                     return auth_entry(entry, password)
     except OSError as exc:
         LOG.error('Problem reading auth file: %s', exc)
-        raise webob.exc.HTTPBadRequest(
-            detail='Problem reading auth file')
+        raise webob.exc.HTTPBadRequest(detail='Problem reading auth file')
     # reached end of file with no matches
     LOG.info('User %s not found', username)
     raise webob.exc.HTTPUnauthorized()
@@ -110,10 +114,7 @@ def auth_entry(entry, password):
     if not bcrypt.checkpw(password, crypted):
         LOG.info('Password for %s does not match', username)
         raise webob.exc.HTTPUnauthorized()
-    return {
-        'HTTP_X_USER': username,
-        'HTTP_X_USER_NAME': username
-    }
+    return {'HTTP_X_USER': username, 'HTTP_X_USER_NAME': username}
 
 
 def validate_auth_file(auth_file):
@@ -131,7 +132,8 @@ def validate_auth_file(auth_file):
                     parse_entry(entry)
     except OSError:
         raise exceptions.ConfigInvalid(
-            error_msg='Problem reading auth user file')
+            error_msg='Problem reading auth user file'
+        )
 
 
 def parse_entry(entry):
@@ -146,8 +148,9 @@ def parse_entry(entry):
     username, crypted_str = entry.split(':', maxsplit=1)
     crypted = crypted_str.encode('utf-8')
     if crypted[:4] not in (b'$2y$', b'$2a$', b'$2b$'):
-        error_msg = ('Only bcrypt digested passwords are supported for '
-                     '%(username)s') % {'username': username}
+        error_msg = (
+            f'Only bcrypt digested passwords are supported for {username}'
+        )
         raise webob.exc.HTTPBadRequest(detail=error_msg)
     return username, crypted
 
@@ -169,8 +172,9 @@ def parse_token(token):
         return (username.decode('utf-8'), password)
     except (TypeError, binascii.Error, ValueError) as exc:
         LOG.info('Could not decode authorization token: %s', exc)
-        raise webob.exc.HTTPBadRequest(detail=(
-            'Could not decode authorization token'))
+        raise webob.exc.HTTPBadRequest(
+            detail=('Could not decode authorization token')
+        )
 
 
 def parse_header(env):
@@ -190,8 +194,9 @@ def parse_header(env):
         auth_type, token = auth_header.strip().split(maxsplit=1)
     except (ValueError, AttributeError) as exc:
         LOG.info('Could not parse Authorization header: %s', exc)
-        raise webob.exc.HTTPBadRequest(detail=(
-            'Could not parse Authorization header'))
+        raise webob.exc.HTTPBadRequest(
+            detail=('Could not parse Authorization header')
+        )
     if auth_type.lower() != 'basic':
         error_msg = 'Unsupported authorization type "%s"'
         LOG.info(error_msg, auth_type)

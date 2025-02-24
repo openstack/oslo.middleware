@@ -26,8 +26,7 @@ def test_application(req):
     if req.path_info == '/server_cors':
         # Mirror back the origin in the request.
         response = webob.Response(status=200)
-        response.headers['Access-Control-Allow-Origin'] = \
-            req.headers['Origin']
+        response.headers['Access-Control-Allow-Origin'] = req.headers['Origin']
         response.headers['X-Server-Generated-Response'] = '1'
         return response
 
@@ -62,16 +61,19 @@ class CORSTestBase(test_base.BaseTestCase):
         self.config_fixture = self.useFixture(fixture.Config())
         self.config = self.config_fixture.conf
 
-    def assertCORSResponse(self, response,
-                           status='200 OK',
-                           allow_origin=None,
-                           max_age=None,
-                           allow_methods=None,
-                           allow_headers=None,
-                           allow_credentials=None,
-                           expose_headers=None,
-                           vary='Origin',
-                           has_content_type=False):
+    def assertCORSResponse(
+        self,
+        response,
+        status='200 OK',
+        allow_origin=None,
+        max_age=None,
+        allow_methods=None,
+        allow_headers=None,
+        allow_credentials=None,
+        expose_headers=None,
+        vary='Origin',
+        has_content_type=False,
+    ):
         """Test helper for CORS response headers.
 
         Assert all the headers in a given response. By default, we assume
@@ -82,34 +84,32 @@ class CORSTestBase(test_base.BaseTestCase):
         self.assertEqual(status, response.status)
 
         # Assert the Access-Control-Allow-Origin header.
-        self.assertHeader(response,
-                          'Access-Control-Allow-Origin',
-                          allow_origin)
+        self.assertHeader(
+            response, 'Access-Control-Allow-Origin', allow_origin
+        )
 
         # Assert the Access-Control-Max-Age header.
-        self.assertHeader(response,
-                          'Access-Control-Max-Age',
-                          max_age)
+        self.assertHeader(response, 'Access-Control-Max-Age', max_age)
 
         # Assert the Access-Control-Allow-Methods header.
-        self.assertHeader(response,
-                          'Access-Control-Allow-Methods',
-                          allow_methods)
+        self.assertHeader(
+            response, 'Access-Control-Allow-Methods', allow_methods
+        )
 
         # Assert the Access-Control-Allow-Headers header.
-        self.assertHeader(response,
-                          'Access-Control-Allow-Headers',
-                          allow_headers)
+        self.assertHeader(
+            response, 'Access-Control-Allow-Headers', allow_headers
+        )
 
         # Assert the Access-Control-Allow-Credentials header.
-        self.assertHeader(response,
-                          'Access-Control-Allow-Credentials',
-                          allow_credentials)
+        self.assertHeader(
+            response, 'Access-Control-Allow-Credentials', allow_credentials
+        )
 
         # Assert the Access-Control-Expose-Headers header.
-        self.assertHeader(response,
-                          'Access-Control-Expose-Headers',
-                          expose_headers)
+        self.assertHeader(
+            response, 'Access-Control-Expose-Headers', expose_headers
+        )
 
         # Assert no Content-Type added.
         if not has_content_type:
@@ -124,8 +124,7 @@ class CORSTestBase(test_base.BaseTestCase):
     def assertHeader(self, response, header, value=None):
         if value:
             self.assertIn(header, response.headers)
-            self.assertEqual(str(value),
-                             response.headers[header])
+            self.assertEqual(str(value), response.headers[header])
         else:
             self.assertNotIn(header, response.headers)
 
@@ -136,24 +135,29 @@ class CORSTestDefaultOverrides(CORSTestBase):
 
         fixture = self.config_fixture  # Line length accommodation
 
-        fixture.load_raw_values(group='cors',
-                                allowed_origin='http://valid.example.com')
+        fixture.load_raw_values(
+            group='cors', allowed_origin='http://valid.example.com'
+        )
 
-        fixture.load_raw_values(group='cors.override_creds',
-                                allowed_origin='http://creds.example.com',
-                                allow_credentials='True')
+        fixture.load_raw_values(
+            group='cors.override_creds',
+            allowed_origin='http://creds.example.com',
+            allow_credentials='True',
+        )
 
-        fixture.load_raw_values(group='cors.override_headers',
-                                allowed_origin='http://headers.example.com',
-                                expose_headers='X-Header-1,X-Header-2',
-                                allow_headers='X-Header-1,X-Header-2')
+        fixture.load_raw_values(
+            group='cors.override_headers',
+            allowed_origin='http://headers.example.com',
+            expose_headers='X-Header-1,X-Header-2',
+            allow_headers='X-Header-1,X-Header-2',
+        )
 
         self.override_opts = {
             'expose_headers': ['X-Header-1'],
             'allow_headers': ['X-Header-2'],
             'allow_methods': ['GET', 'DELETE'],
             'allow_credentials': False,
-            'max_age': 10
+            'max_age': 10,
         }
 
     def test_config_defaults(self):
@@ -168,9 +172,9 @@ class CORSTestDefaultOverrides(CORSTestBase):
     def test_invalid_default_option(self):
         """Assert that using set_defaults only permits valid options."""
 
-        self.assertRaises(AttributeError,
-                          cors.set_defaults,
-                          allowed_origin='test')
+        self.assertRaises(
+            AttributeError, cors.set_defaults, allowed_origin='test'
+        )
 
     def test_cascading_override(self):
         """Assert that using set_defaults overrides cors.* config values."""
@@ -184,37 +188,36 @@ class CORSTestDefaultOverrides(CORSTestBase):
         # Check the global configuration for expected values:
         gc = self.config.cors
         self.assertEqual(['http://valid.example.com'], gc.allowed_origin)
-        self.assertEqual(self.override_opts['allow_credentials'],
-                         gc.allow_credentials)
-        self.assertEqual(self.override_opts['expose_headers'],
-                         gc.expose_headers)
+        self.assertEqual(
+            self.override_opts['allow_credentials'], gc.allow_credentials
+        )
+        self.assertEqual(
+            self.override_opts['expose_headers'], gc.expose_headers
+        )
         self.assertEqual(10, gc.max_age)
-        self.assertEqual(self.override_opts['allow_methods'],
-                         gc.allow_methods)
-        self.assertEqual(self.override_opts['allow_headers'],
-                         gc.allow_headers)
+        self.assertEqual(self.override_opts['allow_methods'], gc.allow_methods)
+        self.assertEqual(self.override_opts['allow_headers'], gc.allow_headers)
 
         # Check the child configuration for expected values:
         cc = self.config['cors.override_creds']
         self.assertEqual(['http://creds.example.com'], cc.allowed_origin)
         self.assertTrue(cc.allow_credentials)
-        self.assertEqual(self.override_opts['expose_headers'],
-                         cc.expose_headers)
+        self.assertEqual(
+            self.override_opts['expose_headers'], cc.expose_headers
+        )
         self.assertEqual(10, cc.max_age)
-        self.assertEqual(self.override_opts['allow_methods'],
-                         cc.allow_methods)
-        self.assertEqual(self.override_opts['allow_headers'],
-                         cc.allow_headers)
+        self.assertEqual(self.override_opts['allow_methods'], cc.allow_methods)
+        self.assertEqual(self.override_opts['allow_headers'], cc.allow_headers)
 
         # Check the other child configuration for expected values:
         ec = self.config['cors.override_headers']
         self.assertEqual(['http://headers.example.com'], ec.allowed_origin)
-        self.assertEqual(self.override_opts['allow_credentials'],
-                         ec.allow_credentials)
+        self.assertEqual(
+            self.override_opts['allow_credentials'], ec.allow_credentials
+        )
         self.assertEqual(['X-Header-1', 'X-Header-2'], ec.expose_headers)
         self.assertEqual(10, ec.max_age)
-        self.assertEqual(self.override_opts['allow_methods'],
-                         ec.allow_methods)
+        self.assertEqual(self.override_opts['allow_methods'], ec.allow_methods)
         self.assertEqual(['X-Header-1', 'X-Header-2'], ec.allow_headers)
 
 
@@ -225,13 +228,15 @@ class CORSTestFilterFactory(CORSTestBase):
         self.config([])
 
         # Test a valid filter.
-        filter = cors.filter_factory(None,
-                                     allowed_origin='http://valid.example.com',
-                                     allow_credentials='False',
-                                     max_age='',
-                                     expose_headers='',
-                                     allow_methods='GET',
-                                     allow_headers='')
+        filter = cors.filter_factory(
+            None,
+            allowed_origin='http://valid.example.com',
+            allow_credentials='False',
+            max_age='',
+            expose_headers='',
+            allow_methods='GET',
+            allow_headers='',
+        )
         application = filter(test_application)
 
         self.assertIn('http://valid.example.com', application.allowed_origins)
@@ -247,9 +252,10 @@ class CORSTestFilterFactory(CORSTestBase):
         self.config([])
 
         # Test a valid filter.
-        filter = cors.filter_factory(None,
-                                     allowed_origin='http://valid.example.com,'
-                                                    'http://other.example.com')
+        filter = cors.filter_factory(
+            None,
+            allowed_origin='http://valid.example.com,http://other.example.com',
+        )
         application = filter(test_application)
 
         self.assertIn('http://valid.example.com', application.allowed_origins)
@@ -257,15 +263,17 @@ class CORSTestFilterFactory(CORSTestBase):
 
     def test_no_origin_fail(self):
         '''Assert that a filter factory with no allowed_origin fails.'''
-        self.assertRaises(TypeError,
-                          cors.filter_factory,
-                          global_conf=None,
-                          # allowed_origin=None,  # Expected value.
-                          allow_credentials='False',
-                          max_age='',
-                          expose_headers='',
-                          allow_methods='GET',
-                          allow_headers='')
+        self.assertRaises(
+            TypeError,
+            cors.filter_factory,
+            global_conf=None,
+            # allowed_origin=None,  # Expected value.
+            allow_credentials='False',
+            max_age='',
+            expose_headers='',
+            allow_methods='GET',
+            allow_headers='',
+        )
 
     def test_no_origin_but_oslo_config_project(self):
         '''Assert that a filter factory with oslo_config_project succeed.'''
@@ -295,37 +303,51 @@ class CORSRegularRequestTest(CORSTestBase):
         super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
-        fixture.load_raw_values(group='cors',
-                                allowed_origin='http://valid.example.com',
-                                allow_credentials='False',
-                                max_age='',
-                                expose_headers='',
-                                allow_methods='GET',
-                                allow_headers='')
+        fixture.load_raw_values(
+            group='cors',
+            allowed_origin='http://valid.example.com',
+            allow_credentials='False',
+            max_age='',
+            expose_headers='',
+            allow_methods='GET',
+            allow_headers='',
+        )
 
-        fixture.load_raw_values(group='cors.credentials',
-                                allowed_origin='http://creds.example.com',
-                                allow_credentials='True')
+        fixture.load_raw_values(
+            group='cors.credentials',
+            allowed_origin='http://creds.example.com',
+            allow_credentials='True',
+        )
 
-        fixture.load_raw_values(group='cors.exposed-headers',
-                                allowed_origin='http://headers.example.com',
-                                expose_headers='X-Header-1,X-Header-2',
-                                allow_headers='X-Header-1,X-Header-2')
+        fixture.load_raw_values(
+            group='cors.exposed-headers',
+            allowed_origin='http://headers.example.com',
+            expose_headers='X-Header-1,X-Header-2',
+            allow_headers='X-Header-1,X-Header-2',
+        )
 
-        fixture.load_raw_values(group='cors.cached',
-                                allowed_origin='http://cached.example.com',
-                                max_age='3600')
+        fixture.load_raw_values(
+            group='cors.cached',
+            allowed_origin='http://cached.example.com',
+            max_age='3600',
+        )
 
-        fixture.load_raw_values(group='cors.get-only',
-                                allowed_origin='http://get.example.com',
-                                allow_methods='GET')
-        fixture.load_raw_values(group='cors.all-methods',
-                                allowed_origin='http://all.example.com',
-                                allow_methods='GET,PUT,POST,DELETE,HEAD')
+        fixture.load_raw_values(
+            group='cors.get-only',
+            allowed_origin='http://get.example.com',
+            allow_methods='GET',
+        )
+        fixture.load_raw_values(
+            group='cors.all-methods',
+            allowed_origin='http://all.example.com',
+            allow_methods='GET,PUT,POST,DELETE,HEAD',
+        )
 
-        fixture.load_raw_values(group='cors.duplicate',
-                                allowed_origin='http://domain1.example.com,'
-                                               'http://domain2.example.com')
+        fixture.load_raw_values(
+            group='cors.duplicate',
+            allowed_origin='http://domain1.example.com,'
+            'http://domain2.example.com',
+        )
 
         # Now that the config is set up, create our application.
         self.application = cors.CORS(test_application, self.config)
@@ -384,15 +406,17 @@ class CORSRegularRequestTest(CORSTestBase):
         self.assertEqual(gc.allow_credentials, ac.allow_credentials)
         self.assertEqual(gc.expose_headers, ac.expose_headers)
         self.assertEqual(gc.max_age, ac.max_age)
-        self.assertEqual(['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
-                         ac.allow_methods)
+        self.assertEqual(
+            ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'], ac.allow_methods
+        )
         self.assertEqual(gc.allow_headers, ac.allow_headers)
 
         # Confirm duplicate domains.
         ac = self.config['cors.duplicate']
-        self.assertEqual(['http://domain1.example.com',
-                          'http://domain2.example.com'],
-                         ac.allowed_origin)
+        self.assertEqual(
+            ['http://domain1.example.com', 'http://domain2.example.com'],
+            ac.allowed_origin,
+        )
         self.assertEqual(gc.allow_credentials, ac.allow_credentials)
         self.assertEqual(gc.expose_headers, ac.expose_headers)
         self.assertEqual(gc.max_age, ac.max_age)
@@ -408,15 +432,17 @@ class CORSRegularRequestTest(CORSTestBase):
         for method in self.methods:
             request = webob.Request.blank('/')
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin=None,
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin=None,
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
     def test_origin_headers(self):
         """CORS Specification Section 6.1.2
@@ -432,15 +458,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://valid.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://valid.example.com',
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://valid.example.com',
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
         # Test origin header not present in configuration.
         for method in self.methods:
@@ -448,15 +476,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://invalid.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin=None,
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin=None,
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
         # Test valid, but case-mismatched origin header.
         for method in self.methods:
@@ -464,15 +494,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://VALID.EXAMPLE.COM'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin=None,
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin=None,
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
         # Test valid header from list of duplicates.
         for method in self.methods:
@@ -480,15 +512,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://domain2.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://domain2.example.com',
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://domain2.example.com',
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
     def test_supports_credentials(self):
         """CORS Specification Section 6.1.3
@@ -509,15 +543,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://valid.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://valid.example.com',
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://valid.example.com',
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+                has_content_type=True,
+            )
 
         # Test valid origin header with credentials
         for method in self.methods:
@@ -525,15 +561,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://creds.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://creds.example.com',
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials="true",
-                                    expose_headers=None,
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://creds.example.com',
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials="true",
+                expose_headers=None,
+                has_content_type=True,
+            )
 
     def test_expose_headers(self):
         """CORS Specification Section 6.1.4
@@ -547,15 +585,17 @@ class CORSRegularRequestTest(CORSTestBase):
             request.method = method
             request.headers['Origin'] = 'http://headers.example.com'
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://headers.example.com',
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers='X-Header-1,X-Header-2',
-                                    has_content_type=True)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://headers.example.com',
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers='X-Header-1,X-Header-2',
+                has_content_type=True,
+            )
 
     def test_application_options_response(self):
         """Assert that an application provided OPTIONS response is honored.
@@ -575,10 +615,10 @@ class CORSRegularRequestTest(CORSTestBase):
         # If the regular CORS handling catches this request, it should set
         # the allow credentials header. This makes sure that it doesn't.
         self.assertNotIn('Access-Control-Allow-Credentials', response.headers)
-        self.assertEqual(response.headers['Access-Control-Allow-Origin'],
-                         test_origin)
-        self.assertEqual(response.headers['X-Server-Generated-Response'],
-                         '1')
+        self.assertEqual(
+            response.headers['Access-Control-Allow-Origin'], test_origin
+        )
+        self.assertEqual(response.headers['X-Server-Generated-Response'], '1')
 
     def test_application_vary_respected(self):
         """Assert that an application's provided Vary header is persisted.
@@ -594,16 +634,18 @@ class CORSRegularRequestTest(CORSTestBase):
 
         response = request.get_response(self.application)
 
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://valid.example.com',
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None,
-                                vary='Custom-Vary,Origin',
-                                has_content_type=True)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://valid.example.com',
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+            vary='Custom-Vary,Origin',
+            has_content_type=True,
+        )
 
 
 class CORSPreflightRequestTest(CORSTestBase):
@@ -616,33 +658,45 @@ class CORSPreflightRequestTest(CORSTestBase):
         super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
-        fixture.load_raw_values(group='cors',
-                                allowed_origin='http://valid.example.com',
-                                allow_credentials='False',
-                                max_age='',
-                                expose_headers='',
-                                allow_methods='GET',
-                                allow_headers='')
+        fixture.load_raw_values(
+            group='cors',
+            allowed_origin='http://valid.example.com',
+            allow_credentials='False',
+            max_age='',
+            expose_headers='',
+            allow_methods='GET',
+            allow_headers='',
+        )
 
-        fixture.load_raw_values(group='cors.credentials',
-                                allowed_origin='http://creds.example.com',
-                                allow_credentials='True')
+        fixture.load_raw_values(
+            group='cors.credentials',
+            allowed_origin='http://creds.example.com',
+            allow_credentials='True',
+        )
 
-        fixture.load_raw_values(group='cors.exposed-headers',
-                                allowed_origin='http://headers.example.com',
-                                expose_headers='X-Header-1,X-Header-2',
-                                allow_headers='X-Header-1,X-Header-2')
+        fixture.load_raw_values(
+            group='cors.exposed-headers',
+            allowed_origin='http://headers.example.com',
+            expose_headers='X-Header-1,X-Header-2',
+            allow_headers='X-Header-1,X-Header-2',
+        )
 
-        fixture.load_raw_values(group='cors.cached',
-                                allowed_origin='http://cached.example.com',
-                                max_age='3600')
+        fixture.load_raw_values(
+            group='cors.cached',
+            allowed_origin='http://cached.example.com',
+            max_age='3600',
+        )
 
-        fixture.load_raw_values(group='cors.get-only',
-                                allowed_origin='http://get.example.com',
-                                allow_methods='GET')
-        fixture.load_raw_values(group='cors.all-methods',
-                                allowed_origin='http://all.example.com',
-                                allow_methods='GET,PUT,POST,DELETE,HEAD')
+        fixture.load_raw_values(
+            group='cors.get-only',
+            allowed_origin='http://get.example.com',
+            allow_methods='GET',
+        )
+        fixture.load_raw_values(
+            group='cors.all-methods',
+            allowed_origin='http://all.example.com',
+            allow_methods='GET,PUT,POST,DELETE,HEAD',
+        )
 
         # Now that the config is set up, create our application.
         self.application = cors.CORS(test_application, self.config)
@@ -701,8 +755,9 @@ class CORSPreflightRequestTest(CORSTestBase):
         self.assertEqual(gc.allow_credentials, ac.allow_credentials)
         self.assertEqual(gc.expose_headers, ac.expose_headers)
         self.assertEqual(gc.max_age, ac.max_age)
-        self.assertEqual(ac.allow_methods,
-                         ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'])
+        self.assertEqual(
+            ac.allow_methods, ['GET', 'PUT', 'POST', 'DELETE', 'HEAD']
+        )
         self.assertEqual(gc.allow_headers, ac.allow_headers)
 
     def test_no_origin_header(self):
@@ -714,14 +769,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request = webob.Request.blank('/')
         request.method = "OPTIONS"
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_case_sensitive_origin(self):
         """CORS Specification Section 6.2.2
@@ -737,14 +794,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://valid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://valid.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers='',
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://valid.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers='',
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
         # Test invalid domain
         request = webob.Request.blank('/')
@@ -752,14 +811,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://invalid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
         # Test case-sensitive mismatch domain
         request = webob.Request.blank('/')
@@ -767,14 +828,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://VALID.EXAMPLE.COM'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_simple_header_response(self):
         """CORS Specification Section 3
@@ -789,12 +852,9 @@ class CORSPreflightRequestTest(CORSTestBase):
         NOTE: We are not testing the media type cases.
         """
 
-        simple_headers = ','.join([
-            'accept',
-            'accept-language',
-            'content-language',
-            'content-type'
-        ])
+        simple_headers = ','.join(
+            ['accept', 'accept-language', 'content-language', 'content-type']
+        )
 
         request = webob.Request.blank('/')
         request.method = "OPTIONS"
@@ -802,14 +862,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Access-Control-Request-Method'] = 'GET'
         request.headers['Access-Control-Request-Headers'] = simple_headers
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://valid.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=simple_headers,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://valid.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=simple_headers,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_no_request_method(self):
         """CORS Specification Section 6.2.3
@@ -825,14 +887,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://get.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://get.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://get.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
         # Test valid domain, invalid HTTP method.
         request = webob.Request.blank('/')
@@ -840,28 +904,32 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://valid.example.com'
         request.headers['Access-Control-Request-Method'] = 'TEAPOT'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
         # Test valid domain, no HTTP method.
         request = webob.Request.blank('/')
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://valid.example.com'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_invalid_method(self):
         """CORS Specification Section 6.2.3
@@ -875,14 +943,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://get.example.com'
         request.headers['Access-Control-Request-Method'] = 'get'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_no_parse_request_headers(self):
         """CORS Specification Section 6.2.4
@@ -900,14 +970,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Access-Control-Request-Method'] = 'GET'
         request.headers['Access-Control-Request-Headers'] = 'value with spaces'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_no_request_headers(self):
         """CORS Specification Section 6.2.4
@@ -921,14 +993,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Access-Control-Request-Method'] = 'GET'
         request.headers['Access-Control-Request-Headers'] = ''
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://headers.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://headers.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_request_headers(self):
         """CORS Specification Section 6.2.4
@@ -943,17 +1017,20 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
-        request.headers['Access-Control-Request-Headers'] = 'X-Header-1,' \
-                                                            'X-Header-2'
+        request.headers['Access-Control-Request-Headers'] = (
+            'X-Header-1,X-Header-2'
+        )
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://headers.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers='X-Header-1,X-Header-2',
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://headers.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers='X-Header-1,X-Header-2',
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_request_headers_not_permitted(self):
         """CORS Specification Section 6.2.4, 6.2.6
@@ -969,17 +1046,20 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.method = "OPTIONS"
         request.headers['Origin'] = 'http://headers.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
-        request.headers['Access-Control-Request-Headers'] = 'X-Not-Exposed,' \
-                                                            'X-Never-Exposed'
+        request.headers['Access-Control-Request-Headers'] = (
+            'X-Not-Exposed,X-Never-Exposed'
+        )
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin=None,
-                                max_age=None,
-                                allow_methods=None,
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin=None,
+            max_age=None,
+            allow_methods=None,
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_credentials(self):
         """CORS Specification Section 6.2.7
@@ -999,14 +1079,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://creds.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://creds.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=None,
-                                allow_credentials="true",
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://creds.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=None,
+            allow_credentials="true",
+            expose_headers=None,
+        )
 
     def test_optional_max_age(self):
         """CORS Specification Section 6.2.8
@@ -1020,14 +1102,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://cached.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://cached.example.com',
-                                max_age=3600,
-                                allow_methods='GET',
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://cached.example.com',
+            max_age=3600,
+            allow_methods='GET',
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_allow_methods(self):
         """CORS Specification Section 6.2.9
@@ -1045,14 +1129,16 @@ class CORSPreflightRequestTest(CORSTestBase):
             request.headers['Origin'] = 'http://all.example.com'
             request.headers['Access-Control-Request-Method'] = method
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin='http://all.example.com',
-                                    max_age=None,
-                                    allow_methods=method,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin='http://all.example.com',
+                max_age=None,
+                allow_methods=method,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+            )
 
         for method in ['PUT', 'POST', 'DELETE']:
             request = webob.Request.blank('/')
@@ -1060,14 +1146,16 @@ class CORSPreflightRequestTest(CORSTestBase):
             request.headers['Origin'] = 'http://get.example.com'
             request.headers['Access-Control-Request-Method'] = method
             response = request.get_response(self.application)
-            self.assertCORSResponse(response,
-                                    status='200 OK',
-                                    allow_origin=None,
-                                    max_age=None,
-                                    allow_methods=None,
-                                    allow_headers=None,
-                                    allow_credentials=None,
-                                    expose_headers=None)
+            self.assertCORSResponse(
+                response,
+                status='200 OK',
+                allow_origin=None,
+                max_age=None,
+                allow_methods=None,
+                allow_headers=None,
+                allow_credentials=None,
+                expose_headers=None,
+            )
 
     def test_allow_headers(self):
         """CORS Specification Section 6.2.10
@@ -1083,8 +1171,10 @@ class CORSPreflightRequestTest(CORSTestBase):
         subset of its values makes it qualify as simple header.
         """
 
-        requested_headers = 'Content-Type,X-Header-1,Cache-Control,Expires,' \
-                            'Last-Modified,Pragma'
+        requested_headers = (
+            'Content-Type,X-Header-1,Cache-Control,Expires,'
+            'Last-Modified,Pragma'
+        )
 
         request = webob.Request.blank('/')
         request.method = "OPTIONS"
@@ -1092,14 +1182,16 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Access-Control-Request-Method'] = 'GET'
         request.headers['Access-Control-Request-Headers'] = requested_headers
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://headers.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=requested_headers,
-                                allow_credentials=None,
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://headers.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=requested_headers,
+            allow_credentials=None,
+            expose_headers=None,
+        )
 
     def test_application_options_response(self):
         """Assert that an application provided OPTIONS response is honored.
@@ -1119,10 +1211,10 @@ class CORSPreflightRequestTest(CORSTestBase):
         # If the regular CORS handling catches this request, it should set
         # the allow credentials header. This makes sure that it doesn't.
         self.assertNotIn('Access-Control-Allow-Credentials', response.headers)
-        self.assertEqual(test_origin,
-                         response.headers['Access-Control-Allow-Origin'])
-        self.assertEqual('1',
-                         response.headers['X-Server-Generated-Response'])
+        self.assertEqual(
+            test_origin, response.headers['Access-Control-Allow-Origin']
+        )
+        self.assertEqual('1', response.headers['X-Server-Generated-Response'])
 
         # If the application returns an OPTIONS response without CORS
         # headers, assert that we apply headers.
@@ -1131,15 +1223,17 @@ class CORSPreflightRequestTest(CORSTestBase):
         request.headers['Origin'] = 'http://get.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://get.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers=None,
-                                allow_credentials=None,
-                                expose_headers=None,
-                                has_content_type=True)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://get.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers=None,
+            allow_credentials=None,
+            expose_headers=None,
+            has_content_type=True,
+        )
 
 
 class CORSTestWildcard(CORSTestBase):
@@ -1149,17 +1243,19 @@ class CORSTestWildcard(CORSTestBase):
         super().setUp()
 
         fixture = self.config_fixture  # Line length accommodation
-        fixture.load_raw_values(group='cors',
-                                allowed_origin='http://default.example.com',
-                                allow_credentials='True',
-                                max_age='',
-                                expose_headers='',
-                                allow_methods='GET,PUT,POST,DELETE,HEAD',
-                                allow_headers='')
+        fixture.load_raw_values(
+            group='cors',
+            allowed_origin='http://default.example.com',
+            allow_credentials='True',
+            max_age='',
+            expose_headers='',
+            allow_methods='GET,PUT,POST,DELETE,HEAD',
+            allow_headers='',
+        )
 
-        fixture.load_raw_values(group='cors.wildcard',
-                                allowed_origin='*',
-                                allow_methods='GET')
+        fixture.load_raw_values(
+            group='cors.wildcard', allowed_origin='*', allow_methods='GET'
+        )
 
         # Now that the config is set up, create our application.
         self.application = cors.CORS(test_application, self.config)
@@ -1173,8 +1269,9 @@ class CORSTestWildcard(CORSTestBase):
         self.assertEqual(True, gc.allow_credentials)
         self.assertEqual([], gc.expose_headers)
         self.assertIsNone(gc.max_age)
-        self.assertEqual(['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
-                         gc.allow_methods)
+        self.assertEqual(
+            ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'], gc.allow_methods
+        )
         self.assertEqual([], gc.allow_headers)
 
         # Confirm all-methods overrides.
@@ -1200,28 +1297,32 @@ class CORSTestWildcard(CORSTestBase):
         request.headers['Origin'] = 'http://default.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://default.example.com',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers='',
-                                allow_credentials='true',
-                                expose_headers=None)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://default.example.com',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers='',
+            allow_credentials='true',
+            expose_headers=None,
+        )
 
         # Test valid domain
         request = webob.Request.blank('/')
         request.method = "GET"
         request.headers['Origin'] = 'http://default.example.com'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='http://default.example.com',
-                                max_age=None,
-                                allow_headers='',
-                                allow_credentials='true',
-                                expose_headers=None,
-                                has_content_type=True)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='http://default.example.com',
+            max_age=None,
+            allow_headers='',
+            allow_credentials='true',
+            expose_headers=None,
+            has_content_type=True,
+        )
 
         # Test invalid domain
         request = webob.Request.blank('/')
@@ -1229,12 +1330,14 @@ class CORSTestWildcard(CORSTestBase):
         request.headers['Origin'] = 'http://invalid.example.com'
         request.headers['Access-Control-Request-Method'] = 'GET'
         response = request.get_response(self.application)
-        self.assertCORSResponse(response,
-                                status='200 OK',
-                                allow_origin='*',
-                                max_age=None,
-                                allow_methods='GET',
-                                allow_headers='',
-                                allow_credentials='true',
-                                expose_headers=None,
-                                has_content_type=True)
+        self.assertCORSResponse(
+            response,
+            status='200 OK',
+            allow_origin='*',
+            max_age=None,
+            allow_methods='GET',
+            allow_headers='',
+            allow_credentials='true',
+            expose_headers=None,
+            has_content_type=True,
+        )

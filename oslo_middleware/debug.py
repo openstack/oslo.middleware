@@ -38,7 +38,7 @@ class Debug(base.ConfigurableMiddleware):
         resp = req.get_response(self.application)
 
         print(("*" * 40) + " RESPONSE HEADERS")
-        for (key, value) in resp.headers.items():
+        for key, value in resp.headers.items():
             print(key, "=", value)
         print()
 

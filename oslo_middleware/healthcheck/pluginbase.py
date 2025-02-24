@@ -26,7 +26,6 @@ class HealthcheckResult:
 
 
 class HealthcheckBaseExtension(metaclass=abc.ABCMeta):
-
     def __init__(self, oslo_conf, conf):
         self.oslo_conf = oslo_conf
         self.conf = conf

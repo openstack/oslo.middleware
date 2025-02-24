@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 class ConfigInvalid(Exception):
     def __init__(self, error_msg):
-        super().__init__(
-            'Invalid configuration. %(error_msg)s')
+        super().__init__('Invalid configuration. %(error_msg)s')
