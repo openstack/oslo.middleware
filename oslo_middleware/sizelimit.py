@@ -85,8 +85,8 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
         if (req.content_length is not None and
                 req.content_length > max_size):
             msg = _("Request is too large. "
-                    "Larger than max_request_body_size (%s).") % max_size
-            LOG.info(msg)
+                    "Larger than max_request_body_size (%s).")
+            LOG.info(msg, max_size)
             raise webob.exc.HTTPRequestEntityTooLarge(explanation=msg)
         if req.content_length is None:
             limiter = LimitingReader(req.body_file, max_size)

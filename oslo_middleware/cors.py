@@ -218,8 +218,8 @@ class CORS(base.ConfigurableMiddleware):
             for origin in allowed_origin:
 
                 if origin in self.allowed_origins:
-                    LOG.warning('Allowed origin [%s] already exists, skipping'
-                                % (allowed_origin,))
+                    LOG.warning('Allowed origin [%s] already exists, skipping',
+                                allowed_origin)
                     continue
 
                 self.allowed_origins[origin] = {
@@ -312,8 +312,8 @@ class CORS(base.ConfigurableMiddleware):
         # Compare request method to permitted methods (Section 6.2.5)
         permitted_methods = cors_config['allow_methods']
         if request_method not in permitted_methods:
-            LOG.debug('Request method \'%s\' not in permitted list: %s'
-                      % (request_method, permitted_methods))
+            LOG.debug('Request method \'%s\' not in permitted list: %s',
+                      request_method, permitted_methods)
             return response
 
         # Compare request headers to permitted headers, case-insensitively.
@@ -324,8 +324,8 @@ class CORS(base.ConfigurableMiddleware):
         for requested_header in request_headers:
             upper_header = requested_header.upper()
             if upper_header not in permitted_headers:
-                LOG.debug('Request header \'%s\' not in permitted list: %s'
-                          % (requested_header, permitted_headers))
+                LOG.debug('Request header \'%s\' not in permitted list: %s',
+                          requested_header, permitted_headers)
                 return response
 
         # Set the default origin permission headers. (Sections 6.2.7, 6.4)
@@ -356,8 +356,8 @@ class CORS(base.ConfigurableMiddleware):
             if '*' in self.allowed_origins:
                 origin = '*'
             else:
-                LOG.debug('CORS request from origin \'%s\' not permitted.'
-                          % origin)
+                LOG.debug('CORS request from origin \'%s\' not permitted.',
+                          origin)
                 raise InvalidOriginError(origin)
         return origin, self.allowed_origins[origin]
 

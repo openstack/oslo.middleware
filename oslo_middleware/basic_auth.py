@@ -193,7 +193,7 @@ def parse_header(env):
         raise webob.exc.HTTPBadRequest(detail=(
             'Could not parse Authorization header'))
     if auth_type.lower() != 'basic':
-        error_msg = ('Unsupported authorization type "%s"') % auth_type
-        LOG.info(error_msg)
-        raise webob.exc.HTTPBadRequest(detail=error_msg)
+        error_msg = 'Unsupported authorization type "%s"'
+        LOG.info(error_msg, auth_type)
+        raise webob.exc.HTTPBadRequest(detail=error_msg % auth_type)
     return token

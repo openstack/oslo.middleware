@@ -65,9 +65,9 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     def healthcheck(self, server_port):
         path = self.status_files.get(server_port)
         if not path:
-            LOG.warning('DisableByFilesPorts healthcheck middleware'
-                        ' enabled without disable_by_file_paths set'
-                        ' for port %s', server_port)
+            LOG.warning('DisableByFilesPorts healthcheck middleware '
+                        'enabled without disable_by_file_paths set '
+                        'for port %s', server_port)
             return pluginbase.HealthcheckResult(available=True,
                                                 reason="OK")
         else:
