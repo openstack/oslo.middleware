@@ -23,7 +23,7 @@ import webob.exc
 
 LOG = logging.getLogger(__name__)
 
-CORS_OPTS = [
+OPTS = [
     cfg.ListOpt('allowed_origin',
                 help='Indicate whether this resource may be shared with the '
                      'domain received in the requests "origin" header. '
@@ -51,6 +51,9 @@ CORS_OPTS = [
                      'the actual request.')
 ]
 
+# legacy alias, since many projects reference this directly
+CORS_OPTS = OPTS
+
 
 def set_defaults(**kwargs):
     """Override the default values for configuration options.
@@ -74,8 +77,7 @@ def set_defaults(**kwargs):
     # there's no good way for a user to override only one option, because all
     # the others would be overridden to 'None'.
 
-    valid_params = {k.name for k in CORS_OPTS
-                    if k.name != 'allowed_origin'}
+    valid_params = {k.name for k in OPTS if k.name != 'allowed_origin'}
     passed_params = {k for k in kwargs}
 
     wrong_params = passed_params - valid_params
@@ -84,7 +86,7 @@ def set_defaults(**kwargs):
                              % (wrong_params, valid_params))
 
     # Set global defaults.
-    cfg.set_defaults(CORS_OPTS, **kwargs)
+    cfg.set_defaults(OPTS, **kwargs)
 
 
 class InvalidOriginError(Exception):
@@ -149,7 +151,7 @@ class CORS(base.ConfigurableMiddleware):
         '''Initialize this middleware from an oslo.config instance.'''
 
         # First, check the configuration and register global options.
-        self.oslo_conf.register_opts(CORS_OPTS, 'cors')
+        self.oslo_conf.register_opts(OPTS, 'cors')
 
         allowed_origin = self._conf_get('allowed_origin', 'cors')
         allow_credentials = self._conf_get('allow_credentials', 'cors')
@@ -158,11 +160,11 @@ class CORS(base.ConfigurableMiddleware):
         allow_methods = self._conf_get('allow_methods', 'cors')
         allow_headers = self._conf_get('allow_headers', 'cors')
 
-        # Clone our original CORS_OPTS, and set the defaults to whatever is
+        # Clone our original OPTS, and set the defaults to whatever is
         # set in the global conf instance. This is done explicitly (instead
         # of **kwargs), since we don't accidentally want to catch
         # allowed_origin.
-        subgroup_opts = copy.deepcopy(CORS_OPTS)
+        subgroup_opts = copy.deepcopy(OPTS)
         cfg.set_defaults(subgroup_opts,
                          allow_credentials=allow_credentials,
                          expose_headers=expose_headers,

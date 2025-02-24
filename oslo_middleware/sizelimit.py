@@ -28,12 +28,13 @@ from oslo_middleware import base
 
 LOG = logging.getLogger(__name__)
 
-
-_opts = [
+OPTS = [
     # default request size is 112k
-    cfg.IntOpt('max_request_body_size',
-               default=114688,
-               help='The maximum body size for each request, in bytes.'),
+    cfg.IntOpt(
+        'max_request_body_size',
+        default=114688,
+        help='The maximum body size for each request, in bytes.',
+    ),
 ]
 
 
@@ -77,7 +78,7 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
 
     def __init__(self, application, conf=None):
         super().__init__(application, conf)
-        self.oslo_conf.register_opts(_opts, group='oslo_middleware')
+        self.oslo_conf.register_opts(OPTS, group='oslo_middleware')
 
     @webob.dec.wsgify
     def __call__(self, req):

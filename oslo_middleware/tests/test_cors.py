@@ -161,7 +161,7 @@ class CORSTestDefaultOverrides(CORSTestBase):
 
         cors.set_defaults(**self.override_opts)
 
-        for opt in cors.CORS_OPTS:
+        for opt in cors.OPTS:
             if opt.dest in self.override_opts:
                 self.assertEqual(self.override_opts[opt.dest], opt.default)
 

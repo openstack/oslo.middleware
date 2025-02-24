@@ -81,7 +81,7 @@ def list_opts_sizelimit():
     :returns: a list of (group_name, opts) tuples
     """
     return [
-        ('oslo_middleware', copy.deepcopy(sizelimit._opts)),
+        ('oslo_middleware', copy.deepcopy(sizelimit.OPTS)),
     ]
 
 
@@ -105,7 +105,7 @@ def list_opts_cors():
     :returns: a list of (group_name, opts) tuples
     """
     return [
-        ('cors', copy.deepcopy(cors.CORS_OPTS)),
+        ('cors', copy.deepcopy(cors.OPTS)),
     ]
 
 
