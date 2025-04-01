@@ -29,18 +29,11 @@ from oslo_middleware import base
 LOG = logging.getLogger(__name__)
 
 
-_oldopts = [cfg.DeprecatedOpt('osapi_max_request_body_size',
-                              group='DEFAULT'),
-            cfg.DeprecatedOpt('max_request_body_size',
-                              group='DEFAULT')]
-
 _opts = [
     # default request size is 112k
     cfg.IntOpt('max_request_body_size',
                default=114688,
-               help='The maximum body size for each '
-                    ' request, in bytes.',
-               deprecated_opts=_oldopts)
+               help='The maximum body size for each request, in bytes.'),
 ]
 
 
