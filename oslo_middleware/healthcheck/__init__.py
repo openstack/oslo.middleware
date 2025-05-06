@@ -31,6 +31,7 @@ import jinja2
 from oslo_utils import reflection
 from oslo_utils import timeutils
 import stevedore
+import typing_extensions as ty_ext
 import webob.dec
 import webob.exc
 import webob.response
@@ -472,7 +473,7 @@ Reason
         cls,
         global_conf: dict[str, ty.Any] | None,
         **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], base.ConfigurableMiddleware]:
+    ) -> ty_ext.Self:
         """Factory method for paste.deploy.
 
         :param global_conf: dict of options for all middlewares
@@ -484,15 +485,9 @@ Reason
         """
         conf = global_conf.copy() if global_conf else {}
         conf.update(local_conf)
-
-        def _factory(
-            app: WSGIApplication,
-        ) -> base.ConfigurableMiddleware:
-            middleware = cls(app, conf)
-            middleware._ignore_path = True
-            return middleware
-
-        return _factory
+        middleware = cls(None, conf)  # type: ignore
+        middleware._ignore_path = True
+        return middleware
 
     @staticmethod
     def _get_threadstacks() -> list[ty.Any]:
