@@ -73,7 +73,7 @@ class ConfigurableMiddleware:
 
     def __init__(
         self,
-        application: WSGIApplication,
+        application: WSGIApplication | None,
         conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         """Base middleware constructor
