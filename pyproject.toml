@@ -2,6 +2,65 @@
 requires = ["pbr>=6.1.1"]
 build-backend = "pbr.build"
 
+[project]
+name = "oslo.middleware"
+description = "Oslo Middleware library"
+readme = "README.rst"
+authors = [
+    {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Environment :: OpenStack",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://docs.openstack.org/oslo.middleware"
+Repository = "https://opendev.org/openstack/oslo.middleware"
+
+[project.entry-points."oslo.config.opts"]
+"oslo.middleware" = "oslo_middleware.opts:list_opts"
+"oslo.middleware.cors" = "oslo_middleware.opts:list_opts_cors"
+"oslo.middleware.sizelimit" = "oslo_middleware.opts:list_opts_sizelimit"
+"oslo.middleware.http_proxy_to_wsgi" = "oslo_middleware.opts:list_opts_http_proxy_to_wsgi"
+"oslo.middleware.healthcheck" = "oslo_middleware.opts:list_opts_healthcheck"
+"oslo.middleware.basic_auth" = "oslo_middleware.opts:list_opts_basic_auth"
+
+[project.entry-points."oslo.middleware.healthcheck"]
+disable_by_file = "oslo_middleware.healthcheck.disable_by_file:DisableByFileHealthcheck"
+disable_by_files_ports = "oslo_middleware.healthcheck.disable_by_file:DisableByFilesPortsHealthcheck"
+enable_by_files = "oslo_middleware.healthcheck.enable_by_files:EnableByFilesHealthcheck"
+
+[project.entry-points."paste.app_factory"]
+healthcheck = "oslo_middleware:Healthcheck.app_factory"
+
+[project.entry-points."paste.filter_factory"]
+basic_auth = "oslo_middleware:BasicAuthMiddleware.factory"
+catch_errors = "oslo_middleware:CatchErrors.factory"
+correlation_id = "oslo_middleware:CorrelationId.factory"
+cors = "oslo_middleware:CORS.factory"
+debug = "oslo_middleware:Debug.factory"
+healthcheck = "oslo_middleware:Healthcheck.factory"
+http_proxy_to_wsgi = "oslo_middleware:HTTPProxyToWSGI.factory"
+request_id = "oslo_middleware:RequestId.factory"
+sizelimit = "oslo_middleware:RequestBodySizeLimiter.factory"
+
+[tool.setuptools]
+packages = ["oslo_middleware"]
+
 [tool.ruff]
 line-length = 79
 
@@ -16,7 +75,7 @@ select = ["E4", "E7", "E9", "F", "S", "U"]
 "oslo_middleware/tests/*" = ["S"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 show_column_numbers = true
 show_error_context = true
 ignore_missing_imports = true
