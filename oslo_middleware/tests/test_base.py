@@ -84,7 +84,7 @@ class TestBase(BaseTestCase):
 class NoRequestBase(Middleware):
     """Test middleware, implements old model."""
 
-    def process_response(self, response):
+    def process_response(self, response, request):  # type: ignore
         self.called_without_request = True
         return response
 
@@ -92,7 +92,7 @@ class NoRequestBase(Middleware):
 class RequestBase(Middleware):
     """Test middleware, implements new model."""
 
-    def process_response(self, response, request):
+    def process_response(self, response, request):  # type: ignore
         self.called_with_request = True
         return response
 
