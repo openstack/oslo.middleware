@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The HealthCheck middleware no longer supports being deployed as a filter.
+    It should be deployed as an application.

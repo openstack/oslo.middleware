@@ -22,7 +22,6 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
             'correlation_id': 'CorrelationId',
             'cors': 'CORS',
             'debug': 'Debug',
-            'healthcheck': 'Healthcheck',
             'http_proxy_to_wsgi': 'HTTPProxyToWSGI',
             'request_id': 'RequestId',
             'sizelimit': 'RequestBodySizeLimiter',

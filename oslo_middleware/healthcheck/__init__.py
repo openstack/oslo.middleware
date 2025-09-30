@@ -26,7 +26,6 @@ import sys
 import traceback
 import typing as ty
 
-from debtcollector import removals
 import jinja2
 from oslo_utils import reflection
 from oslo_utils import timeutils
@@ -406,7 +405,6 @@ Reason
         self.oslo_conf.register_opts(
             opts.HEALTHCHECK_OPTS, group='healthcheck'
         )
-        self._path = self._conf_get('path')
         self._show_details = self._conf_get('detailed')
         self._source_ranges = [
             ipaddress.ip_network(r)
@@ -440,7 +438,6 @@ Reason
         # always return text/plain (because sending an error from this
         # middleware actually can cause issues).
         self._default_accept = 'text/plain'
-        self._ignore_path = False
 
     def _verify_configured_plugins(self) -> None:
         backends = self._conf_get('backends')
@@ -456,17 +453,15 @@ Reason
     def _conf_get(self, key: str, group: str = 'healthcheck') -> ty.Any:
         return super()._conf_get(key, group=group)
 
-    @removals.remove(  # type: ignore
-        message="The healthcheck middleware must now be configured as "
-        "an application, not as a filter"
-    )
     @classmethod
     def factory(
-        cls,
+        cls: type[base.MiddlewareType],
         global_conf: dict[str, ty.Any] | None,
         **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], base.ConfigurableMiddleware]:
-        return super().factory(global_conf, **local_conf)
+    ) -> ty.Callable[[WSGIApplication], base.MiddlewareType]:
+        raise NotImplementedError(
+            'HealthcheckMiddleware should be deployed as an app, not a filter'
+        )
 
     @classmethod
     def app_factory(
@@ -486,7 +481,6 @@ Reason
         conf = global_conf.copy() if global_conf else {}
         conf.update(local_conf)
         middleware = cls(None, conf)
-        middleware._ignore_path = True
         return middleware
 
     @staticmethod
@@ -629,9 +623,6 @@ Reason
         self,
         req: webob.request.Request,
     ) -> webob.response.Response | None:
-        if not self._ignore_path and req.path != self._path:
-            return None
-
         if self._source_ranges:
             if not req.remote_addr:
                 return None

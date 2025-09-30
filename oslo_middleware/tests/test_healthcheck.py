@@ -105,19 +105,8 @@ class HealthcheckTests(test_base.BaseTestCase):
         self.assertEqual(expected_code, res.status_int)
         self.assertEqual(expected_body, res.body)
 
-    def test_default_path_match(self):
+    def test_default(self):
         self._do_test()
-
-    def test_default_path_not_match(self):
-        self._do_test(path='/toto', expected_body=b'Hello, World!!!')
-
-    def test_configured_path_match(self):
-        conf = {'path': '/hidden_healthcheck'}
-        self._do_test(conf, path='/hidden_healthcheck')
-
-    def test_configured_path_not_match(self):
-        conf = {'path': '/hidden_healthcheck'}
-        self._do_test(conf, path='/toto', expected_body=b'Hello, World!!!')
 
     @mock.patch('oslo_middleware.healthcheck.disable_by_file.LOG')
     def test_disablefile_unconfigured(self, fake_log):
