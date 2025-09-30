@@ -265,7 +265,7 @@ class Healthcheck(base.ConfigurableMiddleware):
         [pipeline:public_api]
         pipeline = healthcheck sizelimit [...] public_service
 
-    Multiple filter sections can be defined if it desired to have
+    Multiple app sections can be defined if it desired to have
     pipelines with different healthcheck configuration, example:
 
     .. code-block:: ini
@@ -291,7 +291,7 @@ class Healthcheck(base.ConfigurableMiddleware):
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_public_disable
 
-        [filter:healthcheck_admin]
+        [app:healthcheck_admin]
         use = egg:oslo.middleware:healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_admin_disable
