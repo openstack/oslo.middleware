@@ -18,7 +18,6 @@ import copy
 import logging
 import typing as ty
 
-import debtcollector
 from oslo_config import cfg
 from oslo_middleware import base
 import webob.exc
@@ -224,21 +223,6 @@ class CORS(base.ConfigurableMiddleware):
             allow_methods=allow_methods,
             allow_headers=allow_headers,
         )
-
-        # Iterate through all the loaded config sections, looking for ones
-        # prefixed with 'cors.'
-        for section in self.oslo_conf.list_all_sections():
-            if section.startswith('cors.'):
-                debtcollector.deprecate(
-                    'Multiple configuration blocks are '
-                    'deprecated and will be removed in '
-                    'future versions. Please consolidate '
-                    'your configuration in the [cors] '
-                    'configuration block.'
-                )
-                # Register with the preconstructed defaults
-                self.oslo_conf.register_opts(subgroup_opts, section)
-                self.add_origin(**self.oslo_conf[section])
 
     def add_origin(
         self,

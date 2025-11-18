@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The CORS middleware no longer support multiple configuration blocks.
+    Sections with ``cors.`` prefix are no longer used and should be removed.
