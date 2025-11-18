@@ -313,9 +313,7 @@ class CORS(base.ConfigurableMiddleware):
             return response
 
         # Doublecheck for an OPTIONS request.
-        # TODO(stephenfin): typeshed typing is incomplete and doesn't include
-        # OPTIONS
-        if request.method == 'OPTIONS':  # type: ignore
+        if request.method == 'OPTIONS':
             return self._apply_cors_preflight_headers(
                 request=request, response=response
             )

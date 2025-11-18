@@ -141,7 +141,7 @@ class ConfigurableMiddleware:
         """Do whatever you'd like to the response."""
         return response
 
-    @webob.dec.wsgify(RequestClass=NoContentTypeRequest)  # type: ignore
+    @webob.dec.wsgify(RequestClass=NoContentTypeRequest)
     def __call__(
         self,
         req: webob.request.Request,
