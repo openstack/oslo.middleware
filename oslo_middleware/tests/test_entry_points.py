@@ -10,12 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslotest import base
+from oslotest import base as test_base
 import stevedore
 from testtools import matchers
 
+from oslo_middleware import base
 
-class TestPasteDeploymentEntryPoints(base.BaseTestCase):
+
+class TestPasteDeploymentEntryPoints(test_base.BaseTestCase):
     def test_entry_points(self):
         factory_classes = {
             'catch_errors': 'CatchErrors',
@@ -27,6 +29,7 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
             'sizelimit': 'RequestBodySizeLimiter',
         }
 
+        em: stevedore.ExtensionManager[base.ConfigurableMiddleware]
         em = stevedore.ExtensionManager('paste.filter_factory')
 
         # Ensure all the factories are defined by their names
@@ -40,6 +43,7 @@ class TestPasteDeploymentEntryPoints(base.BaseTestCase):
             'enable_by_files': 'EnableByFilesHealthcheck',
         }
 
+        em: stevedore.ExtensionManager[base.ConfigurableMiddleware]
         em = stevedore.ExtensionManager('oslo.middleware.healthcheck')
 
         # Ensure all the healthcheck plugins are defined by their names

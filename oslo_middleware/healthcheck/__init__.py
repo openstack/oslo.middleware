@@ -38,7 +38,7 @@ import webob.response
 try:
     import greenlet
 except ImportError:
-    greenlet = None
+    greenlet = None  # type: ignore
 
 from oslo_middleware import base
 from oslo_middleware.exceptions import ConfigInvalid
@@ -418,6 +418,10 @@ Reason
         # `disable_by_file` backends are not enabled at same time.
         self._verify_configured_plugins()
 
+        if ty.TYPE_CHECKING:
+            self._backends: stevedore.NamedExtensionManager[
+                pluginbase.HealthcheckBaseExtension
+            ]
         self._backends = stevedore.NamedExtensionManager(
             self.NAMESPACE,
             self._conf_get('backends'),
@@ -648,7 +652,9 @@ Reason
                     return None
 
         results = [
-            ext.obj.healthcheck(req.server_port) for ext in self._backends
+            ext.obj.healthcheck(req.server_port)
+            for ext in self._backends
+            if ext.obj
         ]
         healthy = self._are_results_healthy(results)
         if req.method == "HEAD":
