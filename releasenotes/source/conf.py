@@ -201,8 +201,8 @@ texinfo_documents = [
         'oslo.middleware Release Notes Documentation',
         'oslo.middleware Developers',
         'oslo.middlewareReleaseNotes',
-        'The library includes components that can be injected into wsgi pipelines'
-        ' to intercept request/response flows.',
+        'The library includes components that can be injected '
+        'into wsgi pipelines to intercept request/response flows.',
         'Miscellaneous',
     ),
 ]
