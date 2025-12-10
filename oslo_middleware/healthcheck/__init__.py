@@ -294,7 +294,7 @@ class Healthcheck(base.ConfigurableMiddleware):
         use = egg:oslo.middleware:healthcheck
         backends = disable_by_file
         disable_by_file_path = /var/run/nova/healthcheck_admin_disable
-    """
+    """  # noqa: E501
 
     NAMESPACE = "oslo.middleware.healthcheck"
     HEALTHY_TO_STATUS_CODES = {
