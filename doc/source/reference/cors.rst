@@ -24,7 +24,7 @@ First, include the middleware in your application::
 
 Secondly, add as many allowed origins as you would like::
 
-    app.add_origin(allowed_origin='https://website.example.com:443',
+    app.add_origin(allowed_origin=['https://website.example.com:443'],
                    allow_credentials=True,
                    max_age=3600,
                    allow_methods=['GET','PUT','POST','DELETE'],

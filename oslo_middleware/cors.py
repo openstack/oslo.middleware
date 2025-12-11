@@ -226,7 +226,7 @@ class CORS(base.ConfigurableMiddleware):
 
     def add_origin(
         self,
-        allowed_origin: str | list[str],
+        allowed_origin: list[str],
         allow_credentials: bool = True,
         expose_headers: list[str] | None = None,
         max_age: int | None = None,
@@ -243,16 +243,6 @@ class CORS(base.ConfigurableMiddleware):
         :param allow_headers: List of HTTP headers to permit from the client.
         :return:
         """
-
-        # NOTE(dims): Support older code that still passes in
-        # a string for allowed_origin instead of a list
-        if isinstance(allowed_origin, str):
-            # TODO(krotscheck): https://review.opendev.org/#/c/312687/
-            LOG.warning(
-                'DEPRECATED: The `allowed_origin` keyword argument in '
-                '`add_origin()` should be a list, found String.'
-            )
-            allowed_origin = [allowed_origin]
 
         if allowed_origin:
             for origin in allowed_origin:

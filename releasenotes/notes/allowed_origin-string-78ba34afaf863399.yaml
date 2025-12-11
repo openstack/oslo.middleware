@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The ``add_origin`` method of the ``oslo_middleware.cors.CORS`` class no
+    longer accepts a string value for its ``allowed_origin`` argument. Use
+    a list of strings intead.
