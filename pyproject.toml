@@ -9,12 +9,12 @@ readme = "README.rst"
 authors = [
     {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
 ]
+license = "Apache-2.0"
 requires-python = ">=3.10"
 classifiers = [
     "Environment :: OpenStack",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -58,8 +58,8 @@ http_proxy_to_wsgi = "oslo_middleware:HTTPProxyToWSGI.factory"
 request_id = "oslo_middleware:RequestId.factory"
 sizelimit = "oslo_middleware:RequestBodySizeLimiter.factory"
 
-[tool.setuptools]
-packages = ["oslo_middleware"]
+[tool.setuptools.packages.find]
+include = ["oslo_middleware"]
 
 [tool.mypy]
 python_version = "3.10"
