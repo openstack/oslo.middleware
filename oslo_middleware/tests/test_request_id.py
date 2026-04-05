@@ -37,8 +37,7 @@ class RequestIdTest(test_base.BaseTestCase):
         req = webob.Request.blank('/test')
         res = req.get_response(app)
         res_req_id = res.headers.get(request_id.HTTP_RESP_HEADER_REQUEST_ID)
-        if isinstance(res_req_id, bytes):
-            res_req_id = res_req_id.decode('utf-8')
+        assert isinstance(res_req_id, str)
         self.assertThat(res_req_id, matchers.StartsWith('req-'))
         # request-id in request environ is returned as response body
         self.assertEqual(res.body.decode('utf-8'), res_req_id)

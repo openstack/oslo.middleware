@@ -175,9 +175,7 @@ class TestAuthBasic(test_base.BaseTestCase):
             auth.parse_header({'HTTP_AUTHORIZATION': auth_value}),
         )
         # failed, missing Authorization header
-        e = self.assertRaises(
-            webob.exc.HTTPUnauthorized, auth.parse_header, {}
-        )
+        self.assertRaises(webob.exc.HTTPUnauthorized, auth.parse_header, {})
         # failed missing token
         e = self.assertRaises(
             webob.exc.HTTPBadRequest,
@@ -187,9 +185,9 @@ class TestAuthBasic(test_base.BaseTestCase):
         self.assertEqual('Could not parse Authorization header', str(e))
         # failed, type other than Basic
         digest_value = 'Digest username="myName" nonce="foobar"'
-        e = self.assertRaises(
+        e2 = self.assertRaises(
             webob.exc.HTTPBadRequest,
             auth.parse_header,
             {'HTTP_AUTHORIZATION': digest_value},
         )
-        self.assertEqual('Unsupported authorization type "Digest"', str(e))
+        self.assertEqual('Unsupported authorization type "Digest"', str(e2))
