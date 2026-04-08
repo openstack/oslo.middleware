@@ -77,32 +77,32 @@ class TestAuthBasic(test_base.BaseTestCase):
             'foo:bar\nmyName:$2y$05$lE3eGtyj41jZwrzS87KTqe6.'
             'JETVCWBkc32C63UP2aYrGoYOEpbJm\n\n\n'
         )
-        # test basic auth
-        self.assertEqual(
-            {'HTTP_X_USER': 'myName', 'HTTP_X_USER_NAME': 'myName'},
-            auth.authenticate(auth_file, 'myName', b'myPassword'),
-        )
-        # test failed auth
-        e = self.assertRaises(
-            webob.exc.HTTPBadRequest,
-            auth.authenticate,
-            auth_file,
-            'foo',
-            b'bar',
-        )
-        self.assertEqual(
-            'Only bcrypt digested passwords are supported for foo', str(e)
-        )
-        # test problem reading user data file
-        auth_file = auth_file + '.missing'
-        e = self.assertRaises(
-            webob.exc.HTTPBadRequest,
-            auth.authenticate,
-            auth_file,
-            'myName',
-            b'myPassword',
-        )
-        self.assertEqual('Problem reading auth file', str(e))
+        with self.subTest('basic auth'):
+            self.assertEqual(
+                {'HTTP_X_USER': 'myName', 'HTTP_X_USER_NAME': 'myName'},
+                auth.authenticate(auth_file, 'myName', b'myPassword'),
+            )
+        with self.subTest('failed auth'):
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest,
+                auth.authenticate,
+                auth_file,
+                'foo',
+                b'bar',
+            )
+            self.assertEqual(
+                'Only bcrypt digested passwords are supported for foo', str(e)
+            )
+        with self.subTest('problem reading user data file'):
+            auth_file = auth_file + '.missing'
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest,
+                auth.authenticate,
+                auth_file,
+                'myName',
+                b'myPassword',
+            )
+            self.assertEqual('Problem reading auth file', str(e))
 
     def test_auth_entry(self):
         entry_pass = (
@@ -110,84 +110,94 @@ class TestAuthBasic(test_base.BaseTestCase):
             'JETVCWBkc32C63UP2aYrGoYOEpbJm'
         )
         entry_fail = 'foo:bar'
-        # success
-        self.assertEqual(
-            {'HTTP_X_USER': 'myName', 'HTTP_X_USER_NAME': 'myName'},
-            auth.auth_entry(entry_pass, b'myPassword'),
-        )
-        # failed, unknown digest format
-        ex = self.assertRaises(
-            webob.exc.HTTPBadRequest, auth.auth_entry, entry_fail, b'bar'
-        )
-        self.assertEqual(
-            'Only bcrypt digested passwords are supported for foo', str(ex)
-        )
-        # failed, incorrect password
-        self.assertRaises(
-            webob.exc.HTTPUnauthorized, auth.auth_entry, entry_pass, b'bar'
-        )
+        with self.subTest('success'):
+            self.assertEqual(
+                {'HTTP_X_USER': 'myName', 'HTTP_X_USER_NAME': 'myName'},
+                auth.auth_entry(entry_pass, b'myPassword'),
+            )
+        with self.subTest('unknown digest format'):
+            ex = self.assertRaises(
+                webob.exc.HTTPBadRequest, auth.auth_entry, entry_fail, b'bar'
+            )
+            self.assertEqual(
+                'Only bcrypt digested passwords are supported for foo', str(ex)
+            )
+        with self.subTest('incorrect password'):
+            self.assertRaises(
+                webob.exc.HTTPUnauthorized, auth.auth_entry, entry_pass, b'bar'
+            )
 
     def test_validate_auth_file(self):
         auth_file = self.write_auth_file(
             'myName:$2y$05$lE3eGtyj41jZwrzS87KTqe6.'
             'JETVCWBkc32C63UP2aYrGoYOEpbJm\n\n\n'
         )
-        # success, valid config
-        auth.validate_auth_file(auth_file)
-        # failed, missing auth file
-        auth_file = auth_file + '.missing'
-        self.assertRaises(
-            exc.ConfigInvalid, auth.validate_auth_file, auth_file
-        )
-        # failed, invalid entry
-        auth_file = self.write_auth_file(
-            'foo:bar\nmyName:$2y$05$lE3eGtyj41jZwrzS87KTqe6.'
-            'JETVCWBkc32C63UP2aYrGoYOEpbJm\n\n\n'
-        )
-        self.assertRaises(
-            webob.exc.HTTPBadRequest, auth.validate_auth_file, auth_file
-        )
+        with self.subTest('valid config'):
+            auth.validate_auth_file(auth_file)
+        with self.subTest('missing auth file'):
+            auth_file = auth_file + '.missing'
+            self.assertRaises(
+                exc.ConfigInvalid, auth.validate_auth_file, auth_file
+            )
+        with self.subTest('invalid entry'):
+            auth_file = self.write_auth_file(
+                'foo:bar\nmyName:$2y$05$lE3eGtyj41jZwrzS87KTqe6.'
+                'JETVCWBkc32C63UP2aYrGoYOEpbJm\n\n\n'
+            )
+            self.assertRaises(
+                webob.exc.HTTPBadRequest, auth.validate_auth_file, auth_file
+            )
 
     def test_parse_token(self):
-        # success with bytes
-        btoken = base64.b64encode(b'myName:myPassword')
-        self.assertEqual(('myName', b'myPassword'), auth.parse_token(btoken))
-        # success with string
-        token = str(btoken, encoding='utf-8')
-        self.assertEqual(('myName', b'myPassword'), auth.parse_token(token))
-        # failed, invalid base64
-        e = self.assertRaises(
-            webob.exc.HTTPBadRequest, auth.parse_token, token[:-1]
-        )
-        self.assertEqual('Could not decode authorization token', str(e))
-        # failed, no colon in token
-        token = str(base64.b64encode(b'myNamemyPassword'), encoding='utf-8')
-        e = self.assertRaises(
-            webob.exc.HTTPBadRequest, auth.parse_token, token[:-1]
-        )
-        self.assertEqual('Could not decode authorization token', str(e))
+        with self.subTest('success with bytes'):
+            btoken = base64.b64encode(b'myName:myPassword')
+            self.assertEqual(
+                ('myName', b'myPassword'), auth.parse_token(btoken)
+            )
+        with self.subTest('success with string'):
+            token = str(btoken, encoding='utf-8')
+            self.assertEqual(
+                ('myName', b'myPassword'), auth.parse_token(token)
+            )
+        with self.subTest('invalid base64'):
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest, auth.parse_token, token[:-1]
+            )
+            self.assertEqual('Could not decode authorization token', str(e))
+        with self.subTest('no colon in token'):
+            token = str(
+                base64.b64encode(b'myNamemyPassword'), encoding='utf-8'
+            )
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest, auth.parse_token, token[:-1]
+            )
+            self.assertEqual('Could not decode authorization token', str(e))
 
     def test_parse_header(self):
-        auth_value = 'Basic bXlOYW1lOm15UGFzc3dvcmQ='
-        # success
-        self.assertEqual(
-            'bXlOYW1lOm15UGFzc3dvcmQ=',
-            auth.parse_header({'HTTP_AUTHORIZATION': auth_value}),
-        )
-        # failed, missing Authorization header
-        self.assertRaises(webob.exc.HTTPUnauthorized, auth.parse_header, {})
-        # failed missing token
-        e = self.assertRaises(
-            webob.exc.HTTPBadRequest,
-            auth.parse_header,
-            {'HTTP_AUTHORIZATION': 'Basic'},
-        )
-        self.assertEqual('Could not parse Authorization header', str(e))
-        # failed, type other than Basic
-        digest_value = 'Digest username="myName" nonce="foobar"'
-        e2 = self.assertRaises(
-            webob.exc.HTTPBadRequest,
-            auth.parse_header,
-            {'HTTP_AUTHORIZATION': digest_value},
-        )
-        self.assertEqual('Unsupported authorization type "Digest"', str(e2))
+        with self.subTest('success'):
+            auth_value = 'Basic bXlOYW1lOm15UGFzc3dvcmQ='
+            self.assertEqual(
+                'bXlOYW1lOm15UGFzc3dvcmQ=',
+                auth.parse_header({'HTTP_AUTHORIZATION': auth_value}),
+            )
+
+        with self.subTest('failed, missing Authorization header'):
+            self.assertRaises(
+                webob.exc.HTTPUnauthorized, auth.parse_header, {}
+            )
+            # failed missing token
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest,
+                auth.parse_header,
+                {'HTTP_AUTHORIZATION': 'Basic'},
+            )
+            self.assertEqual('Could not parse Authorization header', str(e))
+
+        with self.subTest('failed, type other than Basic'):
+            digest_value = 'Digest username="myName" nonce="foobar"'
+            e = self.assertRaises(
+                webob.exc.HTTPBadRequest,
+                auth.parse_header,
+                {'HTTP_AUTHORIZATION': digest_value},
+            )
+            self.assertEqual('Unsupported authorization type "Digest"', str(e))
