@@ -24,6 +24,7 @@ from oslo_middleware import cors
 from oslo_middleware.healthcheck import opts as healthcheck_opts
 from oslo_middleware import http_proxy_to_wsgi
 from oslo_middleware import sizelimit
+from oslo_middleware import tracing
 
 if ty.TYPE_CHECKING:
     from oslo_config import cfg
@@ -35,6 +36,7 @@ __all__ = [
     'list_opts_http_proxy_to_wsgi',
     'list_opts_healthcheck',
     'list_opts_basic_auth',
+    'list_opts_tracing',
 ]
 
 
@@ -64,6 +66,7 @@ def list_opts() -> list[tuple[str, Sequence[cfg.Opt]]]:
             list_opts_http_proxy_to_wsgi(),
             list_opts_healthcheck(),
             list_opts_basic_auth(),
+            list_opts_tracing(),
         )
     )
 
@@ -197,4 +200,28 @@ def list_opts_basic_auth() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """
     return [
         ('oslo_middleware', copy.deepcopy(basic_auth.OPTS)),
+    ]
+
+
+def list_opts_tracing() -> list[tuple[str, list[cfg.Opt]]]:
+    """Return a list of oslo.config options for the tracing middleware.
+
+    The returned list includes all oslo.config options which may be registered
+    at runtime by the library.
+
+    Each element of the list is a tuple. The first element is the name of the
+    group under which the list of elements in the second element will be
+    registered. A group name of None corresponds to the [DEFAULT] group in
+    config files.
+
+    This function is also discoverable via the 'oslo.middleware.tracing' entry
+    point under the 'oslo.config.opts' namespace.
+
+    The purpose of this is to allow tools like the Oslo sample config file
+    generator to discover the options exposed to users by this library.
+
+    :returns: a list of (group_name, opts) tuples
+    """
+    return [
+        ('oslo_middleware_tracing', copy.deepcopy(tracing.TRACING_OPTS)),
     ]

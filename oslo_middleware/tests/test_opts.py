@@ -25,3 +25,6 @@ class TestOptionDiscovery(BaseTestCase):
 
     def test_cors(self):
         opts.list_opts_cors()
+
+    def test_tracing(self):
+        opts.list_opts_tracing()

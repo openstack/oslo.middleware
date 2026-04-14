@@ -1,0 +1,25 @@
+---
+features:
+  - |
+    Adds a new ``TracingMiddleware`` that provides OpenTelemetry distributed
+    tracing for OpenStack services. The middleware creates a span for each
+    incoming HTTP request, captures standard HTTP attributes and
+    OpenStack-specific metadata (request ID, project ID, user ID), and
+    propagates W3C TraceContext headers (``traceparent``/``tracestate``)
+    across services.
+
+    Tracing is disabled by default and can be enabled via the
+    ``[oslo_middleware_tracing]``
+    configuration group. When disabled, the middleware is a zero-overhead
+    passthrough. The required OpenTelemetry packages can be installed via
+    the new ``tracing-http`` or ``tracing-grpc`` extras::
+
+        pip install oslo.middleware[tracing-http]
+
+    Services can add tracing by declaring a paste filter::
+
+        [filter:tracing]
+        paste.filter_factory = oslo_middleware:TracingMiddleware.factory
+
+    Traces are exported via OTLP (HTTP or gRPC) to any compatible backend
+    such as Grafana Tempo, Jaeger, or an OpenTelemetry Collector.

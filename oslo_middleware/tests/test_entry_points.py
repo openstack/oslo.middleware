@@ -27,6 +27,7 @@ class TestPasteDeploymentEntryPoints(test_base.BaseTestCase):
             'http_proxy_to_wsgi': 'HTTPProxyToWSGI',
             'request_id': 'RequestId',
             'sizelimit': 'RequestBodySizeLimiter',
+            'tracing': 'TracingMiddleware',
         }
 
         em: stevedore.ExtensionManager[base.ConfigurableMiddleware]

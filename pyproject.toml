@@ -28,6 +28,16 @@ classifiers = [
 ]
 dynamic = ["version", "dependencies"]
 
+[project.optional-dependencies]
+tracing-http = [
+    "opentelemetry-sdk>=1.0.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.0.0",
+]
+tracing-grpc = [
+    "opentelemetry-sdk>=1.0.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.0.0",
+]
+
 [project.urls]
 Homepage = "https://docs.openstack.org/oslo.middleware"
 Repository = "https://opendev.org/openstack/oslo.middleware"
@@ -39,6 +49,7 @@ Repository = "https://opendev.org/openstack/oslo.middleware"
 "oslo.middleware.http_proxy_to_wsgi" = "oslo_middleware.opts:list_opts_http_proxy_to_wsgi"
 "oslo.middleware.healthcheck" = "oslo_middleware.opts:list_opts_healthcheck"
 "oslo.middleware.basic_auth" = "oslo_middleware.opts:list_opts_basic_auth"
+"oslo.middleware.tracing" = "oslo_middleware.opts:list_opts_tracing"
 
 [project.entry-points."oslo.middleware.healthcheck"]
 disable_by_file = "oslo_middleware.healthcheck.disable_by_file:DisableByFileHealthcheck"
@@ -57,6 +68,7 @@ debug = "oslo_middleware:Debug.factory"
 http_proxy_to_wsgi = "oslo_middleware:HTTPProxyToWSGI.factory"
 request_id = "oslo_middleware:RequestId.factory"
 sizelimit = "oslo_middleware:RequestBodySizeLimiter.factory"
+tracing = "oslo_middleware:TracingMiddleware.factory"
 
 [tool.setuptools.packages.find]
 include = ["oslo_middleware"]
