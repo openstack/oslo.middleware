@@ -88,7 +88,7 @@ OPTS = [
 CORS_OPTS = OPTS
 
 
-def set_defaults(**kwargs: cfg.Opt) -> None:
+def set_defaults(**kwargs: ty.Any) -> None:
     """Override the default values for configuration options.
 
     This method permits a project to override the default CORS option values.

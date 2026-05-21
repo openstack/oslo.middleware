@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import copy
 import itertools
 import typing as ty
@@ -37,7 +38,7 @@ __all__ = [
 ]
 
 
-def list_opts() -> list[cfg.Opt]:
+def list_opts() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for ALL of the middleware classes.
 
     The returned list includes all oslo.config options which may be registered
@@ -67,7 +68,7 @@ def list_opts() -> list[cfg.Opt]:
     )
 
 
-def list_opts_sizelimit() -> list[tuple[str, list[cfg.Opt]]]:
+def list_opts_sizelimit() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for the sizelimit middleware.
 
     The returned list includes all oslo.config options which may be registered
@@ -91,7 +92,7 @@ def list_opts_sizelimit() -> list[tuple[str, list[cfg.Opt]]]:
     ]
 
 
-def list_opts_cors() -> list[tuple[str, list[cfg.Opt]]]:
+def list_opts_cors() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for the cors middleware.
 
     The returned list includes all oslo.config options which may be registered
@@ -115,7 +116,7 @@ def list_opts_cors() -> list[tuple[str, list[cfg.Opt]]]:
     ]
 
 
-def list_opts_http_proxy_to_wsgi() -> list[tuple[str, list[cfg.Opt]]]:
+def list_opts_http_proxy_to_wsgi() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for http_proxy_to_wsgi.
 
     The returned list includes all oslo.config options which may be registered
@@ -139,7 +140,7 @@ def list_opts_http_proxy_to_wsgi() -> list[tuple[str, list[cfg.Opt]]]:
     ]
 
 
-def list_opts_healthcheck() -> list[tuple[str, list[cfg.Opt]]]:
+def list_opts_healthcheck() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for healthcheck.
 
     The returned list includes all oslo.config options which may be registered
@@ -163,17 +164,19 @@ def list_opts_healthcheck() -> list[tuple[str, list[cfg.Opt]]]:
     return [
         (
             'healthcheck',
-            copy.deepcopy(
-                healthcheck_opts.HEALTHCHECK_OPTS
-                + healthcheck_opts.DISABLE_BY_FILE_OPTS
-                + healthcheck_opts.DISABLE_BY_FILES_OPTS
-                + healthcheck_opts.ENABLE_BY_FILES_OPTS
+            list(
+                itertools.chain(
+                    healthcheck_opts.HEALTHCHECK_OPTS,
+                    healthcheck_opts.DISABLE_BY_FILE_OPTS,
+                    healthcheck_opts.DISABLE_BY_FILES_OPTS,
+                    healthcheck_opts.ENABLE_BY_FILES_OPTS,
+                ),
             ),
         )
     ]
 
 
-def list_opts_basic_auth() -> list[tuple[str, list[cfg.Opt]]]:
+def list_opts_basic_auth() -> list[tuple[str, Sequence[cfg.Opt]]]:
     """Return a list of oslo.config options for basic auth middleware.
 
     The returned list includes all oslo.config options which may be registered
