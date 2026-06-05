@@ -18,17 +18,18 @@
 from __future__ import annotations
 
 from inspect import getfullargspec
-import typing as ty
+from typing import Any, TYPE_CHECKING, TypeVar
+from collections.abc import Callable
 
 from oslo_config import cfg
 import webob.dec
 import webob.request
 import webob.response
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
 
-MiddlewareType = ty.TypeVar('MiddlewareType', bound='ConfigurableMiddleware')
+MiddlewareType = TypeVar('MiddlewareType', bound='ConfigurableMiddleware')
 
 
 class NoContentTypeResponse(webob.response.Response):
@@ -50,9 +51,9 @@ class ConfigurableMiddleware:
     @classmethod
     def factory(
         cls: type[MiddlewareType],
-        global_conf: dict[str, ty.Any] | None,
-        **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], MiddlewareType]:
+        global_conf: dict[str, Any] | None,
+        **local_conf: Any,
+    ) -> Callable[[WSGIApplication], MiddlewareType]:
         """Factory method for paste.deploy.
 
         :param global_conf: dict of options for all middlewares (usually the
@@ -74,14 +75,14 @@ class ConfigurableMiddleware:
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         """Base middleware constructor
 
         :param conf: a dict of options or a cfg.ConfigOpts object
         """
         self.application = application
-        self.conf: dict[str, ty.Any]
+        self.conf: dict[str, Any]
         self.oslo_conf: cfg.ConfigOpts
 
         # NOTE(sileht): If the configuration come from oslo.config
@@ -115,7 +116,7 @@ class ConfigurableMiddleware:
                 # Fallback to global object
                 self.oslo_conf = cfg.CONF
 
-    def _conf_get(self, key: str, group: str = "oslo_middleware") -> ty.Any:
+    def _conf_get(self, key: str, group: str = "oslo_middleware") -> Any:
         if key in self.conf:
             # Validate value type
             self.oslo_conf.set_override(key, self.conf[key], group=group)
@@ -167,9 +168,9 @@ class Middleware(ConfigurableMiddleware):
     @classmethod
     def factory(
         cls: type[MiddlewareType],
-        global_conf: dict[str, ty.Any] | None,
-        **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], MiddlewareType]:
+        global_conf: dict[str, Any] | None,
+        **local_conf: Any,
+    ) -> Callable[[WSGIApplication], MiddlewareType]:
         """Factory method for paste.deploy."""
 
         def _factory(

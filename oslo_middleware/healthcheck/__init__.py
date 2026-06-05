@@ -24,7 +24,8 @@ import platform
 import socket
 import sys
 import traceback
-import typing as ty
+from typing import Any, TYPE_CHECKING, TypedDict
+from collections.abc import Callable
 
 import jinja2
 from oslo_utils import reflection
@@ -44,22 +45,22 @@ from oslo_middleware import base
 from oslo_middleware.exceptions import ConfigInvalid
 from oslo_middleware.healthcheck import opts
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     from oslo_config import cfg
     from oslo_middleware.healthcheck import pluginbase
 
 
-def _find_objects(t: type[ty.Any]) -> list[ty.Any]:
+def _find_objects(t: type[Any]) -> list[Any]:
     return [o for o in gc.get_objects() if isinstance(o, t)]
 
 
-def _expand_template(contents: str, params: dict[str, ty.Any]) -> ty.Any:
+def _expand_template(contents: str, params: dict[str, Any]) -> Any:
     tpl = jinja2.Template(source=contents, undefined=jinja2.StrictUndefined)
     return tpl.render(**params)
 
 
-Reason = ty.TypedDict("Reason", {"reason": str, "details": str, "class": str})
+Reason = TypedDict("Reason", {"reason": str, "details": str, "class": str})
 
 
 class Healthcheck(base.ConfigurableMiddleware):
@@ -399,7 +400,7 @@ Reason
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self.oslo_conf.register_opts(
@@ -418,7 +419,7 @@ Reason
         # `disable_by_file` backends are not enabled at same time.
         self._verify_configured_plugins()
 
-        if ty.TYPE_CHECKING:
+        if TYPE_CHECKING:
             self._backends: stevedore.NamedExtensionManager[
                 pluginbase.HealthcheckBaseExtension
             ]
@@ -454,15 +455,15 @@ Reason
                 'enabled at the same time.'
             )
 
-    def _conf_get(self, key: str, group: str = 'healthcheck') -> ty.Any:
+    def _conf_get(self, key: str, group: str = 'healthcheck') -> Any:
         return super()._conf_get(key, group=group)
 
     @classmethod
     def factory(
         cls: type[base.MiddlewareType],
-        global_conf: dict[str, ty.Any] | None,
-        **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], base.MiddlewareType]:
+        global_conf: dict[str, Any] | None,
+        **local_conf: Any,
+    ) -> Callable[[WSGIApplication], base.MiddlewareType]:
         raise NotImplementedError(
             'HealthcheckMiddleware should be deployed as an app, not a filter'
         )
@@ -470,8 +471,8 @@ Reason
     @classmethod
     def app_factory(
         cls,
-        global_conf: dict[str, ty.Any] | None,
-        **local_conf: ty.Any,
+        global_conf: dict[str, Any] | None,
+        **local_conf: Any,
     ) -> ty_ext.Self:
         """Factory method for paste.deploy.
 
@@ -488,7 +489,7 @@ Reason
         return middleware
 
     @staticmethod
-    def _get_threadstacks() -> list[ty.Any]:
+    def _get_threadstacks() -> list[Any]:
         threadstacks = []
         try:
             active_frames = sys._current_frames()
@@ -504,7 +505,7 @@ Reason
         return threadstacks
 
     @staticmethod
-    def _get_greenstacks() -> list[ty.Any]:
+    def _get_greenstacks() -> list[Any]:
         greenstacks = []
         if greenlet is not None:
             buf = io.StringIO()
@@ -516,7 +517,7 @@ Reason
         return greenstacks
 
     @staticmethod
-    def _pretty_json_dumps(contents: dict[str, ty.Any]) -> str:
+    def _pretty_json_dumps(contents: dict[str, Any]) -> str:
         return json.dumps(contents, indent=4, sort_keys=True)
 
     @staticmethod

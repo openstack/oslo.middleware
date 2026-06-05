@@ -16,9 +16,9 @@
 from __future__ import annotations
 
 import abc
-import typing as ty
+from typing import Any, TYPE_CHECKING
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from oslo_config import cfg
 
 
@@ -40,7 +40,7 @@ class HealthcheckBaseExtension(metaclass=abc.ABCMeta):
     def __init__(
         self,
         oslo_conf: cfg.ConfigOpts,
-        conf: dict[str, ty.Any],
+        conf: dict[str, Any],
     ) -> None:
         self.oslo_conf = oslo_conf
         self.conf = conf
@@ -52,7 +52,7 @@ class HealthcheckBaseExtension(metaclass=abc.ABCMeta):
         return: HealthcheckResult object
         """
 
-    def _conf_get(self, key: str, group: str = 'healthcheck') -> ty.Any:
+    def _conf_get(self, key: str, group: str = 'healthcheck') -> Any:
         if key in self.conf:
             # Validate value type
             self.oslo_conf.set_override(key, self.conf[key], group=group)

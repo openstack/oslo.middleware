@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import sys
-import typing as ty
+from collections.abc import Iterable, Iterator
 
 import webob.dec
 
@@ -54,8 +54,8 @@ class Debug(base.ConfigurableMiddleware):
 
     @staticmethod
     def print_generator(
-        app_iter: ty.Iterable[bytes],
-    ) -> ty.Iterator[bytes]:
+        app_iter: Iterable[bytes],
+    ) -> Iterator[bytes]:
         """Prints the contents of a wrapper string iterator when iterated."""
         print(("*" * 40) + " BODY")
         for part in app_iter:

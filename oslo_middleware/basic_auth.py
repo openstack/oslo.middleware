@@ -18,7 +18,7 @@ from __future__ import annotations
 import base64
 import binascii
 import logging
-import typing as ty
+from typing import Any, TYPE_CHECKING, TypedDict
 
 import bcrypt
 import webob
@@ -27,7 +27,7 @@ from oslo_config import cfg
 from oslo_middleware import base
 from oslo_middleware import exceptions
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     import webob.request
     import webob.response
@@ -45,7 +45,7 @@ OPTS = [
 cfg.CONF.register_opts(OPTS, group='oslo_middleware')
 
 
-class AuthEntry(ty.TypedDict):
+class AuthEntry(TypedDict):
     HTTP_X_USER: str
     HTTP_X_USER_NAME: str
 
@@ -56,7 +56,7 @@ class BasicAuthMiddleware(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self.auth_file = cfg.CONF.oslo_middleware.http_basic_auth_user_file

@@ -13,15 +13,16 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from http import server
 import socketserver
-import typing as ty
+from typing import TYPE_CHECKING
 
 import webob
 
 from oslo_middleware import healthcheck
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     import webob.request
 
 
@@ -58,7 +59,7 @@ def create_server(port: int = 0) -> socketserver.TCPServer:
     return server
 
 
-def main(args: ty.Sequence[str] | None = None) -> None:
+def main(args: Sequence[str] | None = None) -> None:
     """Runs a basic http server to show healthcheck functionality."""
     parser = argparse.ArgumentParser()
     parser.add_argument(

@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import typing as ty
+from typing import Literal
 
 from oslo_config import fixture
 from oslotest import base as test_base
@@ -232,9 +232,14 @@ class CORSRegularRequestTest(CORSTestBase):
     """
 
     # List of HTTP methods (other than OPTIONS) to test with.
-    methods: list[
-        ty.Literal['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']
-    ] = ['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']
+    methods: list[Literal['POST', 'PUT', 'DELETE', 'GET', 'TRACE', 'HEAD']] = [
+        'POST',
+        'PUT',
+        'DELETE',
+        'GET',
+        'TRACE',
+        'HEAD',
+    ]
 
     def test_config_overrides(self):
         """Assert that the configuration options are properly registered."""

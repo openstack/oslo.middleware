@@ -13,12 +13,12 @@
 
 from __future__ import annotations
 
-import typing as ty
+from typing import TYPE_CHECKING, Any
 
 from oslo_config import cfg
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     import webob.request
     import webob.response
@@ -44,7 +44,7 @@ class HTTPProxyToWSGI(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')

@@ -19,7 +19,8 @@ Request Body limiting middleware.
 from __future__ import annotations
 
 import logging
-import typing as ty
+from typing import Any, IO, TYPE_CHECKING
+from collections.abc import Iterator
 
 from oslo_config import cfg
 import webob.dec
@@ -28,7 +29,7 @@ import webob.exc
 from oslo_middleware._i18n import _
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
 
 LOG = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ OPTS = [
 class LimitingReader:
     """Reader to limit the size of an incoming request."""
 
-    def __init__(self, data: ty.IO[bytes], limit: int) -> None:
+    def __init__(self, data: IO[bytes], limit: int) -> None:
         """Initiates LimitingReader object.
 
         :param data: Underlying data object
@@ -56,7 +57,7 @@ class LimitingReader:
         self.limit = limit
         self.bytes_read = 0
 
-    def __iter__(self) -> ty.Iterator[bytes]:
+    def __iter__(self) -> Iterator[bytes]:
         for chunk in self.data:
             self.bytes_read += len(chunk)
             if self.bytes_read > self.limit:
@@ -85,7 +86,7 @@ class RequestBodySizeLimiter(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self.oslo_conf.register_opts(OPTS, group='oslo_middleware')

@@ -16,14 +16,14 @@
 from __future__ import annotations
 
 import re
-import typing as ty
+from typing import TYPE_CHECKING
 
 from oslo_context import context
 import webob.dec
 
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     import webob.request
     import webob.response
 
