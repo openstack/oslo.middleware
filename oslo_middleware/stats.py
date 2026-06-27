@@ -16,14 +16,14 @@ from __future__ import annotations
 
 import logging
 import re
-import typing as ty
+from typing import Any, TYPE_CHECKING
 
 import statsd
 import webob.dec
 
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     from oslo_config import cfg
 
@@ -74,7 +74,7 @@ class StatsMiddleware(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self.application = application

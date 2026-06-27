@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 import copy
 import itertools
-import typing as ty
+from typing import TYPE_CHECKING
 
 from oslo_middleware import basic_auth
 from oslo_middleware import cors
@@ -26,7 +26,7 @@ from oslo_middleware import http_proxy_to_wsgi
 from oslo_middleware import sizelimit
 from oslo_middleware import tracing
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from oslo_config import cfg
 
 __all__ = [

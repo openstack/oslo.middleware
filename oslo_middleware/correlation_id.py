@@ -15,13 +15,13 @@
 
 from __future__ import annotations
 
-import typing as ty
+from typing import TYPE_CHECKING
 
 from oslo_utils import uuidutils
 
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     import webob.request
     import webob.response
 

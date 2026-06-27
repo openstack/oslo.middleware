@@ -16,19 +16,20 @@ from __future__ import annotations
 
 import copy
 import logging
-import typing as ty
+from typing import Any, TYPE_CHECKING, TypedDict
+from collections.abc import Callable
 
 from oslo_config import cfg
 from oslo_middleware import base
 import webob.exc
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     import webob.request
     import webob.response
 
 
-class AllowedOrigin(ty.TypedDict):
+class AllowedOrigin(TypedDict):
     allow_credentials: bool
     expose_headers: list[str]
     max_age: int | None
@@ -88,7 +89,7 @@ OPTS = [
 CORS_OPTS = OPTS
 
 
-def set_defaults(**kwargs: ty.Any) -> None:
+def set_defaults(**kwargs: Any) -> None:
     """Override the default values for configuration options.
 
     This method permits a project to override the default CORS option values.
@@ -155,7 +156,7 @@ class CORS(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         # Begin constructing our configuration hash.
@@ -165,9 +166,9 @@ class CORS(base.ConfigurableMiddleware):
     @classmethod
     def factory(
         cls: type[base.MiddlewareType],
-        global_conf: dict[str, ty.Any] | None,
-        **local_conf: ty.Any,
-    ) -> ty.Callable[[WSGIApplication], base.MiddlewareType]:
+        global_conf: dict[str, Any] | None,
+        **local_conf: Any,
+    ) -> Callable[[WSGIApplication], base.MiddlewareType]:
         """factory method for paste.deploy
 
         allowed_origin: Protocol, host, and port for the allowed origin.

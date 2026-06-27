@@ -17,12 +17,13 @@ from __future__ import annotations
 
 import logging
 import os
-import typing as ty
+from typing import Any, TYPE_CHECKING
+from collections.abc import Generator
 
 from oslo_middleware.healthcheck import opts
 from oslo_middleware.healthcheck import pluginbase
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from oslo_config import cfg
 
 LOG = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     def __init__(
         self,
         oslo_conf: cfg.ConfigOpts,
-        conf: dict[str, ty.Any],
+        conf: dict[str, Any],
     ) -> None:
         super().__init__(oslo_conf, conf)
         self.oslo_conf.register_opts(
@@ -65,7 +66,7 @@ class DisableByFilesPortsHealthcheck(pluginbase.HealthcheckBaseExtension):
     @staticmethod
     def _iter_paths_ports(
         paths: list[str],
-    ) -> ty.Generator[tuple[int, str], None, None]:
+    ) -> Generator[tuple[int, str], None, None]:
         for port_path in paths:
             port_path = port_path.strip()
             if port_path:
@@ -117,7 +118,7 @@ class DisableByFileHealthcheck(pluginbase.HealthcheckBaseExtension):
     def __init__(
         self,
         oslo_conf: cfg.ConfigOpts,
-        conf: dict[str, ty.Any],
+        conf: dict[str, Any],
     ) -> None:
         super().__init__(oslo_conf, conf)
         self.oslo_conf.register_opts(
