@@ -38,6 +38,12 @@ OPTS = [
     cfg.StrOpt(
         'http_basic_auth_user_file',
         default='/etc/htpasswd',
+        deprecated_for_removal=True,
+        deprecated_since='8.3.0',
+        deprecated_reason=(
+            'The basic auth middleware that this option configures is '
+            'deprecated for removal.'
+        ),
         help="HTTP basic auth password file.",
     )
 ]
@@ -51,13 +57,24 @@ class AuthEntry(TypedDict):
 
 
 class BasicAuthMiddleware(base.ConfigurableMiddleware):
-    """Middleware which performs HTTP basic authentication on requests"""
+    """Middleware which performs HTTP basic authentication on requests
+
+    .. deprecated:: 8.3.0
+        Deprecated for removal. Terminate HTTP basic authentication in a web
+        server in front of the service, or use keystone.
+    """
 
     def __init__(
         self,
         application: WSGIApplication | None,
         conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
+        LOG.warning(
+            'The %s module is deprecated for removal. Terminate HTTP basic '
+            'authentication in a web server in front of the service, or use '
+            'keystone.',
+            __name__,
+        )
         super().__init__(application, conf)
         self.auth_file = cfg.CONF.oslo_middleware.http_basic_auth_user_file
         validate_auth_file(self.auth_file)
