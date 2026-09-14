@@ -71,7 +71,7 @@ sizelimit = "oslo_middleware:RequestBodySizeLimiter.factory"
 tracing = "oslo_middleware:TracingMiddleware.factory"
 
 [tool.setuptools.packages.find]
-include = ["oslo_middleware"]
+include = ["oslo_middleware*"]
 
 [tool.mypy]
 python_version = "3.11"
