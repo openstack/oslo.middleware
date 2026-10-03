@@ -24,14 +24,13 @@ import platform
 import socket
 import sys
 import traceback
-from typing import Any, TYPE_CHECKING, TypedDict
+from typing import Any, Self, TYPE_CHECKING, TypedDict
 from collections.abc import Callable
 
 import jinja2
 from oslo_utils import reflection
 from oslo_utils import timeutils
 import stevedore
-import typing_extensions as ty_ext
 import webob.dec
 import webob.exc
 import webob.response
@@ -473,7 +472,7 @@ Reason
         cls,
         global_conf: dict[str, Any] | None,
         **local_conf: Any,
-    ) -> ty_ext.Self:
+    ) -> Self:
         """Factory method for paste.deploy.
 
         :param global_conf: dict of options for all middlewares
