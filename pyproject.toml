@@ -74,6 +74,19 @@ tracing = "oslo_middleware:TracingMiddleware.factory"
 [tool.setuptools.packages.find]
 include = ["oslo_middleware*"]
 
+[tool.coverage.run]
+source = [
+    "oslo_middleware"
+]
+branch = true
+omit = [
+    "oslo_middleware/tests/*"
+]
+
+[tool.coverage.report]
+ignore_errors = true
+show_missing = true
+
 [tool.mypy]
 python_version = "3.11"
 show_column_numbers = true
