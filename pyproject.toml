@@ -79,6 +79,7 @@ source = [
     "oslo_middleware"
 ]
 branch = true
+parallel = true
 omit = [
     "oslo_middleware/tests/*"
 ]
