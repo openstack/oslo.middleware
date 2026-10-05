@@ -45,14 +45,14 @@ from __future__ import annotations
 
 import atexit
 import logging
-import typing as ty
+from typing import Any, TYPE_CHECKING
 
 from oslo_config import cfg
 
 from oslo_middleware._i18n import _
 from oslo_middleware import base
 
-if ty.TYPE_CHECKING:
+if TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
     import webob.request
     import webob.response
@@ -143,7 +143,7 @@ _TRACER_PROVIDER = None
 _INITIALIZED = False
 
 
-def set_defaults(**kwargs: ty.Any) -> None:
+def set_defaults(**kwargs: Any) -> None:
     """Override default values for tracing configuration options.
 
     This is intended to be called by services during their configuration
@@ -256,7 +256,7 @@ def _register_opts(conf: cfg.ConfigOpts) -> None:
     conf.register_opts(TRACING_OPTS, group='oslo_middleware_tracing')
 
 
-def _create_exporter(conf: cfg.ConfigOpts) -> ty.Any:
+def _create_exporter(conf: cfg.ConfigOpts) -> Any:
     """Create the OTLP span exporter based on configuration.
 
     The protocol-specific exporter package is imported here rather
@@ -321,12 +321,12 @@ class TracingMiddleware(base.ConfigurableMiddleware):
     def __init__(
         self,
         application: WSGIApplication | None,
-        conf: dict[str, ty.Any] | cfg.ConfigOpts | None = None,
+        conf: dict[str, Any] | cfg.ConfigOpts | None = None,
     ) -> None:
         super().__init__(application, conf)
         self._tracing_enabled = False
-        self._tracer: ty.Any = None
-        self._propagator: ty.Any = None
+        self._tracer: Any = None
+        self._propagator: Any = None
 
         _register_opts(self.oslo_conf)
 
