@@ -160,11 +160,12 @@ def set_defaults(**kwargs: ty.Any) -> None:
 
 
 def init_tracing(conf: cfg.ConfigOpts | None = None) -> None:
-    """Initialize the OpenTelemetry TracerProvider.
+    """Initialize the middleware-owned OpenTelemetry TracerProvider.
 
     Sets up the TracerProvider, OTLP exporter, span processor, and W3C
     propagators. This function is idempotent — calling it multiple times
-    has no additional effect.
+    has no additional effect. It does not install the provider as the
+    process-global provider.
 
     The middleware calls this automatically in ``__init__``. Services
     that need early initialization (before paste pipeline loading) can
@@ -210,11 +211,14 @@ def init_tracing(conf: cfg.ConfigOpts | None = None) -> None:
     _TRACER_PROVIDER = otel_sdk_trace.TracerProvider(
         resource=resource,
         sampler=sampler,
+        # We own the provider lifecycle: shutdown_tracing() is registered as
+        # our atexit handler below. Disable the SDK's built-in atexit
+        # shutdown so the provider isn't shut down twice at exit.
+        shutdown_on_exit=False,
     )
     _TRACER_PROVIDER.add_span_processor(
         otel_export.BatchSpanProcessor(exporter)
     )
-    otel_trace.set_tracer_provider(_TRACER_PROVIDER)
 
     # Set W3C TraceContext + Baggage propagators
     otel_propagate.set_global_textmap(
@@ -239,7 +243,10 @@ def init_tracing(conf: cfg.ConfigOpts | None = None) -> None:
 
 
 def shutdown_tracing() -> None:
-    """Shut down the TracerProvider, flushing any pending spans."""
+    """Shut down the middleware-owned TracerProvider and flush its spans.
+
+    Providers owned by other libraries are unaffected.
+    """
     global _TRACER_PROVIDER, _INITIALIZED
     if _TRACER_PROVIDER is not None:
         _TRACER_PROVIDER.shutdown()
@@ -335,7 +342,11 @@ class TracingMiddleware(base.ConfigurableMiddleware):
 
         init_tracing(self.oslo_conf)
 
-        self._tracer = otel_trace.get_tracer('oslo_middleware.tracing')
+        # init_tracing() always sets the provider when tracing is enabled.
+        provider = _TRACER_PROVIDER
+        if provider is None:
+            raise RuntimeError('provider not initialized')
+        self._tracer = provider.get_tracer('oslo_middleware.tracing')
         self._propagator = otel_propagate.get_global_textmap()
         self._tracing_enabled = True
 
