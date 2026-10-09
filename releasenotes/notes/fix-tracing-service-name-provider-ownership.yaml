@@ -1,0 +1,15 @@
+---
+fixes:
+  - |
+    API spans created by TracingMiddleware now use the configured
+    ``[oslo_middleware_tracing] service_name``, exporter, and sampling rate
+    even when OSProfiler or another component has already installed an
+    OpenTelemetry global tracer provider. Middleware uses its own provider
+    and does not replace or shut down providers owned by other components.
+upgrade:
+  - |
+    Middleware no longer installs a global OpenTelemetry tracer provider.
+    If oslo.messaging tracing previously relied on that implicit provider
+    and no other component provides a global SDK provider, configure the
+    endpoint and service name under ``[oslo_messaging_tracing]``. RPC spans
+    can continue the API trace through shared OpenTelemetry context.

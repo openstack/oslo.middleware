@@ -15,6 +15,7 @@
 
 from unittest import mock
 
+import fixtures
 from oslo_config import cfg
 from oslotest import base as test_base
 import webob
@@ -47,8 +48,8 @@ class TestTracingConfig(test_base.BaseTestCase):
 class TestTracingMiddlewareDisabled(test_base.BaseTestCase):
     def setUp(self):
         super().setUp()
-        tracing._INITIALIZED = False
-        tracing._TRACER_PROVIDER = None
+        self.patch(tracing, '_INITIALIZED', False)
+        self.patch(tracing, '_TRACER_PROVIDER', None)
         tracing._register_opts(cfg.CONF)
         cfg.CONF.set_override(
             'enabled', False, group='oslo_middleware_tracing'
@@ -81,8 +82,8 @@ class TestTracingMiddleware(test_base.BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        tracing._INITIALIZED = False
-        tracing._TRACER_PROVIDER = None
+        self.patch(tracing, '_INITIALIZED', False)
+        self.patch(tracing, '_TRACER_PROVIDER', None)
         tracing._register_opts(cfg.CONF)
         cfg.CONF.set_override(
             'enabled', False, group='oslo_middleware_tracing'
@@ -269,8 +270,8 @@ class TestTracingMiddleware(test_base.BaseTestCase):
 class TestInitTracing(test_base.BaseTestCase):
     def setUp(self):
         super().setUp()
-        tracing._INITIALIZED = False
-        tracing._TRACER_PROVIDER = None
+        self.patch(tracing, '_INITIALIZED', False)
+        self.patch(tracing, '_TRACER_PROVIDER', None)
 
     def test_init_disabled(self):
         tracing._register_opts(cfg.CONF)
@@ -345,6 +346,137 @@ class _InMemoryExporter:
         return list(self._spans)
 
 
+class TestTracingProviderOwnership(test_base.BaseTestCase):
+    """Regression tests for coexistence with a foreign global provider.
+
+    OSProfiler installs its own OpenTelemetry provider as the process
+    global. Once that happens, ``trace.set_tracer_provider()`` is a no-op
+    and ``trace.get_tracer()`` returns a tracer bound to OSProfiler's
+    provider. These tests verify the middleware uses its own provider for
+    API spans so they keep the configured service name and exporter.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry import trace
+
+        self.trace = trace
+        self.patch(tracing, '_INITIALIZED', False)
+        self.patch(tracing, '_TRACER_PROVIDER', None)
+
+        # Stand in for the provider OSProfiler installs as the process
+        # global, with its own resource and exporter.
+        self.foreign_exporter = _InMemoryExporter()
+        self.foreign = TracerProvider(
+            resource=Resource.create(
+                {'service.name': 'openstack-nova-osapi_compute'}
+            ),
+            shutdown_on_exit=False,
+        )
+        span_processor = SimpleSpanProcessor(
+            self.foreign_exporter  # type: ignore[arg-type]
+        )
+        self.foreign.add_span_processor(span_processor)
+        self.addCleanup(self.foreign.shutdown)
+        self.set_global = self.useFixture(
+            fixtures.MockPatchObject(trace, 'set_tracer_provider')
+        ).mock
+        self.useFixture(
+            fixtures.MockPatchObject(
+                trace, 'get_tracer_provider', return_value=self.foreign
+            )
+        )
+
+        # Capture everything the middleware-owned provider exports.
+        self.api_exporter = _InMemoryExporter()
+        self.useFixture(
+            fixtures.MockPatchObject(
+                tracing, '_create_exporter', return_value=self.api_exporter
+            )
+        )
+
+        self.conf = cfg.ConfigOpts()
+        tracing._register_opts(self.conf)
+        self.conf.set_override(
+            'enabled', True, group='oslo_middleware_tracing'
+        )
+        self.conf.set_override(
+            'service_name', 'nova-api', group='oslo_middleware_tracing'
+        )
+        self.addCleanup(tracing.shutdown_tracing)
+
+    def _request(self, app, traceparent=None):
+        middleware = tracing.TracingMiddleware(app, self.conf)
+        req = webob.Request.blank('/servers/detail')
+        if traceparent:
+            req.headers['traceparent'] = traceparent
+        response = req.get_response(middleware)
+        self.assertEqual(200, response.status_int)
+        assert tracing._TRACER_PROVIDER is not None
+        tracing._TRACER_PROVIDER.force_flush()
+        return response
+
+    def test_coexists_with_foreign_global_provider(self):
+        @webob.dec.wsgify
+        def app(req):
+            return 'Hello'
+
+        self._request(app=app)
+
+        self.assertEqual(1, len(self.api_exporter.get_finished_spans()))
+        (span,) = self.api_exporter.get_finished_spans()
+        self.assertEqual('HTTP GET /servers/detail', span.name)
+        self.assertEqual('nova-api', span.resource.attributes['service.name'])
+
+        self.assertEqual(0, len(self.foreign_exporter.get_finished_spans()))
+        self.set_global.assert_not_called()
+        self.assertIs(self.foreign, self.trace.get_tracer_provider())
+
+    def test_spans_from_other_providers_join_the_same_trace(self):
+        traceparent = '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01'
+
+        @webob.dec.wsgify
+        def app(req):
+            # A span created through the global provider, as oslo.messaging
+            # or other OpenTelemetry context-aware instrumentation would,
+            # while handling the request.
+            tracer = self.trace.get_tracer_provider().get_tracer(
+                'oslo.messaging'
+            )
+            with tracer.start_as_current_span('rpc.call'):
+                pass
+            return 'Hello'
+
+        self._request(app=app, traceparent=traceparent)
+
+        trace_id = int(traceparent.split('-')[1], 16)
+
+        self.assertEqual(1, len(self.api_exporter.get_finished_spans()))
+        (api_span,) = self.api_exporter.get_finished_spans()
+        self.assertEqual('HTTP GET /servers/detail', api_span.name)
+        self.assertEqual(
+            'nova-api', api_span.resource.attributes['service.name']
+        )
+        self.assertEqual(trace_id, api_span.context.trace_id)
+
+        self.assertEqual(1, len(self.foreign_exporter.get_finished_spans()))
+        (rpc_span,) = self.foreign_exporter.get_finished_spans()
+        self.assertEqual('rpc.call', rpc_span.name)
+        self.assertEqual(
+            'openstack-nova-osapi_compute',
+            rpc_span.resource.attributes['service.name'],
+        )
+        self.assertEqual(trace_id, rpc_span.context.trace_id)
+
+        # Both spans share the incoming trace, but each keeps its own
+        # provider's service name: the other provider's span parents off the
+        # API span without either bleeding identity into the other.
+        self.assertEqual(api_span.context.span_id, rpc_span.parent.span_id)
+
+
 class TestTracingIntegration(test_base.BaseTestCase):
     """Integration tests using the real OpenTelemetry SDK.
 
@@ -359,8 +491,8 @@ class TestTracingIntegration(test_base.BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        tracing._INITIALIZED = False
-        tracing._TRACER_PROVIDER = None
+        self.patch(tracing, '_INITIALIZED', False)
+        self.patch(tracing, '_TRACER_PROVIDER', None)
         tracing._register_opts(cfg.CONF)
         cfg.CONF.set_override(
             'enabled', False, group='oslo_middleware_tracing'
