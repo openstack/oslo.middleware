@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    ``bcrypt`` is no longer a requirement of oslo.middleware. It is only used
+    by the deprecated basic auth middleware, and has moved to the
+    ``basic-auth`` extra. Deployments that use the basic auth middleware must
+    install ``oslo.middleware[basic-auth]``, otherwise the middleware refuses
+    to start.
