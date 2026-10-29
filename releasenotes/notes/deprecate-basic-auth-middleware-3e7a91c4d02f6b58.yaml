@@ -1,0 +1,11 @@
+---
+deprecations:
+  - |
+    The ``oslo_middleware.basic_auth`` module and associated objects have been
+    deprecated for removal, along with the ``basic_auth`` paste filter and the
+    ``[oslo_middleware] http_basic_auth_user_file`` option. No known consumer
+    exists: the projects that perform HTTP basic authentication against an
+    Apache ``htpasswd`` file carry their own copy of this code.
+
+    Terminate HTTP basic authentication in a web server in front of the
+    service, or use keystone.
